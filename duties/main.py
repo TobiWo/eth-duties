@@ -15,7 +15,7 @@ from cli.cli import get_arguments
 from colorama import init
 
 
-__sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.target_slot
+__sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
 def __fetch_validator_duties(
@@ -23,9 +23,9 @@ def __fetch_validator_duties(
     duty_fetcher: ValidatorDutyFetcher,
     duties: List[ValidatorDuty],
 ) -> List[ValidatorDuty]:
-    # Check if both lists are empty
+    # Check if both lists can be empty
     current_slot = duty_fetcher.get_current_slot()
-    if duties and duties[0].target_slot > current_slot:
+    if duties and duties[0].slot > current_slot:
         return duties
     next_attestation_duties: dict[int, ValidatorDuty] = {}
     if not arguments.omit_attestation_duties:
@@ -65,5 +65,5 @@ if __name__ == "__main__":
             args, validator_duty_fetcher, upcoming_duties
         )
         print_time_to_next_duties(upcoming_duties, validator_duty_fetcher.genesis_time)
-        sleep(15)
+        sleep(args.interval)
     print("\nHappy staking. See you for next maintenance \U0001F642 !")
