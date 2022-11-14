@@ -7,7 +7,6 @@ Module which holds all logic for fetching and printing validator duties
 from time import time, sleep
 from math import trunc
 from typing import List
-from sys import exit as sys_exit
 from requests import (
     post,
     get,
@@ -16,7 +15,23 @@ from requests import (
     ReadTimeout,
 )
 from helper.killer import GracefulKiller
-from .data_types import RawValidatorDuty, ValidatorDuty, DutyType
+from .data_types import ValidatorDuty, DutyType
+from .constants import (
+    SLOT_TIME,
+    SLOTS_PER_EPOCH,
+    ATTESTATION_DUTY_ENDPOINT,
+    BLOCK_PROPOSING_DUTY_ENDPOINT,
+    BEACON_GENESIS_ENDPOINT,
+    RESPONSE_JSON_DATA_FIELD_NAME,
+    RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME,
+    REQUEST_TIMEOUT,
+    REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME,
+    REQUEST_CONNECTION_ERROR_WAITING_TIME,
+    CONNECTION_ERROR_MESSAGE,
+    READ_TIMEOUT_ERROR_MESSAGE,
+    NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE,
+    NO_RESPONSE_ERROR_MESSAGE,
+)
 
 
 class ValidatorDutyFetcher:
@@ -42,7 +57,7 @@ class ValidatorDutyFetcher:
         Returns:
             int: The current beacon chain slot
         """
-        return trunc((time() - self.genesis_time) / 12)
+        return trunc((time() - self.genesis_time) / SLOT_TIME)
 
     def get_next_attestation_duties(self) -> dict[int, ValidatorDuty]:
         """
@@ -69,7 +84,7 @@ class ValidatorDutyFetcher:
                     for data in response_data
                 }
                 is_any_duty_outdated = [
-                    True for duty in validator_duties.values() if duty.target_slot == 0
+                    True for duty in validator_duties.values() if duty.slot == 0
                 ]
                 target_epoch += 1
         return validator_duties
@@ -96,16 +111,25 @@ class ValidatorDutyFetcher:
                         and data.validator_index not in validator_duties
                     ):
                         validator_duties[data.validator_index] = ValidatorDuty(
-                            data.validator_index, data.slot, DutyType.PROPOSING
+                            data.pubkey,
+                            data.validator_index,
+                            data.slot,
+                            DutyType.PROPOSING,
                         )
                 target_epoch += index
         return self.__filter_proposing_duties(validator_duties)
 
     def __fetch_genesis_time(self) -> int:
-        response = self.__send_beacon_api_request("/eth/v1/beacon/genesis")
+        response = self.__send_beacon_api_request(BEACON_GENESIS_ENDPOINT)
         if not response.text:
-            sys_exit("Exited")  # besser
-        return int(response.json()["data"]["genesis_time"])
+            raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
+        if not RESPONSE_JSON_DATA_FIELD_NAME in response.json():
+            raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
+        return int(
+            response.json()[RESPONSE_JSON_DATA_FIELD_NAME][
+                RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME
+            ]
+        )
 
     def __send_beacon_api_request(
         self, endpoint: str, request_data: str = ""
@@ -116,41 +140,48 @@ class ValidatorDutyFetcher:
             try:
                 if len(request_data) == 0:
                     response = get(
-                        url=f"{self.__beacon_node_url}{endpoint}", timeout=(3, 5)
+                        url=f"{self.__beacon_node_url}{endpoint}",
+                        timeout=REQUEST_TIMEOUT,
                     )
                 else:
                     response = post(
                         url=f"{self.__beacon_node_url}{endpoint}",
                         data=request_data,
-                        timeout=(3, 5),
+                        timeout=REQUEST_TIMEOUT,
                     )
                 response.close()
-                if "data" in response.json():
+                if not response.text:
+                    raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
+                if RESPONSE_JSON_DATA_FIELD_NAME in response.json():
                     is_request_successful = True
+                else:
+                    raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
             except RequestsConnectionError:
-                print("Couldn't connect to beacon client. Retry in 2 second.")
-                sleep(2)
+                print(CONNECTION_ERROR_MESSAGE)
+                sleep(REQUEST_CONNECTION_ERROR_WAITING_TIME)
             except ReadTimeout:
-                print("Couldn't read from beacon client. Retry in 5 seconds.")
-                sleep(5)
+                print(READ_TIMEOUT_ERROR_MESSAGE)
+                sleep(REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
         return response
 
     def __get_current_epoch(self) -> int:
         now = time()
-        return trunc((now - self.genesis_time) / (32 * 12))
+        return trunc((now - self.genesis_time) / (SLOTS_PER_EPOCH * SLOT_TIME))
 
     def __get_next_attestation_duty(
-        self, data: RawValidatorDuty, present_duties: dict[int, ValidatorDuty]
+        self, data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
     ) -> ValidatorDuty:
         current_slot = self.get_current_slot()
         if data.validator_index in present_duties:
             present_validator_duty = present_duties[data.validator_index]
-            if present_validator_duty.target_slot != 0:
+            if present_validator_duty.slot != 0:
                 return present_validator_duty
-        attestation_duty = ValidatorDuty(data.validator_index, 0, DutyType.ATTESTATION)
+        attestation_duty = ValidatorDuty(
+            data.pubkey, data.validator_index, 0, DutyType.ATTESTATION
+        )
         if current_slot >= data.slot:
             return attestation_duty
-        attestation_duty.target_slot = data.slot
+        attestation_duty.slot = data.slot
         return attestation_duty
 
     def __filter_proposing_duties(
@@ -160,31 +191,17 @@ class ValidatorDutyFetcher:
         filtered_proposing_duties = {
             validator_index: proposing_duty
             for (validator_index, proposing_duty) in raw_proposing_duties.items()
-            if proposing_duty.target_slot > current_slot
+            if proposing_duty.slot > current_slot
         }
         return filtered_proposing_duties
 
     def __get_raw_response_data(
         self, target_epoch: int, duty_type: DutyType, request_data: str = ""
-    ) -> List[RawValidatorDuty] | None:
-        # is_request_successful = False
-        # Logik für leeres data objekt in der response Objekt überarbeiten
-        # None Logik überarbeiten (generell in Klasse)
-        # response: Response = Response()
-        # while not is_request_successful:
-        # try:
+    ) -> List[ValidatorDuty] | None:
         response = self.__fetch_duty_response(target_epoch, duty_type, request_data)
-        response_data = response.json()["data"]
+        response_data = response.json()[RESPONSE_JSON_DATA_FIELD_NAME]
         if response_data:
-            # if "data" in response.json():
-            #     is_request_successful = True
-            # except RequestsConnectionError:
-            #     print("Couldn't connect to beacon client. Retry in 2 seconds.")
-            #     sleep(2)
-            # except ReadTimeout:
-            #     print("Couldn't read from beacon client. Retry in 5 seconds.")
-            #     sleep(5)
-            return [RawValidatorDuty.from_dict(data) for data in response_data]
+            return [ValidatorDuty.from_dict(data) for data in response_data]
         return None
 
     def __fetch_duty_response(
@@ -193,10 +210,10 @@ class ValidatorDutyFetcher:
         match duty_type:
             case DutyType.ATTESTATION:
                 response = self.__send_beacon_api_request(
-                    f"/eth/v1/validator/duties/attester/{target_epoch}", request_data
+                    f"{ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
                 )
             case DutyType.PROPOSING:
                 response = self.__send_beacon_api_request(
-                    f"/eth/v1/validator/duties/proposer/{target_epoch}"
+                    f"{BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
                 )
         return response
