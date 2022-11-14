@@ -5,13 +5,7 @@ Module for parsing CLI arguments
 from argparse import ArgumentParser, Namespace, FileType
 
 
-def get_arguments() -> Namespace:
-    """
-    Parses cli arguments passed by the user
-
-    Returns:
-        Namespace: Parsed arguments
-    """
+def __get_raw_arguments() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument(
         "-b",
@@ -41,7 +35,34 @@ def get_arguments() -> Namespace:
         "-f",
         "--validator-file",
         type=FileType("r"),
-        help="File with validator indices where every indice is on a separate line",
+        help="File with validator indices where every index is on a separate line",
         action="store",
     )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        help="Interval in seconds for fetching data from the beacon node (default: 15 seconds)",
+        action="store",
+        default=15,
+    )
     return parser.parse_args()
+
+
+def __validate_fetching_interval(passed_fetching_interval: int) -> None:
+    if passed_fetching_interval < 12:
+        raise ValueError(
+            "The interval should be greater or equal the slot time (12 seconds)"
+        )
+
+
+def get_arguments() -> Namespace:
+    """
+    Parses cli arguments passed by the user
+
+    Returns:
+        Namespace: Parsed arguments
+    """
+    arguments = __get_raw_arguments()
+    __validate_fetching_interval(arguments.interval)
+    return arguments
