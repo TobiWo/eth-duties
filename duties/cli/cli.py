@@ -46,6 +46,14 @@ def __get_raw_arguments() -> Namespace:
         action="store",
         default=15,
     )
+    parser.add_argument(
+        "-l",
+        "--log",
+        type=str,
+        help="Defines log level. Values are 'DEBUG' or 'INFO'. Default is 'INFO'",
+        action="store",
+        default="INFO",
+    )
     return parser.parse_args()
 
 
