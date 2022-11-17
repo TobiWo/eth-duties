@@ -15,7 +15,6 @@ from helper.killer import GracefulKiller
 from cli.cli import get_arguments
 from initialize import initialize
 
-
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
@@ -24,6 +23,16 @@ def __fetch_validator_duties(
     duty_fetcher: ValidatorDutyFetcher,
     duties: List[ValidatorDuty],
 ) -> List[ValidatorDuty]:
+    """Fetches upcoming validator duties
+
+    Args:
+        arguments (Namespace): CLI arguments
+        duty_fetcher (ValidatorDutyFetcher): Holds all logic for fetching validator duties
+        duties (List[ValidatorDuty]): List of validator duties for last logging interval
+
+    Returns:
+        List[ValidatorDuty]: Sorted list with all upcoming validator duties
+    """
     current_slot = duty_fetcher.get_current_slot()
     if duties and duties[0].slot > current_slot:
         return duties
@@ -43,6 +52,15 @@ def __fetch_validator_duties(
 def __create_validator_duty_fetcher_instance(
     arguments: Namespace, graceful_killer: GracefulKiller
 ) -> ValidatorDutyFetcher:
+    """Creates an instance of the class which holds logic for fetching validator duties
+
+    Args:
+        arguments (Namespace): CLI arguments
+        graceful_killer (GracefulKiller): Instance of helper class to shutdown program gracefully
+
+    Returns:
+        ValidatorDutyFetcher: Instance of ValidatorDutyFetcher which holds logic for fetching validator duties
+    """
     if arguments.validators:
         user_passed_validators = arguments.validators
     else:

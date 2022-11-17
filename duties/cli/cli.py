@@ -6,6 +6,11 @@ from argparse import ArgumentParser, Namespace, FileType
 
 
 def __get_raw_arguments() -> Namespace:
+    """Parses cli arguments passed by the user
+
+    Returns:
+        Namespace: Parsed cli arguments
+    """
     parser = ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument(
@@ -58,6 +63,14 @@ def __get_raw_arguments() -> Namespace:
 
 
 def __validate_fetching_interval(passed_fetching_interval: int) -> None:
+    """Validates whether the fetching interval is set above a lower threshold of 12 seconds
+
+    Args:
+        passed_fetching_interval (int): Passed interval in seconds
+
+    Raises:
+        ValueError: Error for wrongly provided interval user input
+    """
     if passed_fetching_interval < 12:
         raise ValueError(
             "The interval should be greater or equal the slot time (12 seconds)"
@@ -65,8 +78,7 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 
 
 def get_arguments() -> Namespace:
-    """
-    Parses cli arguments passed by the user
+    """Parses cli arguments passed by the user
 
     Returns:
         Namespace: Parsed arguments

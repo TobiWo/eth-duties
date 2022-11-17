@@ -1,5 +1,4 @@
-"""
-Module for printing validator duties
+"""Module for printing validator duties
 """
 
 # pylint: disable=import-error
@@ -43,6 +42,15 @@ def print_time_to_next_duties(
 
 
 def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
+    """Creates the logging message for the provided duty
+
+    Args:
+        seconds_to_next_duty (float): Time to next duty in seconds
+        duty (ValidatorDuty): Specific upcoming validator duty
+
+    Returns:
+        str: Message which will be logged to stdout
+    """
     if seconds_to_next_duty < 0:
         logging_message = (
             f"Upcoming {duty.type.name} duty "
@@ -62,6 +70,15 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
 
 
 def __get_printing_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
+    """Gets correct printing color in dependence of duty and time to next duty
+
+    Args:
+        seconds_to_next_duty (float): Time to next duty in seconds
+        duty (ValidatorDuty): Specific upcoming validator duty
+
+    Returns:
+        str: ANSI codes for colorful logging
+    """
     if (
         RED_PRINTING_THRESHOLD_IN_SECONDS
         < seconds_to_next_duty
