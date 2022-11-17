@@ -29,5 +29,5 @@ RED_PRINTING_THRESHOLD_IN_SECONDS = 60.0
 PRINTER_TIME_FORMAT = "%M:%S"
 
 # printer messages
-NEXT_INTERVAL_MESSAGE = "\nPrinting next interval..."
+NEXT_INTERVAL_MESSAGE = "Printing next interval..."
 NO_UPCOMING_DUTIES_MESSAGE = "No upcoming duties detected!"
