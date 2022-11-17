@@ -1,5 +1,4 @@
-"""_summary_
-Helper module for graceful shutdown
+"""Helper module for graceful shutdown
 """
 
 import signal
@@ -7,9 +6,7 @@ from typing import Any
 
 
 class GracefulKiller:
-    """
-    Helper class for graceful shutdown
-    """
+    """Helper class for graceful shutdown"""
 
     kill_now = False
 
@@ -18,7 +15,5 @@ class GracefulKiller:
         signal.signal(signal.SIGTERM, self.exit_gracefully)
 
     def exit_gracefully(self, *args: Any) -> None:
-        """
-        Main method to exit program gracefully
-        """
+        """Main method to exit program gracefully"""
         self.kill_now = True

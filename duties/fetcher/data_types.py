@@ -1,5 +1,4 @@
-"""
-Defines different data types
+"""Defines different data types
 """
 
 from dataclasses import dataclass
