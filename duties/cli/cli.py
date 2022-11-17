@@ -7,6 +7,7 @@ from argparse import ArgumentParser, Namespace, FileType
 
 def __get_raw_arguments() -> Namespace:
     parser = ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument(
         "-b",
         "--beacon-node",
@@ -14,22 +15,6 @@ def __get_raw_arguments() -> Namespace:
         help="URL to access the beacon node api (default: http://localhost:5052)",
         action="store",
         default="http://localhost:5052",
-    )
-    parser.add_argument(
-        "-o",
-        "--omit-attestation-duties",
-        help="If supplied upcoming attestation duties will not be printed to the console",
-        action="store_true",
-        default=False,
-    )
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "-v",
-        "--validators",
-        type=str,
-        help="One or many validator indices for which next duties will be fetched",
-        action="store",
-        nargs="+",
     )
     group.add_argument(
         "-f",
@@ -53,6 +38,21 @@ def __get_raw_arguments() -> Namespace:
         help="Defines log level. Values are 'DEBUG' or 'INFO'. Default is 'INFO'",
         action="store",
         default="INFO",
+    )
+    parser.add_argument(
+        "-o",
+        "--omit-attestation-duties",
+        help="If supplied upcoming attestation duties will not be printed to the console",
+        action="store_true",
+        default=False,
+    )
+    group.add_argument(
+        "-v",
+        "--validators",
+        type=str,
+        help="One or many validator indices for which next duties will be fetched",
+        action="store",
+        nargs="+",
     )
     return parser.parse_args()
 
