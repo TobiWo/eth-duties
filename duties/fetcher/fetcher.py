@@ -7,6 +7,7 @@ Module which holds all logic for fetching and printing validator duties
 from time import time, sleep
 from math import trunc
 from typing import List
+from logging import getLogger
 from requests import (
     post,
     get,
@@ -45,6 +46,7 @@ class ValidatorDutyFetcher:
         validators: List[str],
         graceful_killer: GracefulKiller,
     ) -> None:
+        self.__logger = getLogger(__name__)
         self.__beacon_node_url = beacon_node_url
         self.__validators = validators
         self.__graceful_killer = graceful_killer
@@ -76,17 +78,16 @@ class ValidatorDutyFetcher:
             response_data = self.__get_raw_response_data(
                 target_epoch, DutyType.ATTESTATION, request_data
             )
-            if response_data:
-                validator_duties = {
-                    data.validator_index: self.__get_next_attestation_duty(
-                        data, validator_duties
-                    )
-                    for data in response_data
-                }
-                is_any_duty_outdated = [
-                    True for duty in validator_duties.values() if duty.slot == 0
-                ]
-                target_epoch += 1
+            validator_duties = {
+                data.validator_index: self.__get_next_attestation_duty(
+                    data, validator_duties
+                )
+                for data in response_data
+            }
+            is_any_duty_outdated = [
+                True for duty in validator_duties.values() if duty.slot == 0
+            ]
+            target_epoch += 1
         return validator_duties
 
     def get_next_proposing_duties(self) -> dict[int, ValidatorDuty]:
@@ -104,27 +105,22 @@ class ValidatorDutyFetcher:
             response_data = self.__get_raw_response_data(
                 target_epoch, DutyType.PROPOSING
             )
-            if response_data:
-                for data in response_data:
-                    if (
-                        str(data.validator_index) in self.__validators
-                        and data.validator_index not in validator_duties
-                    ):
-                        validator_duties[data.validator_index] = ValidatorDuty(
-                            data.pubkey,
-                            data.validator_index,
-                            data.slot,
-                            DutyType.PROPOSING,
-                        )
-                target_epoch += index
+            for data in response_data:
+                if (
+                    str(data.validator_index) in self.__validators
+                    and data.validator_index not in validator_duties
+                ):
+                    validator_duties[data.validator_index] = ValidatorDuty(
+                        data.pubkey,
+                        data.validator_index,
+                        data.slot,
+                        DutyType.PROPOSING,
+                    )
+            target_epoch += index
         return self.__filter_proposing_duties(validator_duties)
 
     def __fetch_genesis_time(self) -> int:
         response = self.__send_beacon_api_request(BEACON_GENESIS_ENDPOINT)
-        if not response.text:
-            raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
-        if not RESPONSE_JSON_DATA_FIELD_NAME in response.json():
-            raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
         return int(
             response.json()[RESPONSE_JSON_DATA_FIELD_NAME][
                 RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME
@@ -135,7 +131,7 @@ class ValidatorDutyFetcher:
         self, endpoint: str, request_data: str = ""
     ) -> Response:
         is_request_successful = False
-        response: Response = Response()
+        response = None
         while not is_request_successful and not self.__graceful_killer.kill_now:
             try:
                 if len(request_data) == 0:
@@ -150,19 +146,24 @@ class ValidatorDutyFetcher:
                         timeout=REQUEST_TIMEOUT,
                     )
                 response.close()
-                if not response.text:
-                    raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
-                if RESPONSE_JSON_DATA_FIELD_NAME in response.json():
-                    is_request_successful = True
-                else:
-                    raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
+                is_request_successful = self.__is_request_successful(response)
             except RequestsConnectionError:
-                print(CONNECTION_ERROR_MESSAGE)
+                self.__logger.error(CONNECTION_ERROR_MESSAGE)
                 sleep(REQUEST_CONNECTION_ERROR_WAITING_TIME)
             except ReadTimeout:
-                print(READ_TIMEOUT_ERROR_MESSAGE)
+                self.__logger.error(READ_TIMEOUT_ERROR_MESSAGE)
                 sleep(REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
-        return response
+        if response:
+            return response
+        self.__logger.error("Detected user intervention (SIGINT). Stopping program.")
+        raise SystemExit()
+
+    def __is_request_successful(self, response: Response) -> bool:
+        if not response.text:
+            raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
+        if RESPONSE_JSON_DATA_FIELD_NAME in response.json():
+            return True
+        raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
 
     def __get_current_epoch(self) -> int:
         now = time()
@@ -197,12 +198,10 @@ class ValidatorDutyFetcher:
 
     def __get_raw_response_data(
         self, target_epoch: int, duty_type: DutyType, request_data: str = ""
-    ) -> List[ValidatorDuty] | None:
+    ) -> List[ValidatorDuty]:
         response = self.__fetch_duty_response(target_epoch, duty_type, request_data)
         response_data = response.json()[RESPONSE_JSON_DATA_FIELD_NAME]
-        if response_data:
-            return [ValidatorDuty.from_dict(data) for data in response_data]
-        return None
+        return [ValidatorDuty.from_dict(data) for data in response_data]
 
     def __fetch_duty_response(
         self, target_epoch: int, duty_type: DutyType, request_data: str = ""
