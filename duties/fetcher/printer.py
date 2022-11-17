@@ -5,6 +5,7 @@ Module for printing validator duties
 # pylint: disable=import-error
 
 from time import time, strftime, gmtime
+from logging import getLogger
 from typing import List
 from colorama import Back, Style
 from .data_types import ValidatorDuty, DutyType
@@ -27,28 +28,37 @@ def print_time_to_next_duties(
         validator_duties (List[ValidatorDuty]): List of validator duties
         genesis_time (int): Genesis time of the connected chain
     """
-    print(NEXT_INTERVAL_MESSAGE)
+    logger = getLogger(__name__)
+    logger.info(NEXT_INTERVAL_MESSAGE)
     if validator_duties:
-        for duty in validator_duties:
+        for index, duty in enumerate(validator_duties):
             now = time()
             seconds_to_next_duty = duty.slot * SLOT_TIME + genesis_time - now
-            if seconds_to_next_duty < 0:
-                print(
-                    f"Upcoming {duty.type.name} duty "
-                    f"for validator {duty.validator_index} outdated. "
-                    f"Fetching duties in next interval."
-                )
-            else:
-                time_to_next_duty = strftime(
-                    PRINTER_TIME_FORMAT, gmtime(float(seconds_to_next_duty))
-                )
-                print(
-                    f"{__get_printing_color(seconds_to_next_duty, duty)}"
-                    f"Validator {duty.validator_index} has next {duty.type.name} duty in: "
-                    f"{time_to_next_duty} min. (slot: {duty.slot}){Style.RESET_ALL}"
-                )
+            logging_message = __create_logging_message(seconds_to_next_duty, duty)
+            if index == len(validator_duties) - 1:
+                logging_message += "\n"
+            logger.info(logging_message)
     else:
-        print(NO_UPCOMING_DUTIES_MESSAGE)
+        logger.info(NO_UPCOMING_DUTIES_MESSAGE)
+
+
+def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
+    if seconds_to_next_duty < 0:
+        logging_message = (
+            f"Upcoming {duty.type.name} duty "
+            f"for validator {duty.validator_index} outdated. "
+            f"Fetching duties in next interval."
+        )
+    else:
+        time_to_next_duty = strftime(
+            PRINTER_TIME_FORMAT, gmtime(float(seconds_to_next_duty))
+        )
+        logging_message = (
+            f"{__get_printing_color(seconds_to_next_duty, duty)}"
+            f"Validator {duty.validator_index} has next {duty.type.name} duty in: "
+            f"{time_to_next_duty} min. (slot: {duty.slot}){Style.RESET_ALL}"
+        )
+    return logging_message
 
 
 def __get_printing_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
