@@ -119,6 +119,58 @@ class ValidatorDutyFetcher:
             target_epoch += index
         return self.__filter_proposing_duties(validator_duties)
 
+    def __get_raw_response_data(
+        self, target_epoch: int, duty_type: DutyType, request_data: str = ""
+    ) -> List[ValidatorDuty]:
+        response = self.__fetch_duty_response(target_epoch, duty_type, request_data)
+        response_data = response.json()[RESPONSE_JSON_DATA_FIELD_NAME]
+        return [ValidatorDuty.from_dict(data) for data in response_data]
+
+    def __get_current_epoch(self) -> int:
+        now = time()
+        return trunc((now - self.genesis_time) / (SLOTS_PER_EPOCH * SLOT_TIME))
+
+    def __get_next_attestation_duty(
+        self, data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
+    ) -> ValidatorDuty:
+        current_slot = self.get_current_slot()
+        if data.validator_index in present_duties:
+            present_validator_duty = present_duties[data.validator_index]
+            if present_validator_duty.slot != 0:
+                return present_validator_duty
+        attestation_duty = ValidatorDuty(
+            data.pubkey, data.validator_index, 0, DutyType.ATTESTATION
+        )
+        if current_slot >= data.slot:
+            return attestation_duty
+        attestation_duty.slot = data.slot
+        return attestation_duty
+
+    def __filter_proposing_duties(
+        self, raw_proposing_duties: dict[int, ValidatorDuty]
+    ) -> dict[int, ValidatorDuty]:
+        current_slot = self.get_current_slot()
+        filtered_proposing_duties = {
+            validator_index: proposing_duty
+            for (validator_index, proposing_duty) in raw_proposing_duties.items()
+            if proposing_duty.slot > current_slot
+        }
+        return filtered_proposing_duties
+
+    def __fetch_duty_response(
+        self, target_epoch: int, duty_type: DutyType, request_data: str = ""
+    ) -> Response:
+        match duty_type:
+            case DutyType.ATTESTATION:
+                response = self.__send_beacon_api_request(
+                    f"{ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
+                )
+            case DutyType.PROPOSING:
+                response = self.__send_beacon_api_request(
+                    f"{BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
+                )
+        return response
+
     def __fetch_genesis_time(self) -> int:
         response = self.__send_beacon_api_request(BEACON_GENESIS_ENDPOINT)
         return int(
@@ -164,55 +216,3 @@ class ValidatorDutyFetcher:
         if RESPONSE_JSON_DATA_FIELD_NAME in response.json():
             return True
         raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
-
-    def __get_current_epoch(self) -> int:
-        now = time()
-        return trunc((now - self.genesis_time) / (SLOTS_PER_EPOCH * SLOT_TIME))
-
-    def __get_next_attestation_duty(
-        self, data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
-    ) -> ValidatorDuty:
-        current_slot = self.get_current_slot()
-        if data.validator_index in present_duties:
-            present_validator_duty = present_duties[data.validator_index]
-            if present_validator_duty.slot != 0:
-                return present_validator_duty
-        attestation_duty = ValidatorDuty(
-            data.pubkey, data.validator_index, 0, DutyType.ATTESTATION
-        )
-        if current_slot >= data.slot:
-            return attestation_duty
-        attestation_duty.slot = data.slot
-        return attestation_duty
-
-    def __filter_proposing_duties(
-        self, raw_proposing_duties: dict[int, ValidatorDuty]
-    ) -> dict[int, ValidatorDuty]:
-        current_slot = self.get_current_slot()
-        filtered_proposing_duties = {
-            validator_index: proposing_duty
-            for (validator_index, proposing_duty) in raw_proposing_duties.items()
-            if proposing_duty.slot > current_slot
-        }
-        return filtered_proposing_duties
-
-    def __get_raw_response_data(
-        self, target_epoch: int, duty_type: DutyType, request_data: str = ""
-    ) -> List[ValidatorDuty]:
-        response = self.__fetch_duty_response(target_epoch, duty_type, request_data)
-        response_data = response.json()[RESPONSE_JSON_DATA_FIELD_NAME]
-        return [ValidatorDuty.from_dict(data) for data in response_data]
-
-    def __fetch_duty_response(
-        self, target_epoch: int, duty_type: DutyType, request_data: str = ""
-    ) -> Response:
-        match duty_type:
-            case DutyType.ATTESTATION:
-                response = self.__send_beacon_api_request(
-                    f"{ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
-                )
-            case DutyType.PROPOSING:
-                response = self.__send_beacon_api_request(
-                    f"{BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
-                )
-        return response
