@@ -7,12 +7,13 @@ Entrypoint for the simple cli tool to check for upcoming duties for one or many 
 from argparse import Namespace
 from time import sleep
 from typing import List, Callable
+from logging import getLogger
 from fetcher.fetcher import ValidatorDutyFetcher
 from fetcher.data_types import ValidatorDuty
 from fetcher.printer import print_time_to_next_duties
 from helper.killer import GracefulKiller
 from cli.cli import get_arguments
-from colorama import init
+from initialize import initialize
 
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
@@ -23,7 +24,6 @@ def __fetch_validator_duties(
     duty_fetcher: ValidatorDutyFetcher,
     duties: List[ValidatorDuty],
 ) -> List[ValidatorDuty]:
-    # Check if both lists can be empty
     current_slot = duty_fetcher.get_current_slot()
     if duties and duties[0].slot > current_slot:
         return duties
@@ -40,25 +40,25 @@ def __fetch_validator_duties(
     return duties
 
 
-def __initialize_validator_duty_fetcher(
+def __create_validator_duty_fetcher_instance(
     arguments: Namespace, graceful_killer: GracefulKiller
 ) -> ValidatorDutyFetcher:
     if arguments.validators:
-        return ValidatorDutyFetcher(
-            arguments.beacon_node, arguments.validators, graceful_killer
-        )
+        user_passed_validators = arguments.validators
+    else:
+        user_passed_validators = [
+            validator.strip() for validator in arguments.validator_file
+        ]
     return ValidatorDutyFetcher(
-        arguments.beacon_node,
-        [validator.strip() for validator in arguments.validator_file],
-        graceful_killer,
+        arguments.beacon_node, user_passed_validators, graceful_killer
     )
 
 
 if __name__ == "__main__":
-    init()
+    initialize()
     killer = GracefulKiller()
     args = get_arguments()
-    validator_duty_fetcher = __initialize_validator_duty_fetcher(args, killer)
+    validator_duty_fetcher = __create_validator_duty_fetcher_instance(args, killer)
     upcoming_duties: List[ValidatorDuty] = []
     while not killer.kill_now:
         upcoming_duties = __fetch_validator_duties(
@@ -66,4 +66,5 @@ if __name__ == "__main__":
         )
         print_time_to_next_duties(upcoming_duties, validator_duty_fetcher.genesis_time)
         sleep(args.interval)
-    print("\nHappy staking. See you for next maintenance \U0001F642 !")
+    logger = getLogger(__name__)
+    logger.info("Happy staking. See you for next maintenance \U0001F642 !")
