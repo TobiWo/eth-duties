@@ -1,5 +1,4 @@
-"""
-Module which holds all logic for fetching and printing validator duties
+"""Module which holds all logic for fetching validator duties
 """
 
 # pylint: disable=import-error
@@ -16,23 +15,12 @@ from requests import (
     ReadTimeout,
 )
 from helper.killer import GracefulKiller
-from .data_types import ValidatorDuty, DutyType
-from .constants import (
-    SLOT_TIME,
-    SLOTS_PER_EPOCH,
-    ATTESTATION_DUTY_ENDPOINT,
-    BLOCK_PROPOSING_DUTY_ENDPOINT,
-    BEACON_GENESIS_ENDPOINT,
-    RESPONSE_JSON_DATA_FIELD_NAME,
-    RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME,
-    REQUEST_TIMEOUT,
-    REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME,
-    REQUEST_CONNECTION_ERROR_WAITING_TIME,
-    CONNECTION_ERROR_MESSAGE,
-    READ_TIMEOUT_ERROR_MESSAGE,
-    NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE,
-    NO_RESPONSE_ERROR_MESSAGE,
-)
+from fetcher.data_types import ValidatorDuty, DutyType
+from fetcher.constants import ethereum
+from fetcher.constants import endpoints
+from fetcher.constants import json
+from fetcher.constants import logging
+from fetcher.constants import program
 
 
 class ValidatorDutyFetcher:
@@ -59,12 +47,11 @@ class ValidatorDutyFetcher:
         Returns:
             int: The current beacon chain slot
         """
-        return trunc((time() - self.genesis_time) / SLOT_TIME)
+        return trunc((time() - self.genesis_time) / ethereum.SLOT_TIME)
 
     def get_next_attestation_duties(self) -> dict[int, ValidatorDuty]:
-        """
-        Fetches upcoming attestations for all validators which were
-        provided during class instantiation.
+        """Fetches upcoming attestations (for current and upcoming epoch)
+        for all validators which were provided during class instantiation.
 
         Returns:
             dict[int, ValidatorDuty]: The upcoming attestation duties
@@ -122,17 +109,43 @@ class ValidatorDutyFetcher:
     def __get_raw_response_data(
         self, target_epoch: int, duty_type: DutyType, request_data: str = ""
     ) -> List[ValidatorDuty]:
+        """Fetches raw responses for provided duties
+
+        Args:
+            target_epoch (int): Epoch to check for duties
+            duty_type (DutyType): Type of the duty
+            request_data (str, optional): Request data if any are present. Defaults to "".
+
+        Returns:
+            List[ValidatorDuty]: List of all fetched validator duties for a specific epoch
+        """
         response = self.__fetch_duty_response(target_epoch, duty_type, request_data)
-        response_data = response.json()[RESPONSE_JSON_DATA_FIELD_NAME]
+        response_data = response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
         return [ValidatorDuty.from_dict(data) for data in response_data]
 
     def __get_current_epoch(self) -> int:
+        """Calculates the current epoch based on connected chain specifics
+
+        Returns:
+            int: Current epoch
+        """
         now = time()
-        return trunc((now - self.genesis_time) / (SLOTS_PER_EPOCH * SLOT_TIME))
+        return trunc(
+            (now - self.genesis_time) / (ethereum.SLOTS_PER_EPOCH * ethereum.SLOT_TIME)
+        )
 
     def __get_next_attestation_duty(
         self, data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
     ) -> ValidatorDuty:
+        """Checks supplied response data for upcoming attestation duty and returns it
+
+        Args:
+            data (ValidatorDuty): Response data from rest api call
+            present_duties (dict[int, ValidatorDuty]): The already fetched and processed duties
+
+        Returns:
+            ValidatorDuty: Validator duty object for the next attestation duty
+        """
         current_slot = self.get_current_slot()
         if data.validator_index in present_duties:
             present_validator_duty = present_duties[data.validator_index]
@@ -149,6 +162,15 @@ class ValidatorDutyFetcher:
     def __filter_proposing_duties(
         self, raw_proposing_duties: dict[int, ValidatorDuty]
     ) -> dict[int, ValidatorDuty]:
+        """Filters supplied proposing duties dict for already outdated duties
+
+        Args:
+            raw_proposing_duties (dict[int, ValidatorDuty]): All fetched proposing duties
+            for the current and upcoming epoch
+
+        Returns:
+            dict[int, ValidatorDuty]: Filtered proposing duties
+        """
         current_slot = self.get_current_slot()
         filtered_proposing_duties = {
             validator_index: proposing_duty
@@ -160,28 +182,57 @@ class ValidatorDutyFetcher:
     def __fetch_duty_response(
         self, target_epoch: int, duty_type: DutyType, request_data: str = ""
     ) -> Response:
+        """Fetches validator duties in dependence of the duty type from the beacon client
+
+        Args:
+            target_epoch (int): Epoch to fetch duties for
+            duty_type (DutyType): Type of the duty
+            request_data (str, optional): Request data if any. Defaults to "".
+
+        Returns:
+            Response: Raw response from the sent api request
+        """
         match duty_type:
             case DutyType.ATTESTATION:
                 response = self.__send_beacon_api_request(
-                    f"{ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
+                    f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
                 )
             case DutyType.PROPOSING:
                 response = self.__send_beacon_api_request(
-                    f"{BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
+                    f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
                 )
         return response
 
     def __fetch_genesis_time(self) -> int:
-        response = self.__send_beacon_api_request(BEACON_GENESIS_ENDPOINT)
+        """Fetches the genesis time from the beacon client
+
+        Returns:
+            int: Genesis time as unix timestamp in seconds
+        """
+        response = self.__send_beacon_api_request(endpoints.BEACON_GENESIS_ENDPOINT)
         return int(
-            response.json()[RESPONSE_JSON_DATA_FIELD_NAME][
-                RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME
+            response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME][
+                json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME
             ]
         )
 
     def __send_beacon_api_request(
         self, endpoint: str, request_data: str = ""
     ) -> Response:
+        """Sends an api request to the beacon client
+
+        Args:
+            endpoint (str): The endpoint which will be called
+            request_data (str, optional): Request data if any. Defaults to "".
+
+        Raises:
+            SystemExit: Program exit if the response is not present at all
+            which will happen if the user interrupts at specific moment during
+            execution
+
+        Returns:
+            Response: Response object with data provided by the endpoint
+        """
         is_request_successful = False
         response = None
         while not is_request_successful and not self.__graceful_killer.kill_now:
@@ -189,30 +240,42 @@ class ValidatorDutyFetcher:
                 if len(request_data) == 0:
                     response = get(
                         url=f"{self.__beacon_node_url}{endpoint}",
-                        timeout=REQUEST_TIMEOUT,
+                        timeout=program.REQUEST_TIMEOUT,
                     )
                 else:
                     response = post(
                         url=f"{self.__beacon_node_url}{endpoint}",
                         data=request_data,
-                        timeout=REQUEST_TIMEOUT,
+                        timeout=program.REQUEST_TIMEOUT,
                     )
                 response.close()
                 is_request_successful = self.__is_request_successful(response)
             except RequestsConnectionError:
-                self.__logger.error(CONNECTION_ERROR_MESSAGE)
-                sleep(REQUEST_CONNECTION_ERROR_WAITING_TIME)
-            except ReadTimeout:
-                self.__logger.error(READ_TIMEOUT_ERROR_MESSAGE)
-                sleep(REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
+                self.__logger.error(logging.CONNECTION_ERROR_MESSAGE)
+                sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
+            except (ReadTimeout, KeyError):
+                self.__logger.error(logging.READ_TIMEOUT_ERROR_MESSAGE)
+                sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
         if response:
             return response
-        self.__logger.error("Detected user intervention (SIGINT). Stopping program.")
+        self.__logger.error(logging.SYSTEM_EXIT_MESSAGE)
         raise SystemExit()
 
     def __is_request_successful(self, response: Response) -> bool:
+        """Helper to check if a request was successful
+
+        Args:
+            response (Response): Response object from the api call
+
+        Raises:
+            RuntimeError: Raised when reponse is totally empty
+            KeyError: Raised if no data field is within the response object
+
+        Returns:
+            bool: True if request was successful
+        """
         if not response.text:
-            raise RuntimeError(NO_RESPONSE_ERROR_MESSAGE)
-        if RESPONSE_JSON_DATA_FIELD_NAME in response.json():
+            raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE)
+        if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
             return True
-        raise KeyError(NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
+        raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
