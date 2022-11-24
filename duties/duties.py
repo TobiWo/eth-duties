@@ -13,7 +13,6 @@ from fetcher.data_types import ValidatorDuty
 from fetcher.printer import print_time_to_next_duties
 from helper.killer import GracefulKiller
 from cli.cli import get_arguments
-from initialize import initialize
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
@@ -59,7 +58,8 @@ def __create_validator_duty_fetcher_instance(
         graceful_killer (GracefulKiller): Instance of helper class to shutdown program gracefully
 
     Returns:
-        ValidatorDutyFetcher: Instance of ValidatorDutyFetcher which holds logic for fetching validator duties
+        ValidatorDutyFetcher: Instance of ValidatorDutyFetcher which
+        holds logic for fetching validator duties
     """
     if arguments.validators:
         user_passed_validators = arguments.validators
@@ -73,7 +73,6 @@ def __create_validator_duty_fetcher_instance(
 
 
 if __name__ == "__main__":
-    initialize()
     killer = GracefulKiller()
     args = get_arguments()
     validator_duty_fetcher = __create_validator_duty_fetcher_instance(args, killer)
