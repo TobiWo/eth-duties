@@ -11,9 +11,9 @@ class GracefulKiller:
     kill_now = False
 
     def __init__(self) -> None:
-        signal.signal(signal.SIGINT, self.exit_gracefully)
-        signal.signal(signal.SIGTERM, self.exit_gracefully)
+        signal.signal(signal.SIGINT, self.__exit_gracefully)
+        signal.signal(signal.SIGTERM, self.__exit_gracefully)
 
-    def exit_gracefully(self, *args: Any) -> None:
+    def __exit_gracefully(self, *args: Any) -> None:
         """Main method to exit program gracefully"""
         self.kill_now = True
