@@ -7,15 +7,10 @@ from time import time, strftime, gmtime
 from logging import getLogger
 from typing import List
 from colorama import Back, Style
-from .data_types import ValidatorDuty, DutyType
-from .constants import (
-    NEXT_INTERVAL_MESSAGE,
-    SLOT_TIME,
-    PRINTER_TIME_FORMAT,
-    NO_UPCOMING_DUTIES_MESSAGE,
-    RED_PRINTING_THRESHOLD_IN_SECONDS,
-    YELLOW_PRINTING_THRESHOLD_IN_SECONDS,
-)
+from fetcher.data_types import ValidatorDuty, DutyType
+from fetcher.constants import ethereum
+from fetcher.constants import logging
+from fetcher.constants import program
 
 
 def print_time_to_next_duties(
@@ -28,17 +23,17 @@ def print_time_to_next_duties(
         genesis_time (int): Genesis time of the connected chain
     """
     logger = getLogger(__name__)
-    logger.info(NEXT_INTERVAL_MESSAGE)
+    logger.info(logging.NEXT_INTERVAL_MESSAGE)
     if validator_duties:
         for index, duty in enumerate(validator_duties):
             now = time()
-            seconds_to_next_duty = duty.slot * SLOT_TIME + genesis_time - now
+            seconds_to_next_duty = duty.slot * ethereum.SLOT_TIME + genesis_time - now
             logging_message = __create_logging_message(seconds_to_next_duty, duty)
             if index == len(validator_duties) - 1:
                 logging_message += "\n"
             logger.info(logging_message)
     else:
-        logger.info(NO_UPCOMING_DUTIES_MESSAGE)
+        logger.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
 
 
 def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
@@ -59,7 +54,7 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
         )
     else:
         time_to_next_duty = strftime(
-            PRINTER_TIME_FORMAT, gmtime(float(seconds_to_next_duty))
+            program.PRINTER_TIME_FORMAT, gmtime(float(seconds_to_next_duty))
         )
         logging_message = (
             f"{__get_printing_color(seconds_to_next_duty, duty)}"
@@ -80,12 +75,12 @@ def __get_printing_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> st
         str: ANSI codes for colorful logging
     """
     if (
-        RED_PRINTING_THRESHOLD_IN_SECONDS
+        program.RED_PRINTING_THRESHOLD_IN_SECONDS
         < seconds_to_next_duty
-        <= YELLOW_PRINTING_THRESHOLD_IN_SECONDS
+        <= program.YELLOW_PRINTING_THRESHOLD_IN_SECONDS
     ):
         return Back.YELLOW
-    if seconds_to_next_duty <= RED_PRINTING_THRESHOLD_IN_SECONDS:
+    if seconds_to_next_duty <= program.RED_PRINTING_THRESHOLD_IN_SECONDS:
         return Back.RED
     if duty.type is DutyType.PROPOSING:
         return Back.GREEN
