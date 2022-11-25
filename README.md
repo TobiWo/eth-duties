@@ -1,6 +1,5 @@
 # eth-duties
 
-
 This CLI tool prints upcoming validator duties to the console in order to find the best maintenance period for your validators. In general the tool was developed to mainly help home validators but it still can be used on a larger scale (see [usage](#usage) examples).
 
 ## Caveat
@@ -12,7 +11,7 @@ This CLI tool prints upcoming validator duties to the console in order to find t
     * lighthouse
     * teku
 
-   However, since it only calls official ETH2 specendpoints it should work with every client. As a side node, I had issues with `Teku 22.10.1` as the tool crashed from time to time. I read in the teku release notes that they updated their REST API framework in version `22.10.2` and since then I did not experience any issues.
+  However, since it only calls official ETH2 spec endpoints it should work with every client. As a side node, I had issues with `Teku 22.10.1` as the tool crashed from time to time. I read in the teku release notes that they updated their REST API framework in version `22.10.2` and since then I did not experience any issues.
 
 Please use the tool at your own risk. Since it is very early I probably would connect it to a beacon client which is not connected to a validator.
 
