@@ -3,8 +3,8 @@
 
 # pylint: disable=import-error
 
-from time import time, sleep
-from math import trunc
+from time import sleep
+from math import ceil
 from typing import List
 from logging import getLogger
 from requests import (
@@ -16,11 +16,11 @@ from requests import (
 )
 from helper.killer import GracefulKiller
 from fetcher.data_types import ValidatorDuty, DutyType
-from fetcher.constants import ethereum
 from fetcher.constants import endpoints
 from fetcher.constants import json
 from fetcher.constants import logging
 from fetcher.constants import program
+from protocol import protocol
 
 
 class ValidatorDutyFetcher:
@@ -40,15 +40,6 @@ class ValidatorDutyFetcher:
         self.__graceful_killer = graceful_killer
         self.genesis_time = self.__fetch_genesis_time()
 
-    def get_current_slot(self) -> int:
-        """
-        Calculates the current beacon chain slot
-
-        Returns:
-            int: The current beacon chain slot
-        """
-        return trunc((time() - self.genesis_time) / ethereum.SLOT_TIME)
-
     def get_next_attestation_duties(self) -> dict[int, ValidatorDuty]:
         """Fetches upcoming attestations (for current and upcoming epoch)
         for all validators which were provided during class instantiation.
@@ -57,7 +48,7 @@ class ValidatorDutyFetcher:
             dict[int, ValidatorDuty]: The upcoming attestation duties
             for all provided validators
         """
-        target_epoch = self.__get_current_epoch()
+        target_epoch = protocol.get_current_epoch(self.genesis_time)
         request_data = f"[{','.join(self.__validators)}]"
         is_any_duty_outdated: List[bool] = [True]
         validator_duties: dict[int, ValidatorDuty] = {}
@@ -77,6 +68,30 @@ class ValidatorDutyFetcher:
             target_epoch += 1
         return validator_duties
 
+    def get_next_sync_committee_duties(self) -> dict[int, ValidatorDuty]:
+        current_epoch = protocol.get_current_epoch(self.genesis_time)
+        next_sync_committee_starting_epoch = (
+            ceil(current_epoch / protocol.EPOCHS_PER_SYNC_COMMITTEE)
+            * protocol.EPOCHS_PER_SYNC_COMMITTEE
+        )
+        request_data = f"[{','.join(self.__validators)}]"
+        validator_duties: dict[int, ValidatorDuty] = {}
+        for epoch in [current_epoch, next_sync_committee_starting_epoch]:
+            response_data = self.__get_raw_response_data(
+                epoch, DutyType.SYNC_COMMITTEE, request_data
+            )
+            for data in response_data:
+                if data.validator_index not in validator_duties:
+                    validator_duties[data.validator_index] = ValidatorDuty(
+                        data.pubkey,
+                        data.validator_index,
+                        epoch,
+                        0,
+                        data.validator_sync_committee_indices,
+                        DutyType.SYNC_COMMITTEE,
+                    )
+        return validator_duties
+
     def get_next_proposing_duties(self) -> dict[int, ValidatorDuty]:
         """
         Fetches upcoming block proposals for all validators which were
@@ -86,7 +101,7 @@ class ValidatorDutyFetcher:
             dict[int, ValidatorDuty]: The upcoming block proposing duties
             for all provided validators
         """
-        target_epoch = self.__get_current_epoch()
+        target_epoch = protocol.get_current_epoch(self.genesis_time)
         validator_duties: dict[int, ValidatorDuty] = {}
         for index in [1, 1]:
             response_data = self.__get_raw_response_data(
@@ -100,7 +115,9 @@ class ValidatorDutyFetcher:
                     validator_duties[data.validator_index] = ValidatorDuty(
                         data.pubkey,
                         data.validator_index,
+                        0,
                         data.slot,
+                        [],
                         DutyType.PROPOSING,
                     )
             target_epoch += index
@@ -123,17 +140,6 @@ class ValidatorDutyFetcher:
         response_data = response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
         return [ValidatorDuty.from_dict(data) for data in response_data]
 
-    def __get_current_epoch(self) -> int:
-        """Calculates the current epoch based on connected chain specifics
-
-        Returns:
-            int: Current epoch
-        """
-        now = time()
-        return trunc(
-            (now - self.genesis_time) / (ethereum.SLOTS_PER_EPOCH * ethereum.SLOT_TIME)
-        )
-
     def __get_next_attestation_duty(
         self, data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
     ) -> ValidatorDuty:
@@ -146,13 +152,13 @@ class ValidatorDutyFetcher:
         Returns:
             ValidatorDuty: Validator duty object for the next attestation duty
         """
-        current_slot = self.get_current_slot()
+        current_slot = protocol.get_current_slot(self.genesis_time)
         if data.validator_index in present_duties:
             present_validator_duty = present_duties[data.validator_index]
             if present_validator_duty.slot != 0:
                 return present_validator_duty
         attestation_duty = ValidatorDuty(
-            data.pubkey, data.validator_index, 0, DutyType.ATTESTATION
+            data.pubkey, data.validator_index, 0, 0, [], DutyType.ATTESTATION
         )
         if current_slot >= data.slot:
             return attestation_duty
@@ -171,7 +177,7 @@ class ValidatorDutyFetcher:
         Returns:
             dict[int, ValidatorDuty]: Filtered proposing duties
         """
-        current_slot = self.get_current_slot()
+        current_slot = protocol.get_current_slot(self.genesis_time)
         filtered_proposing_duties = {
             validator_index: proposing_duty
             for (validator_index, proposing_duty) in raw_proposing_duties.items()
@@ -197,10 +203,17 @@ class ValidatorDutyFetcher:
                 response = self.__send_beacon_api_request(
                     f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
                 )
+            case DutyType.SYNC_COMMITTEE:
+                response = self.__send_beacon_api_request(
+                    f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
+                    request_data,
+                )
             case DutyType.PROPOSING:
                 response = self.__send_beacon_api_request(
                     f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
                 )
+            case _:
+                response = Response()
         return response
 
     def __fetch_genesis_time(self) -> int:
