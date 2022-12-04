@@ -56,16 +56,16 @@ The following workflow is based on [miniconda/Anaconda](https://docs.conda.io/en
 
 1. Navigate to the root folder of the repository
 1. Execute
-  
-    ```bash
-    conda env create -f development_env.yaml
-    ```
+
+   ```bash
+   conda env create -f development_env.yaml
+   ```
 
 1. Activate your newly created conda environment
 
-    ```bash
-    conda activate eth-duties
-    ```
+   ```bash
+   conda activate eth-duties
+   ```
 
 ### Pip
 
@@ -73,10 +73,10 @@ I also added a requirements.txt to install the dependencies with pip.
 
 1. Navigate to the root folder of the repository
 1. Execute
-  
-    ```bash
-    pip install -r requirements.txt
-    ```
+
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
@@ -84,27 +84,53 @@ As for the installation, please navigate to the projects root folder.
 
 1. Print the help:
 
-    ```bash
-    python duties/duties.py --help
-    ```
+   ```bash
+   python duties/duties.py --help
+   ```
 
 1. Print upcoming duties for two validators while connecting to a local beacon client:
 
-    ```bash
-    python duties/duties.py --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --beacon-node http://localhost:5052
-    ```
+   ```bash
+   python duties/duties.py --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --beacon-node http://localhost:5052
+   ```
 
 1. Print upcoming duties for validators which indices are located in a file:
 
-    ```bash
-      python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
-    ```
+   ```bash
+     python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
+   ```
 
 1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
 
-    ```bash
-    python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
-    ```
+   ```bash
+   python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
+   ```
+
+## Run in Docker
+
+1. Build image
+
+   ```bash
+   docker build -t tobiwo/eth-duties:latest -f docker/Dockerfile .
+   ```
+
+1. Run container
+
+   ```bash
+   docker run --rm --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+   ```
+
+1. Run container on boot
+
+   ```bash
+   docker run -d --restart always --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+   ```
+
+1. Print logs
+
+   ```bash
+   docker logs eth-duties --tail=20 -f
+   ```
 
 ## ToDos
 
