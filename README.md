@@ -134,7 +134,7 @@ As for the installation, please navigate to the projects root folder.
 
 ## ToDos
 
-* fetch and process sync committee duties
+* add validation of beacon client url
 * add validator pubkey parsing
 * add space trimming to index and pubkey parsing from file
 * add some explainer at program start for color coding
