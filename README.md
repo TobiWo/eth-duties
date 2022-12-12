@@ -106,6 +106,32 @@ As for the installation, please navigate to the projects root folder.
     python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
     ```
 
+## Run in Docker
+
+1. Build image
+
+    ```bash
+    docker build -t tobiwo/eth-duties:latest -f docker/dockerfile .
+    ```
+
+1. Run container
+
+    ```bash
+    docker run --rm --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+    ```
+
+1. Run container on boot
+
+    ```bash
+    docker run -d --restart always --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+    ```
+
+1. Print logs
+
+    ```bash
+    docker logs eth-duties --tail=20 -f
+    ```
+
 ## ToDos
 
 * fetch and process sync committee duties
