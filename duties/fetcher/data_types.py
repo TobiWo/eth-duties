@@ -8,9 +8,7 @@ from typing import List
 
 
 class DutyType(Enum):
-    """
-    Defines a validator duty type
-    """
+    """Defines a validator duty type"""
 
     NONE = 0
     ATTESTATION = 1
@@ -20,9 +18,7 @@ class DutyType(Enum):
 
 @dataclass
 class ValidatorDuty(JSONWizard):
-    """
-    Validator duty relevant data points
-    """
+    """Validator duty relevant data points"""
 
     pubkey: str
     validator_index: int

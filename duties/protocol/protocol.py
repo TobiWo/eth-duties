@@ -28,8 +28,7 @@ EPOCHS_PER_SYNC_COMMITTEE = 256
 
 
 def get_current_slot() -> int:
-    """
-    Calculates the current beacon chain slot
+    """Calculates the current beacon chain slot
 
     Returns:
         int: The current beacon chain slot
@@ -38,7 +37,7 @@ def get_current_slot() -> int:
 
 
 def get_current_epoch() -> int:
-    """Calculates the current epoch based on connected chain specifics
+    """Calculates the current beacon chain epoch
 
     Returns:
         int: Current epoch

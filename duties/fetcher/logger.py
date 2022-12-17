@@ -1,7 +1,5 @@
-"""Module for printing validator duties
+"""Module for logging validator duties
 """
-
-# pylint: disable=import-error
 
 from time import time, strftime, gmtime
 from logging import getLogger
@@ -14,11 +12,10 @@ from protocol import protocol
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
-    """Prints time to next duties for the provided validators
+    """Logs the time to next duties for the provided validators to the console
 
     Args:
         validator_duties (List[ValidatorDuty]): List of validator duties
-        genesis_time (int): Genesis time of the connected chain
     """
     logger = getLogger(__name__)
     logger.info(logging.NEXT_INTERVAL_MESSAGE)
@@ -67,6 +64,14 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
 
 
 def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
+    """Create a sync committee duty related logging message
+
+    Args:
+        duty (ValidatorDuty): Sync committee duty
+
+    Returns:
+        str: sync committee duty related logging message
+    """
     current_epoch = protocol.get_current_epoch()
     current_sync_committee_epoch_lower_bound: int = (
         trunc(current_epoch / protocol.EPOCHS_PER_SYNC_COMMITTEE)
@@ -95,7 +100,7 @@ def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
 
 
 def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
-    """Gets correct printing color in dependence of duty and time to next duty
+    """Gets correct logging color in dependence of duty and time to next duty
 
     Args:
         seconds_to_next_duty (float): Time to next duty in seconds
