@@ -2,11 +2,10 @@
 
 # eth-duties
 
-ETH-duties logs upcoming validator duties to the console in order to find the best maintenance period for your validator(s). In general the tool was developed to mainly help home validators but it still can be used on a larger scale (see [usage](#usage) examples).
+ETH-duties logs upcoming validator duties to the console in order to find the best maintenance period for your validator(s). In general the tool was developed to mainly help home stakers but it still can be used on a larger scale (see [usage](#usage) examples).
 
 ## Caveat
 
-1. The tool does not check for sync committee duties currently. This is the feature with the highest priority and will be implemented soon.
 1. Currently the tool can only handle validator indices but I will add pubkey handling as well (see [todo](#todos) list).
 1. I only tested the tool with the following beaon clients:
 
@@ -14,6 +13,8 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
     * teku
 
    However, since it only calls official ETH2 spec endpoints it should work with every client. As a side node, I had issues with `Teku 22.10.1` as the tool crashed from time to time. I read in the teku release notes that they updated their REST API framework in version `22.10.2` and since then I did not experience any issues.
+
+1. The maximum number of validators (validator indices) which can be provided by the user is currently at 300. The reason for that is a simple one and will be fixed in a future release.
 
 **Please use the tool at your own risk. Since it is very early I probably would connect it to a beacon client which is not connected to a validator.**
 
@@ -27,14 +28,13 @@ The color coding comprises of:
 | --- | --- |
 | GREEN | Indicates upcoming block proposer duties |
 | YELLOW | The upcoming duty will be performed in less than 2 minutes **or** your validator was chosen to be part in the next sync committee |
-| RED | The upcoming duty will be performed in less than 1 minute **or** your validator is partof the current sync committee |
-
-Note: **Sync committee duties are not implemented yet (see [caveat](#caveat))**
+| RED | The upcoming duty will be performed in less than 1 minute **or** your validator is part of the current sync committee |
 
 ### Examples
 
 1. Attestion duties for some validators ![attestations](./img/attestations.PNG)
 1. Block proposing duties for some validators ![proposing](./img/proposing.PNG)
+1. Sync committee duties for some validators ![sync_committee](./img/sync_committee.PNG)
 
 ## Requirements
 
@@ -56,7 +56,7 @@ The following workflow is based on [miniconda/Anaconda](https://docs.conda.io/en
 
 1. Navigate to the root folder of the repository
 1. Execute
-  
+
     ```bash
     conda env create -f development_env.yaml
     ```
@@ -73,7 +73,7 @@ I also added a requirements.txt to install the dependencies with pip.
 
 1. Navigate to the root folder of the repository
 1. Execute
-  
+
     ```bash
     pip install -r requirements.txt
     ```
@@ -97,7 +97,7 @@ As for the installation, please navigate to the projects root folder.
 1. Print upcoming duties for validators which indices are located in a file:
 
     ```bash
-      python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
+    python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
@@ -136,6 +136,7 @@ As for the installation, please navigate to the projects root folder.
 
 * add validation of beacon client url
 * add validator pubkey parsing
+* add support for more than 300 validators (split provided validators to chunks for api calls)
 * add space trimming to index and pubkey parsing from file
 * add some explainer at program start for color coding
 * improve fetching in case no duties could be detected
