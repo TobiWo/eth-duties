@@ -26,6 +26,18 @@ __ARGUMENTS = get_arguments()
 __VALIDATORS = __get_validator_list()
 
 
+def is_provided_validator_count_too_high() -> bool:
+    """Checks whether the number of provided validators is too high for
+    upcoming api calls
+
+    Returns:
+        bool: is number of provided validators > 300
+    """
+    if len(__VALIDATORS) > 300:
+        return True
+    return False
+
+
 def get_next_attestation_duties() -> dict[int, ValidatorDuty]:
     """Fetches upcoming attestations (for current and upcoming epoch)
     for all validators which were provided by the user.
