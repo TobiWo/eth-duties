@@ -1,4 +1,4 @@
-name: semver
+name: Create tag
 
 on:
   push:
@@ -6,20 +6,22 @@ on:
       - main
 
 jobs:
-  build:
+  tag:
+    name: Create and push tag
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
         fetch-depth: '0'
-
     - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@1.53.0
+      uses: anothrNick/github-tag-action@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         WITH_V: true
         DEFAULT_BUMP: none
         RELEASE_BRANCHES: main
         MAJOR_STRING_TOKEN: perf
         MINOR_STRING_TOKEN: feat
         PATCH_STRING_TOKEN: fix
+        BRANCH_HISTORY: last
