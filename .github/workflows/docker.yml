@@ -9,6 +9,7 @@ on:
 
 jobs:
   docker:
+    name: Build and push docker image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,9 +21,9 @@ jobs:
           images: |
             ${{ secrets.DOCKER_REPOSITORY }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
             type=raw,value=latest
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
