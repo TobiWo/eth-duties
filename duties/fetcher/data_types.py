@@ -3,8 +3,9 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from dataclass_wizard import JSONWizard
 from typing import List
+
+from dataclass_wizard import JSONWizard
 
 
 class DutyType(Enum):

@@ -3,12 +3,13 @@
 
 from math import ceil
 from typing import List
-from requests import Response
-from fetcher.data_types import ValidatorDuty, DutyType
+
+from cli.arguments import get_arguments
 from constants import endpoints, json
-from protocol import protocol
+from fetcher.data_types import DutyType, ValidatorDuty
+from protocol import ethereum
 from protocol.request import send_beacon_api_request
-from cli.cli import get_arguments
+from requests import Response
 
 
 def __get_validator_list() -> List[str]:
@@ -46,7 +47,7 @@ def get_next_attestation_duties() -> dict[int, ValidatorDuty]:
         dict[int, ValidatorDuty]: The upcoming attestation duties
         for all provided validators
     """
-    current_epoch = protocol.get_current_epoch()
+    current_epoch = ethereum.get_current_epoch()
     request_data = f"[{','.join(__VALIDATORS)}]"
     is_any_duty_outdated: List[bool] = [True]
     validator_duties: dict[int, ValidatorDuty] = {}
@@ -75,10 +76,10 @@ def get_next_sync_committee_duties() -> dict[int, ValidatorDuty]:
         dict[int, ValidatorDuty]: The upcoming sync committee duties
         for all provided validators
     """
-    current_epoch = protocol.get_current_epoch()
+    current_epoch = ethereum.get_current_epoch()
     next_sync_committee_starting_epoch = (
-        ceil(current_epoch / protocol.EPOCHS_PER_SYNC_COMMITTEE)
-        * protocol.EPOCHS_PER_SYNC_COMMITTEE
+        ceil(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
+        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
     )
     request_data = f"[{','.join(__VALIDATORS)}]"
     validator_duties: dict[int, ValidatorDuty] = {}
@@ -107,7 +108,7 @@ def get_next_proposing_duties() -> dict[int, ValidatorDuty]:
         dict[int, ValidatorDuty]: The upcoming block proposing duties
         for all provided validators
     """
-    current_epoch = protocol.get_current_epoch()
+    current_epoch = ethereum.get_current_epoch()
     validator_duties: dict[int, ValidatorDuty] = {}
     for index in [1, 1]:
         response_data = __get_raw_response_data(current_epoch, DutyType.PROPOSING)
@@ -158,7 +159,7 @@ def __get_next_attestation_duty(
     Returns:
         ValidatorDuty: Validator duty object for the next attestation duty
     """
-    current_slot = protocol.get_current_slot()
+    current_slot = ethereum.get_current_slot()
     if data.validator_index in present_duties:
         present_validator_duty = present_duties[data.validator_index]
         if present_validator_duty.slot != 0:
@@ -184,7 +185,7 @@ def __filter_proposing_duties(
     Returns:
         dict[int, ValidatorDuty]: Filtered proposing duties
     """
-    current_slot = protocol.get_current_slot()
+    current_slot = ethereum.get_current_slot()
     filtered_proposing_duties = {
         validator_index: proposing_duty
         for (validator_index, proposing_duty) in raw_proposing_duties.items()
