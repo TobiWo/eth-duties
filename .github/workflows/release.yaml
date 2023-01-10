@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - OS: ubuntu-latest
+            PYTHON_VERSION: 3.10.9
+            BUILD_CMD: |
+              export PYTHONHASHSEED=42
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-linux-amd64;
+              mkdir ${BUILD_FILE_NAME};
+              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+              mkdir /tmp/artifacts;
+              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
+          - OS: macos-latest
+            PYTHON_VERSION: 3.10.9
+            BUILD_CMD: |
+              export PYTHONHASHSEED=42
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-darwin-amd64;
+              mkdir ${BUILD_FILE_NAME};
+              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+              mkdir /tmp/artifacts;
+              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+              shasum -a 256 ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256
+          - OS: windows-latest
+            PYTHON_VERSION: 3.10.9
+            BUILD_CMD: |
+              source $VENV
+              export PYTHONHASHSEED=42
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-windows-amd64;
+              mkdir ${BUILD_FILE_NAME};
+              poetry run pyinstaller --clean --onefile --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+              mkdir /tmp/artifacts;
+              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.OS }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.PYTHON_VERSION }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
+      - name: Build executable for ${{ matrix.OS }}
+        env:
+          RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: ${{ matrix.BUILD_CMD }}
+      - name: Upload windows artifacts 
+        if: matrix.OS == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.OS }}
+          path: C:\Users\runneradmin\AppData\Local\Temp\artifacts\*
+          if-no-files-found: error
+      - name: Upload UNIX artifacts
+        if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.OS }}
+          path: /tmp/artifacts/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: /tmp/artifacts
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: /tmp/artifacts
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-linux-amd64.sha256
+            /tmp/artifacts/macos-11/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
+            /tmp/artifacts/macos-11/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
+            /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
+            /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
