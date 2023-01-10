@@ -48,11 +48,11 @@ In general it is recommended to work with virtual environments instead of a glob
 
 ## Installation
 
-I will add full dependency management and also a binary release in the future. For now you need to call the python binary to execute the program. Therefore you need to perform some steps before usage.
+A binary/executable release will be added in the near future. For now you need to call the python binary to execute the program or build the artefact on your own (see [here](#build)). Therefore you need to perform some steps before usage. I added three possible installation workflows.
 
 ### Anaconda
 
-The following workflow is based on [miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html). Make sure you can call the conda binary/executable in your terminal.
+The first one is based on [miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html). Make sure you can call the conda binary/executable in your terminal.
 
 1. Navigate to the root folder of the repository
 1. Execute
@@ -69,7 +69,7 @@ The following workflow is based on [miniconda/Anaconda](https://docs.conda.io/en
 
 ### Pip
 
-I also added a requirements.txt to install the dependencies with pip.
+The second workflow leverages an requirements.txt to install the dependencies via pip.
 
 1. Navigate to the root folder of the repository
 1. Execute
@@ -78,7 +78,77 @@ I also added a requirements.txt to install the dependencies with pip.
     pip install -r requirements.txt
     ```
 
-## Usage
+### Poetry
+
+The third and most enhanced way is to use poetry where you can manage all dependencies and also run certain commands like e.g. pyinstaller to build the binary/executable on your own.
+
+For more information I recommend to check poetries documentation [here](https://python-poetry.org/docs/) and especially how to manage virtual envs [here](https://python-poetry.org/docs/managing-environments/).
+
+My personal way is to use poetry in combination with a conda virtual environment. Both work perfectly fine together. Therefore I added a second conda environemnt file (poetry_env.yaml). If you want to take this path as well you can execute the following steps:
+
+1. Navigate to the root folder of the repository
+1. Execute
+
+    ```bash
+    conda env create -f poetry_env.yaml
+    ```
+
+1. Activate your newly created conda environment
+
+    ```bash
+    conda activate poetry-py310
+    ```
+
+1. List your Python environments with poetry
+
+    ```bash
+    poetry env info
+
+    # You will receive a Python System and Virtualenv output
+    ```
+
+1. Create a separate poetry virtual env
+
+    ```bash
+    # Create a poetry virtual env while using the executable/binary path of the virtualenv output of the command before
+    poetry env use <PATH TO PYTHON_EXECUTABLE OF VIRTUALENV>
+    ```
+
+1. Install dependencies
+
+    ```bash
+    poetry install
+    ```
+
+## Build
+
+You can build the binary/executable on your own. This will work out of the box if you installed all dev dependencies via the [anaconda](#anaconda) or [poetry workflow](#poetry).
+
+Note: Pyinstaller uses the OS where it runs on to build the respective artefact. So if you are on a windows machine you will build an executable of eth-duties.
+
+As always you need to navigate to the root folder of this repository first.
+
+1. Build Windows executable
+
+    ```cmd
+    Rem Building from anaconda env directly
+    pyinstaller --clean --onefile --add-data config;config --name eth-duties .\duties\main.py
+    
+    Rem Building via poetry virtual env
+    poetry run pyinstaller --clean --onefile --add-data config;config --name eth-duties .\duties\main.py
+    ```
+
+1. Build Linux or MacOS binary
+
+    ```bash
+    # Building from anaconda env directly
+    pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
+
+    # Building via poetry virtual env
+    poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
+    ```
+
+## Usage with Python binary/executable
 
 As for the installation, please navigate to the projects root folder.
 
