@@ -1,14 +1,15 @@
 """Module for logging validator duties
 """
 
-from time import time, strftime, gmtime
 from logging import getLogger
-from typing import List
 from math import ceil, trunc
+from time import gmtime, strftime, time
+from typing import List
+
 from colorama import Back, Style
-from fetcher.data_types import ValidatorDuty, DutyType
 from constants import logging, program
-from protocol import protocol
+from fetcher.data_types import DutyType, ValidatorDuty
+from protocol import ethereum
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -23,7 +24,7 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
         for index, duty in enumerate(validator_duties):
             now = time()
             seconds_to_next_duty = (
-                duty.slot * protocol.SLOT_TIME + protocol.GENESIS_TIME - now
+                duty.slot * ethereum.SLOT_TIME + ethereum.GENESIS_TIME - now
             )
             logging_message = __create_logging_message(seconds_to_next_duty, duty)
             if index == len(validator_duties) - 1:
@@ -72,14 +73,14 @@ def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
     Returns:
         str: sync committee duty related logging message
     """
-    current_epoch = protocol.get_current_epoch()
+    current_epoch = ethereum.get_current_epoch()
     current_sync_committee_epoch_lower_bound: int = (
-        trunc(current_epoch / protocol.EPOCHS_PER_SYNC_COMMITTEE)
-        * protocol.EPOCHS_PER_SYNC_COMMITTEE
+        trunc(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
+        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
     )
     current_sync_committee_epoch_upper_bound: int = (
-        ceil(current_epoch / protocol.EPOCHS_PER_SYNC_COMMITTEE)
-        * protocol.EPOCHS_PER_SYNC_COMMITTEE
+        ceil(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
+        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
     ) - 1
     if duty.epoch in range(
         current_sync_committee_epoch_lower_bound,

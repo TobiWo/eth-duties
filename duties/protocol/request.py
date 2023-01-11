@@ -1,17 +1,13 @@
-"""Module for fetching data from a beacon client 
+"""Module for fetching data from a beacon client
 """
 
 from logging import getLogger
 from time import sleep
-from requests import (
-    Response,
-    get,
-    post,
-    ConnectionError as RequestsConnectionError,
-    ReadTimeout,
-)
-from cli.cli import get_arguments
-from constants import program, json, logging
+
+from cli.arguments import get_arguments
+from constants import json, logging, program
+from requests import ConnectionError as RequestsConnectionError
+from requests import ReadTimeout, Response, get, post
 
 __LOGGER = getLogger(__name__)
 __ARGUMENTS = get_arguments()

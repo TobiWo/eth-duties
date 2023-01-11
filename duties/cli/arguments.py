@@ -2,7 +2,8 @@
 Module for parsing CLI arguments
 """
 
-from argparse import ArgumentParser, Namespace, FileType
+from argparse import ArgumentError, ArgumentParser, FileType, Namespace
+from typing import List
 
 
 def __get_raw_arguments() -> Namespace:
@@ -12,7 +13,6 @@ def __get_raw_arguments() -> Namespace:
         Namespace: Parsed cli arguments
     """
     parser = ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument(
         "-b",
         "--beacon-node",
@@ -21,7 +21,7 @@ def __get_raw_arguments() -> Namespace:
         action="store",
         default="http://localhost:5052",
     )
-    group.add_argument(
+    parser.add_argument(
         "-f",
         "--validator-file",
         type=FileType("r"),
@@ -51,7 +51,7 @@ def __get_raw_arguments() -> Namespace:
         action="store_true",
         default=False,
     )
-    group.add_argument(
+    parser.add_argument(
         "-v",
         "--validators",
         type=str,
@@ -77,6 +77,16 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
         )
 
 
+def __validate_provided_validator_flag(
+    validators: List[str] | None, validator_file: str | None
+) -> None:
+    if (validators and validator_file) or (not validators and not validator_file):
+        raise ArgumentError(
+            None,
+            "ONE of the following flags is required: '--validators|-v', '--validator-file|-f'",
+        )
+
+
 def get_arguments() -> Namespace:
     """Parses cli arguments passed by the user
 
@@ -85,4 +95,5 @@ def get_arguments() -> Namespace:
     """
     arguments = __get_raw_arguments()
     __validate_fetching_interval(arguments.interval)
+    __validate_provided_validator_flag(arguments.validators, arguments.validator_file)
     return arguments

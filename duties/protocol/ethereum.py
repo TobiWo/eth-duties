@@ -3,8 +3,9 @@
 
 from math import trunc
 from time import time
-from protocol.request import send_beacon_api_request
+
 from constants import endpoints, json
+from protocol.request import send_beacon_api_request
 
 
 def __fetch_genesis_time() -> int:

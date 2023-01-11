@@ -1,16 +1,17 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators
 """
 
+from logging import Logger, getLogger
 from time import sleep
-from typing import List, Callable
-from logging import getLogger, Logger
-from fetcher import fetcher
-from fetcher.data_types import ValidatorDuty, DutyType
-from fetcher.logger import log_time_to_next_duties
-from cli.cli import get_arguments
-from protocol.protocol import get_current_slot
-from constants.program import GRACEFUL_KILLER
+from typing import Callable, List
+
+from cli.arguments import get_arguments
 from constants import logging
+from constants.program import GRACEFUL_KILLER
+from fetcher import fetch
+from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.log import log_time_to_next_duties
+from protocol.ethereum import get_current_slot
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
@@ -30,12 +31,12 @@ def __fetch_validator_duties(
         return duties
     next_attestation_duties: dict[int, ValidatorDuty] = {}
     next_sync_committee_duties: dict[int, ValidatorDuty] = {}
-    if fetcher.is_provided_validator_count_too_high():
+    if fetch.is_provided_validator_count_too_high():
         logger.warning(logging.TOO_MANY_PROVIDED_VALIDATORS_MESSAGE)
     else:
-        next_attestation_duties = fetcher.get_next_attestation_duties()
-        next_sync_committee_duties = fetcher.get_next_sync_committee_duties()
-    next_proposing_duties = fetcher.get_next_proposing_duties()
+        next_attestation_duties = fetch.get_next_attestation_duties()
+        next_sync_committee_duties = fetch.get_next_sync_committee_duties()
+    next_proposing_duties = fetch.get_next_proposing_duties()
     duties = [
         duty
         for duties in [

@@ -1,7 +1,7 @@
 """Defines program related constants
 """
 
-from helper.killer import GracefulKiller
+from helper.kill import GracefulKiller
 
 REQUEST_TIMEOUT = (3, 5)
 REQUEST_CONNECTION_ERROR_WAITING_TIME = 2
