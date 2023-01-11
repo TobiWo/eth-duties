@@ -1,12 +1,15 @@
 name: Create tag
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
 
 jobs:
   tag:
+    if: startsWith(github.event.pull_request.body, '/release')
     name: Create and push tag
     runs-on: ubuntu-22.04
     steps:
