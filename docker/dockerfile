@@ -1,15 +1,25 @@
-FROM python:3.10-alpine3.15
-
-COPY requirements.txt /tmp
-WORKDIR /tmp
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
-
-RUN adduser -D app
-USER app
-
+FROM python:3.10-alpine3.15 as python
+ENV PYTHONUNBUFFERED=true
 WORKDIR /home/app
 
+FROM python as poetry
+ENV POETRY_HOME=/opt/poetry
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
+ENV PATH="$POETRY_HOME/bin:$PATH"
+RUN python3 -m pip install --no-cache-dir poetry==1.3.2
+COPY pyproject.toml .
+COPY poetry.lock .
+RUN poetry install --only main
+
+FROM python as runtime
+LABEL author1="Tobias Wohland" \
+  author2="Nils Effinghausen" \
+  name="eth-duties" \
+  description="Tool to log upcoming validator duties to the console."
+ENV PATH="/home/app/.venv/bin:$PATH"
+COPY --from=poetry /home/app /home/app
 COPY config ./config
 COPY duties ./duties
-
+RUN adduser -D app
+USER app
 ENTRYPOINT [ "python", "duties/main.py" ]
