@@ -48,46 +48,14 @@ In general it is recommended to work with virtual environments instead of a glob
 
 ## Installation
 
-A binary/executable release will be added in the near future. For now you need to call the python binary to execute the program or build the artefact on your own (see [here](#build)). Therefore you need to perform some steps before usage. I added three possible installation workflows.
+A binary/executable release will be added in the near future. For now you need to call the python binary to execute the application or build the artefact on your own (see [here](#build)). In any way you need to perform some steps before you can proceed.
 
-### Anaconda
+Dependencies are organized and managed using poetry. Poetry itself needs `Python 3.7` or later. It is recommended to work with virtual environments instead of your global Python installation.
 
-The first one is based on [miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html). Make sure you can call the conda binary/executable in your terminal.
-
-1. Navigate to the root folder of the repository
-1. Execute
-
-    ```bash
-    conda env create -f development_env.yaml
-    ```
-
-1. Activate your newly created conda environment
-
-    ```bash
-    conda activate eth-duties
-    ```
-
-### Pip
-
-The second workflow leverages an requirements.txt to install the dependencies via pip.
+My personal workflow to manage virtual environments is to use [miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html), therefore the steps described are based on this toolchain.
 
 1. Navigate to the root folder of the repository
-1. Execute
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-### Poetry
-
-The third and most enhanced way is to use poetry where you can manage all dependencies and also run certain commands like e.g. pyinstaller to build the binary/executable on your own.
-
-For more information I recommend to check poetries documentation [here](https://python-poetry.org/docs/) and especially how to manage virtual envs [here](https://python-poetry.org/docs/managing-environments/).
-
-My personal way is to use poetry in combination with a conda virtual environment. Both work perfectly fine together. Therefore I added a second conda environemnt file (poetry_env.yaml). If you want to take this path as well you can execute the following steps:
-
-1. Navigate to the root folder of the repository
-1. Execute
+1. Create new conda environment with poetry
 
     ```bash
     conda env create -f poetry_env.yaml
@@ -103,7 +71,6 @@ My personal way is to use poetry in combination with a conda virtual environment
 
     ```bash
     poetry env info
-
     # You will receive a Python System and Virtualenv output
     ```
 
@@ -111,40 +78,36 @@ My personal way is to use poetry in combination with a conda virtual environment
 
     ```bash
     # Create a poetry virtual env while using the executable/binary path of the virtualenv output of the command before
-    poetry env use <PATH TO PYTHON_EXECUTABLE OF VIRTUALENV>
+    poetry env use <PATH_TO_PYTHON_EXECUTABLE_OF_VIRTUALENV>
     ```
 
 1. Install dependencies
 
     ```bash
+    # Installs all dependencies
     poetry install
+
+    # Installs only dependencies for running the application
+    poetry install --only main 
     ```
 
 ## Build
 
-You can build the binary/executable on your own. This will work out of the box if you installed all dev dependencies via the [anaconda](#anaconda) or [poetry workflow](#poetry).
+You can build the binary/executable on your own. This will work out of the box if you installed all dev dependencies (see [installation](#installation)).
 
 Note: Pyinstaller uses the OS where it runs on to build the respective artefact. So if you are on a windows machine you will build an executable of eth-duties.
 
-As always you need to navigate to the root folder of this repository first.
+As always you need to navigate to the root folder of this repository first. Make sure you are in the correct virtual environment where you installed the dependencies.
 
 1. Build Windows executable
 
     ```cmd
-    Rem Building from anaconda env directly
-    pyinstaller --clean --onefile --add-data config;config --name eth-duties .\duties\main.py
-    
-    Rem Building via poetry virtual env
     poetry run pyinstaller --clean --onefile --add-data config;config --name eth-duties .\duties\main.py
     ```
 
 1. Build Linux or MacOS binary
 
     ```bash
-    # Building from anaconda env directly
-    pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
-
-    # Building via poetry virtual env
     poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
     ```
 
@@ -187,13 +150,13 @@ As for the installation, please navigate to the projects root folder.
 1. Run container
 
     ```bash
-    docker run --rm --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+    docker run --rm --name eth-duties tobiwo/eth-duties:latest --validators "123456, 456789" --beacon-node "http://locahost:5052"
     ```
 
 1. Run container on boot
 
     ```bash
-    docker run -d --restart always --name eth-duties tobiwo/eth-duties:latest -v "123456, 456789" -b "http://locahost:5052"
+    docker run -d --restart always --name eth-duties tobiwo/eth-duties:latest --validators "123456, 456789" --beacon-node "http://locahost:5052"
     ```
 
 1. Print logs
