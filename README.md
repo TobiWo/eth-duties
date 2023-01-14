@@ -118,25 +118,25 @@ As for the installation, please navigate to the projects root folder.
 1. Print the help:
 
     ```bash
-    python duties/duties.py --help
+    python duties/main.py --help
     ```
 
 1. Print upcoming duties for two validators while connecting to a local beacon client:
 
     ```bash
-    python duties/duties.py --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --beacon-node http://localhost:5052
+    python duties/main.py --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming duties for validators which indices are located in a file:
 
     ```bash
-    python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
+    python duties/main.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
 
     ```bash
-    python duties/duties.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
+    python duties/main.py --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
     ```
 
 ## Run in Docker
