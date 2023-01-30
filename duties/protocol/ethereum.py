@@ -26,6 +26,7 @@ GENESIS_TIME = __fetch_genesis_time()
 SLOT_TIME = 12
 SLOTS_PER_EPOCH = 32
 EPOCHS_PER_SYNC_COMMITTEE = 256
+ACTIVE_VALIDATOR_STATUS = ["active_ongoing", "active_exiting", "active_slashed"]
 
 
 def get_current_slot() -> int:

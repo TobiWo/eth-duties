@@ -3,6 +3,7 @@
 
 from logging import getLogger
 from time import sleep
+from typing import Dict
 
 from cli.arguments import get_arguments
 from constants import json, logging, program
@@ -13,7 +14,11 @@ __LOGGER = getLogger(__name__)
 __ARGUMENTS = get_arguments()
 
 
-def send_beacon_api_request(endpoint: str, request_data: str = "") -> Response:
+def send_beacon_api_request(
+    endpoint: str,
+    request_data: str | None = None,
+    parameters: Dict[str, str] | None = None,
+) -> Response:
     """Sends an api request to the beacon client
 
     Args:
@@ -32,15 +37,21 @@ def send_beacon_api_request(endpoint: str, request_data: str = "") -> Response:
     response = None
     while not is_request_successful and not program.GRACEFUL_KILLER.kill_now:
         try:
-            if len(request_data) == 0:
+            if not request_data and not parameters:
                 response = get(
                     url=f"{__ARGUMENTS.beacon_node}{endpoint}",
                     timeout=program.REQUEST_TIMEOUT,
                 )
-            else:
+            elif request_data and not parameters:
                 response = post(
                     url=f"{__ARGUMENTS.beacon_node}{endpoint}",
                     data=request_data,
+                    timeout=program.REQUEST_TIMEOUT,
+                )
+            else:
+                response = get(
+                    url=f"{__ARGUMENTS.beacon_node}{endpoint}",
+                    params=parameters,
                     timeout=program.REQUEST_TIMEOUT,
                 )
             response.close()
