@@ -1,15 +1,92 @@
 """Module which holds all logic for fetching validator duties
 """
 
+from logging import getLogger
 from math import ceil
-from typing import List
+from typing import Any, List
 
 from cli.arguments import get_arguments
-from constants import endpoints, json
-from fetcher.data_types import DutyType, ValidatorDuty
+from constants import endpoints, json, logging, program
+from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from protocol import ethereum
 from protocol.request import send_beacon_api_request
 from requests import Response
+
+__ARGUMENTS = get_arguments()
+__LOGGER = getLogger(__name__)
+
+
+def __get_active_validators(validators: List[str]) -> List[str]:
+    """Checks status from provided validators and filters inactive ones
+
+    Args:
+        validators (List[str]): Provided validators by the user
+
+    Returns:
+        List[str]: Currently active validators
+    """
+    if len(validators) > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD:
+        __LOGGER.info(logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE, len(validators))
+    fetched_validators = __fetch_validators_from_beacon_chain(validators)
+    active_validators = [
+        __get_correct_validator_identifier(
+            validators, ValidatorIdentifier.from_dict(validator)
+        )
+        for validator in fetched_validators
+        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
+    ]
+    inactive_validators = list(set(validators).difference(set(active_validators)))
+    if inactive_validators:
+        __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
+    return [
+        validator["index"]
+        for validator in fetched_validators
+        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
+    ]
+
+
+def __fetch_validators_from_beacon_chain(validators: List[str]) -> List[Any]:
+    """Temporary function to fetch all validators with it's status
+    from the beacon chain
+
+    Args:
+        validators (List[str]): List of validator identifiers
+
+    Returns:
+        List[Any]: Fetched validators from the beacon chain
+    """
+    chunked_validators = [
+        validators[index : index + 300] for index in range(0, len(validators), 300)
+    ]
+    fetched_validators: List[Any] = []
+    for chunk in chunked_validators:
+        parameter_value = f"{','.join(chunk)}"
+        raw_response = send_beacon_api_request(
+            endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
+            parameters={"id": parameter_value},
+        )
+        fetched_validators.extend(
+            raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
+        )
+    return fetched_validators
+
+
+def __get_correct_validator_identifier(
+    validators: List[str], validator: ValidatorIdentifier
+) -> str:
+    """Checks for the validator identifier provided by the user and
+    returns it accordingly
+
+    Args:
+        validators (List[str]): Provided validators by the user
+        validator (ValidatorIdentifier): current checked validator
+
+    Returns:
+        str: validator identifier
+    """
+    if validator.index in validators:
+        return validator.index
+    return validator.validator.pubkey
 
 
 def __get_validator_list() -> List[str]:
@@ -18,12 +95,17 @@ def __get_validator_list() -> List[str]:
     Returns:
         List[str]: List of validators based on the provided user input
     """
+    provided_validators: List[str] = []
     if __ARGUMENTS.validators:
-        return __ARGUMENTS.validators
-    return [validator.strip() for validator in __ARGUMENTS.validator_file]
+        provided_validators = __ARGUMENTS.validators
+    else:
+        provided_validators = [
+            validator.strip() for validator in __ARGUMENTS.validator_file
+        ]
+    active_validators = __get_active_validators(provided_validators)
+    return active_validators
 
 
-__ARGUMENTS = get_arguments()
 __VALIDATORS = __get_validator_list()
 
 
@@ -39,7 +121,7 @@ def is_provided_validator_count_too_high() -> bool:
     return False
 
 
-def get_next_attestation_duties() -> dict[int, ValidatorDuty]:
+def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
     """Fetches upcoming attestations (for current and upcoming epoch)
     for all validators which were provided by the user.
 
@@ -50,7 +132,7 @@ def get_next_attestation_duties() -> dict[int, ValidatorDuty]:
     current_epoch = ethereum.get_current_epoch()
     request_data = f"[{','.join(__VALIDATORS)}]"
     is_any_duty_outdated: List[bool] = [True]
-    validator_duties: dict[int, ValidatorDuty] = {}
+    validator_duties: dict[str, ValidatorDuty] = {}
     if __ARGUMENTS.omit_attestation_duties:
         return validator_duties
     while is_any_duty_outdated:
@@ -68,7 +150,7 @@ def get_next_attestation_duties() -> dict[int, ValidatorDuty]:
     return validator_duties
 
 
-def get_next_sync_committee_duties() -> dict[int, ValidatorDuty]:
+def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
     """Fetches current and upcoming sync committee duties for all validators
     provided by the user.
 
@@ -82,7 +164,7 @@ def get_next_sync_committee_duties() -> dict[int, ValidatorDuty]:
         * ethereum.EPOCHS_PER_SYNC_COMMITTEE
     )
     request_data = f"[{','.join(__VALIDATORS)}]"
-    validator_duties: dict[int, ValidatorDuty] = {}
+    validator_duties: dict[str, ValidatorDuty] = {}
     for epoch in [current_epoch, next_sync_committee_starting_epoch]:
         response_data = __get_raw_response_data(
             epoch, DutyType.SYNC_COMMITTEE, request_data
@@ -100,7 +182,7 @@ def get_next_sync_committee_duties() -> dict[int, ValidatorDuty]:
     return validator_duties
 
 
-def get_next_proposing_duties() -> dict[int, ValidatorDuty]:
+def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
     """Fetches upcoming block proposals for all validators which were
     provided by the user.
 
@@ -109,7 +191,7 @@ def get_next_proposing_duties() -> dict[int, ValidatorDuty]:
         for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
-    validator_duties: dict[int, ValidatorDuty] = {}
+    validator_duties: dict[str, ValidatorDuty] = {}
     for index in [1, 1]:
         response_data = __get_raw_response_data(current_epoch, DutyType.PROPOSING)
         for data in response_data:
@@ -148,7 +230,7 @@ def __get_raw_response_data(
 
 
 def __get_next_attestation_duty(
-    data: ValidatorDuty, present_duties: dict[int, ValidatorDuty]
+    data: ValidatorDuty, present_duties: dict[str, ValidatorDuty]
 ) -> ValidatorDuty:
     """Checks supplied response data for upcoming attestation duty and returns it
 
@@ -174,8 +256,8 @@ def __get_next_attestation_duty(
 
 
 def __filter_proposing_duties(
-    raw_proposing_duties: dict[int, ValidatorDuty]
-) -> dict[int, ValidatorDuty]:
+    raw_proposing_duties: dict[str, ValidatorDuty]
+) -> dict[str, ValidatorDuty]:
     """Filters supplied proposing duties dict for already outdated duties
 
     Args:
