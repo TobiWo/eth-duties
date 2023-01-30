@@ -13,6 +13,7 @@ from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.log import log_time_to_next_duties
 from protocol.ethereum import get_current_slot
 
+
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
@@ -29,8 +30,8 @@ def __fetch_validator_duties(
     """
     if not __is_current_data_outdated(duties):
         return duties
-    next_attestation_duties: dict[int, ValidatorDuty] = {}
-    next_sync_committee_duties: dict[int, ValidatorDuty] = {}
+    next_attestation_duties: dict[str, ValidatorDuty] = {}
+    next_sync_committee_duties: dict[str, ValidatorDuty] = {}
     if fetch.is_provided_validator_count_too_high():
         logger.warning(logging.TOO_MANY_PROVIDED_VALIDATORS_MESSAGE)
     else:
