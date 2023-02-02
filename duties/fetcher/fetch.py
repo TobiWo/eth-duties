@@ -97,7 +97,11 @@ def __get_validator_list() -> List[str]:
     """
     provided_validators: List[str] = []
     if __ARGUMENTS.validators:
-        provided_validators = __ARGUMENTS.validators
+        provided_validators = [
+            validator
+            for validator_list in __ARGUMENTS.validators
+            for validator in validator_list
+        ]
     else:
         provided_validators = [
             validator.strip() for validator in __ARGUMENTS.validator_file
