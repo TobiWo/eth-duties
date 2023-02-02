@@ -6,13 +6,11 @@ from math import ceil, trunc
 from time import gmtime, strftime, time
 from typing import List
 
-from cli.arguments import get_arguments
+from cli.arguments import ARGUMENTS
 from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
 from protocol import ethereum
-
-__ARGUMENTS = get_arguments()
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -129,6 +127,6 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
 
 
 def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
-    if __ARGUMENTS.log_pubkeys:
+    if ARGUMENTS.log_pubkeys:
         return duty.pubkey
     return duty.validator_index

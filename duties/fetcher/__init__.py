@@ -6,15 +6,14 @@ from argparse import Namespace
 from logging import config as logging_config
 from os import path
 
-from cli.arguments import get_arguments
+from cli.arguments import ARGUMENTS
 from colorama import init
 from yaml import safe_load
 
 
 def __initialize() -> None:
     """Initializes logger and colorama"""
-    arguments = get_arguments()
-    __initialize_logging(arguments)
+    __initialize_logging(ARGUMENTS)
     __initialize_colorama()
 
 
