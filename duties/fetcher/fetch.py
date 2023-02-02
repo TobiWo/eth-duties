@@ -5,14 +5,13 @@ from logging import getLogger
 from math import ceil
 from typing import Any, List
 
-from cli.arguments import get_arguments
+from cli.arguments import ARGUMENTS
 from constants import endpoints, json, logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from protocol import ethereum
 from protocol.request import send_beacon_api_request
 from requests import Response
 
-__ARGUMENTS = get_arguments()
 __LOGGER = getLogger(__name__)
 
 
@@ -96,15 +95,15 @@ def __get_validator_list() -> List[str]:
         List[str]: List of validators based on the provided user input
     """
     provided_validators: List[str] = []
-    if __ARGUMENTS.validators:
+    if ARGUMENTS.validators:
         provided_validators = [
             validator
-            for validator_list in __ARGUMENTS.validators
+            for validator_list in ARGUMENTS.validators
             for validator in validator_list
         ]
     else:
         provided_validators = [
-            validator.strip() for validator in __ARGUMENTS.validator_file
+            validator.strip() for validator in ARGUMENTS.validator_file
         ]
     active_validators = __get_active_validators(provided_validators)
     return active_validators
@@ -137,7 +136,7 @@ def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
     request_data = f"[{','.join(__VALIDATORS)}]"
     is_any_duty_outdated: List[bool] = [True]
     validator_duties: dict[str, ValidatorDuty] = {}
-    if __ARGUMENTS.omit_attestation_duties:
+    if ARGUMENTS.omit_attestation_duties:
         return validator_duties
     while is_any_duty_outdated:
         response_data = __get_raw_response_data(

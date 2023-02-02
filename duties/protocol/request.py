@@ -5,13 +5,12 @@ from logging import getLogger
 from time import sleep
 from typing import Dict
 
-from cli.arguments import get_arguments
+from cli.arguments import ARGUMENTS
 from constants import json, logging, program
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
 
 __LOGGER = getLogger(__name__)
-__ARGUMENTS = get_arguments()
 
 
 def send_beacon_api_request(
@@ -39,18 +38,18 @@ def send_beacon_api_request(
         try:
             if not request_data and not parameters:
                 response = get(
-                    url=f"{__ARGUMENTS.beacon_node}{endpoint}",
+                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
                     timeout=program.REQUEST_TIMEOUT,
                 )
             elif request_data and not parameters:
                 response = post(
-                    url=f"{__ARGUMENTS.beacon_node}{endpoint}",
+                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
                     data=request_data,
                     timeout=program.REQUEST_TIMEOUT,
                 )
             else:
                 response = get(
-                    url=f"{__ARGUMENTS.beacon_node}{endpoint}",
+                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
                     params=parameters,
                     timeout=program.REQUEST_TIMEOUT,
                 )

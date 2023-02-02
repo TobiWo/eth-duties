@@ -5,14 +5,13 @@ from logging import Logger, getLogger
 from time import sleep
 from typing import Callable, List
 
-from cli.arguments import get_arguments
+from cli.arguments import ARGUMENTS
 from constants import logging
 from constants.program import GRACEFUL_KILLER
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.log import log_time_to_next_duties
 from protocol.ethereum import get_current_slot
-
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
@@ -76,10 +75,9 @@ def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
 
 if __name__ == "__main__":
     main_logger = getLogger(__name__)
-    args = get_arguments()
     upcoming_duties: List[ValidatorDuty] = []
     while not GRACEFUL_KILLER.kill_now:
         upcoming_duties = __fetch_validator_duties(upcoming_duties, main_logger)
         log_time_to_next_duties(upcoming_duties)
-        sleep(args.interval)
+        sleep(ARGUMENTS.interval)
     main_logger.info("Happy staking. See you for next maintenance \U0001F642 !")
