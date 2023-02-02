@@ -52,6 +52,13 @@ def __get_raw_arguments() -> Namespace:
         default=False,
     )
     parser.add_argument(
+        "-p",
+        "--log-pubkeys",
+        help="If supplied the validator index will be replaced with the pubkey in log messages",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
         "-v",
         "--validators",
         type=str,
