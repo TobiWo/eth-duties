@@ -63,8 +63,8 @@ def __get_raw_arguments() -> Namespace:
         "--validators",
         type=str,
         help="One or many validator indices for which next duties will be fetched",
-        action="store",
-        nargs="+",
+        action="append",
+        nargs="*",
     )
     return parser.parse_args()
 
