@@ -6,10 +6,13 @@ from math import ceil, trunc
 from time import gmtime, strftime, time
 from typing import List
 
+from cli.arguments import get_arguments
 from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
 from protocol import ethereum
+
+__ARGUMENTS = get_arguments()
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -49,7 +52,7 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
     elif seconds_to_next_duty < 0:
         logging_message = (
             f"Upcoming {duty.type.name} duty "
-            f"for validator {duty.validator_index} outdated. "
+            f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
             f"Fetching duties in next interval."
         )
     else:
@@ -58,7 +61,8 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
         )
         logging_message = (
             f"{__get_logging_color(seconds_to_next_duty, duty)}"
-            f"Validator {duty.validator_index} has next {duty.type.name} duty in: "
+            f"Validator {__get_validator_identifier_for_logging(duty)} "
+            f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){Style.RESET_ALL}"
         )
     return logging_message
@@ -88,13 +92,14 @@ def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
         1,
     ):
         logging_message = (
-            f"{Back.RED}Validator {duty.validator_index} is in current sync committee "
-            f"(next sync committee starts at epoch "
+            f"{Back.RED}Validator {__get_validator_identifier_for_logging(duty)} "
+            f"is in current sync committee (next sync committee starts at epoch "
             f"{current_sync_committee_epoch_upper_bound + 1}){Style.RESET_ALL}"
         )
     else:
         logging_message = (
-            f"{Back.YELLOW}Validator {duty.validator_index} will be in sync committee "
+            f"{Back.YELLOW}Validator "
+            f"{__get_validator_identifier_for_logging(duty)} will be in sync committee "
             f"starting at epoch {current_sync_committee_epoch_upper_bound + 1}{Style.RESET_ALL}"
         )
     return logging_message
@@ -121,3 +126,9 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
     if duty.type is DutyType.PROPOSING:
         return Back.GREEN
     return Style.RESET_ALL
+
+
+def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
+    if __ARGUMENTS.log_pubkeys:
+        return duty.pubkey
+    return duty.validator_index
