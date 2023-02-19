@@ -10,6 +10,7 @@ from cli.arguments import ARGUMENTS
 from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.parser.validators import PARSED_VALIDATORS_WITH_ALIAS
 from protocol import ethereum
 
 
@@ -127,6 +128,19 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
 
 
 def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
+    alias = __get_alias(duty)
+    if alias:
+        return alias
     if ARGUMENTS.log_pubkeys:
         return duty.pubkey
     return duty.validator_index
+
+
+def __get_alias(duty: ValidatorDuty) -> str | None:
+    validator_with_alias = PARSED_VALIDATORS_WITH_ALIAS.get(duty.validator_index)
+    if validator_with_alias and validator_with_alias.alias:
+        return validator_with_alias.alias
+    validator_with_alias = PARSED_VALIDATORS_WITH_ALIAS.get(duty.pubkey)
+    if validator_with_alias and validator_with_alias.alias:
+        return validator_with_alias.alias
+    return None
