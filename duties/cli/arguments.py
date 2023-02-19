@@ -94,7 +94,7 @@ def __validate_provided_validator_flag(
         )
 
 
-def __get_arguments() -> Namespace:
+def __set_arguments() -> Namespace:
     """Parses cli arguments passed by the user
 
     Returns:
@@ -106,4 +106,4 @@ def __get_arguments() -> Namespace:
     return arguments
 
 
-ARGUMENTS = __get_arguments()
+ARGUMENTS = __set_arguments()
