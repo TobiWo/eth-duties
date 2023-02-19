@@ -25,3 +25,11 @@ INACTIVE_VALIDATORS_MESSAGE = (
     "and therefore will be skipped for further processing: %s"
     f"{Style.RESET_ALL}"
 )
+WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE = (
+    "Provided character is not supported for validator '%s'. "
+    "Please only use ';' for separation of <INDEX_OR_PUBKEY> "
+    "and <ALIAS> (e.g. 123;Validator_1). "
+    "Furthermore only '-' and '_' are allowed for multiword alias.",
+)
+WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE = "Wrong or incomplete provided pubkey: 0x%s"
+PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE = "Pubkey 0x%s is not hexadecimal: %s"
