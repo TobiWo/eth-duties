@@ -3,11 +3,12 @@
 
 from logging import getLogger
 from math import ceil
-from typing import Any, List
+from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, json, logging, program
-from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
+from constants import endpoints, json
+from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.parser.validators import get_active_validator_indices
 from protocol import ethereum
 from protocol.request import send_beacon_api_request
 from requests import Response
@@ -15,101 +16,7 @@ from requests import Response
 __LOGGER = getLogger(__name__)
 
 
-def __get_active_validators(validators: List[str]) -> List[str]:
-    """Checks status from provided validators and filters inactive ones
-
-    Args:
-        validators (List[str]): Provided validators by the user
-
-    Returns:
-        List[str]: Currently active validators
-    """
-    if len(validators) > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD:
-        __LOGGER.info(logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE, len(validators))
-    fetched_validators = __fetch_validators_from_beacon_chain(validators)
-    active_validators = [
-        __get_correct_validator_identifier(
-            validators, ValidatorIdentifier.from_dict(validator)
-        )
-        for validator in fetched_validators
-        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
-    ]
-    inactive_validators = list(set(validators).difference(set(active_validators)))
-    if inactive_validators:
-        __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
-    return [
-        validator["index"]
-        for validator in fetched_validators
-        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
-    ]
-
-
-def __fetch_validators_from_beacon_chain(validators: List[str]) -> List[Any]:
-    """Temporary function to fetch all validators with it's status
-    from the beacon chain
-
-    Args:
-        validators (List[str]): List of validator identifiers
-
-    Returns:
-        List[Any]: Fetched validators from the beacon chain
-    """
-    chunked_validators = [
-        validators[index : index + 300] for index in range(0, len(validators), 300)
-    ]
-    fetched_validators: List[Any] = []
-    for chunk in chunked_validators:
-        parameter_value = f"{','.join(chunk)}"
-        raw_response = send_beacon_api_request(
-            endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
-            parameters={"id": parameter_value},
-        )
-        fetched_validators.extend(
-            raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
-        )
-    return fetched_validators
-
-
-def __get_correct_validator_identifier(
-    validators: List[str], validator: ValidatorIdentifier
-) -> str:
-    """Checks for the validator identifier provided by the user and
-    returns it accordingly
-
-    Args:
-        validators (List[str]): Provided validators by the user
-        validator (ValidatorIdentifier): current checked validator
-
-    Returns:
-        str: validator identifier
-    """
-    if validator.index in validators:
-        return validator.index
-    return validator.validator.pubkey
-
-
-def __get_validator_list() -> List[str]:
-    """Creates a list of validators based on the provided user input
-
-    Returns:
-        List[str]: List of validators based on the provided user input
-    """
-    provided_validators: List[str] = []
-    if ARGUMENTS.validators:
-        provided_validators = [
-            validator
-            for validator_list in ARGUMENTS.validators
-            for validator in validator_list
-        ]
-    else:
-        provided_validators = [
-            validator.strip() for validator in ARGUMENTS.validator_file
-        ]
-    active_validators = __get_active_validators(provided_validators)
-    return active_validators
-
-
-__VALIDATORS = __get_validator_list()
+__VALIDATORS = get_active_validator_indices()
 
 
 def is_provided_validator_count_too_high() -> bool:
