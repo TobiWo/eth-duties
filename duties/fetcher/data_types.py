@@ -42,5 +42,6 @@ class ValidatorIdentifier(JSONWizard):
     /eth/v1/beacon/states/<state>/validators
     """
 
-    index: str
-    validator: ValidatorData
+    index: str = ""
+    validator: ValidatorData = ValidatorData("")
+    alias: str | None = None
