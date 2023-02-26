@@ -81,7 +81,9 @@ def __is_request_successful(response: Response) -> bool:
         bool: True if request was successful
     """
     if not response.text:
+        __LOGGER.error(response)
         raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE)
     if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
         return True
+    __LOGGER.error(response.text)
     raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
