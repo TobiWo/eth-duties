@@ -12,7 +12,6 @@ from protocol import ethereum
 from protocol.request import send_beacon_api_request
 
 __LOGGER = getLogger(__name__)
-NOT_ALLOWED_CHARACTERS = [".", ","]
 
 
 def get_active_validator_indices() -> List[str]:
@@ -21,135 +20,228 @@ def get_active_validator_indices() -> List[str]:
     Returns:
         List[str]: List of active validator indices based on the provided user input
     """
-    validator_identifiers = [
-        __get_correct_validator_identifier(None, validator)
-        for validator in PARSED_VALIDATORS.values()
-    ]
-    active_validator_indices = __get_active_validator_indices(validator_identifiers)
-    return active_validator_indices
+    return list(COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS.keys())
 
 
-def __get_active_validator_indices(validators: List[str]) -> List[str]:
-    """Checks status from provided validators and filters out inactive ones
+def __create_active_validator_identifiers(
+    validator_identifiers: Dict[str, ValidatorIdentifier]
+) -> Dict[str, ValidatorIdentifier]:
+    """Checks status from provided validators and filters inactives and duplicates
 
     Args:
-        validators (List[str]): Provided validators by the user
+        validator_identifiers (Dict[str, ValidatorIdentifier]):
+        Raw validator identifiers which were provided by the user
 
     Returns:
-        List[str]: Currently active validator indices
+        Dict[str, ValidatorIdentifier]: Active validator identifiers
     """
-    if len(validators) > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD:
-        __LOGGER.info(logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE, len(validators))
-    fetched_validators = __fetch_validators_from_beacon_chain(validators)
-    active_validators = [
-        __get_correct_validator_identifier(
-            validators, ValidatorIdentifier.from_dict(validator)
+    if len(validator_identifiers) > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD:
+        __LOGGER.info(
+            logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE, len(validator_identifiers)
         )
-        for validator in fetched_validators
-        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
+    provided_validators = [
+        __get_validator_index_or_pubkey(None, validator)
+        for validator in __RAW_PARSED_VALIDATOR_IDENTIFIERS.values()
     ]
-    inactive_validators = list(set(validators).difference(set(active_validators)))
-    if inactive_validators:
-        __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
-    return [
-        validator["index"]
-        for validator in fetched_validators
-        if validator["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
-    ]
+    validator_infos = __fetch_validator_infos_from_beacon_chain(provided_validators)
+    return __create_complete_active_validator_identifiers(
+        validator_infos, provided_validators
+    )
 
 
-def __fetch_validators_from_beacon_chain(validators: List[str]) -> List[Any]:
-    """Temporary function to fetch all validators with it's status
-    from the beacon chain
+def __get_validator_index_or_pubkey(
+    provided_validators: List[str] | None, raw_validator_identifier: ValidatorIdentifier
+) -> str:
+    """Checks if index or pubkey is present and returns it accordingly
 
     Args:
-        validators (List[str]): List of validator identifiers
+        provided_validators (List[str]): Provided validators by the user
+        raw_validator_identifier (ValidatorIdentifier): Validator identifiers
 
     Returns:
-        List[Any]: Fetched validators from the beacon chain
+        str: Validator index or pubkey
+    """
+    if provided_validators:
+        if raw_validator_identifier.index in provided_validators:
+            return raw_validator_identifier.index
+        return raw_validator_identifier.validator.pubkey
+    if raw_validator_identifier.index:
+        return raw_validator_identifier.index
+    return raw_validator_identifier.validator.pubkey
+
+
+def __fetch_validator_infos_from_beacon_chain(
+    provided_validators: List[str],
+) -> List[Any]:
+    """Temporary function to fetch all validators with it's status
+    from the beacon chain. Temporary because chunking will be added
+    in general to the request functionality
+
+    Args:
+        provided_validators (List[str]): Provided validators by the user
+
+    Returns:
+        List[Any]: Fetched validator infos from the beacon chain
     """
     chunked_validators = [
-        validators[index : index + 300] for index in range(0, len(validators), 300)
+        provided_validators[index : index + 300]
+        for index in range(0, len(provided_validators), 300)
     ]
-    fetched_validators: List[Any] = []
+    fetched_validator_infos: List[Any] = []
     for chunk in chunked_validators:
         parameter_value = f"{','.join(chunk)}"
         raw_response = send_beacon_api_request(
             endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
             parameters={"id": parameter_value},
         )
-        fetched_validators.extend(
+        fetched_validator_infos.extend(
             raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
         )
-    return fetched_validators
+    return fetched_validator_infos
 
 
-def __get_correct_validator_identifier(
-    validators: List[str] | None, validator: ValidatorIdentifier
-) -> str:
-    """Checks which validator identifier is present and returns it accordingly
+def __create_complete_active_validator_identifiers(
+    fetched_validator_infos: List[Any], provided_validators: List[str]
+) -> Dict[str, ValidatorIdentifier]:
+    """Creates complete validator identifiers (index, pubkey, alias) and filters
+    for inactive ones and duplicates
 
     Args:
-        validators (List[str]): Provided validators by the user
-        validator (ValidatorIdentifier): Current checked validator identifier
+        fetched_validator_infos (List[Any]): Fetched validator infos from the beacon chain
+        provided_validators (List[str]): Provided validators by the user
 
     Returns:
-        str: Specific validator identifier
+        Dict[str, ValidatorIdentifier]: Complete validator identifiers
+        filtered for inactive ones and duplicates
     """
-    if validators:
-        if validator.index in validators:
-            return validator.index
-        return validator.validator.pubkey
-    if validator.index:
-        return validator.index
-    return validator.validator.pubkey
+    complete_validator_identifiers: Dict[str, ValidatorIdentifier] = {}
+    for validator_info in fetched_validator_infos:
+        raw_identifier = __get_raw_validator_identifier(validator_info)
+        if (
+            raw_identifier
+            and validator_info["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
+        ):
+            raw_identifier.index = validator_info["index"]
+            raw_identifier.validator.pubkey = validator_info["validator"]["pubkey"]
+            complete_validator_identifiers[raw_identifier.index] = raw_identifier
+    __log_inactive_and_duplicated_validators(
+        provided_validators,
+        complete_validator_identifiers,
+    )
+    return complete_validator_identifiers
 
 
-def __get_validator_identifiers() -> Dict[str, ValidatorIdentifier]:
-    """Parses the validators provided by the user
+def __get_raw_validator_identifier(
+    validator_info: Any,
+) -> ValidatorIdentifier | None:
+    """Gets raw validator identifier as provided by the user based on the
+    fetched validator infos from the beacon chain
+
+    Args:
+        validator_info (Any): Validator infos from the beacon chain
 
     Returns:
-        Dict[str, ValidatorIdentifier]: Validator identifiers as provided by the user
+        ValidatorIdentifier | None: Raw validator identifier
     """
-    provided_validators: Dict[str, ValidatorIdentifier] = {}
+    identifier_index = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(validator_info["index"])
+    identifier_pubkey = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(
+        validator_info["validator"]["pubkey"]
+    )
+    if identifier_index and identifier_pubkey:
+        if identifier_index.alias:
+            return identifier_index
+        return identifier_pubkey
+    if identifier_index:
+        return identifier_index
+    return identifier_pubkey
+
+
+def __log_inactive_and_duplicated_validators(
+    provided_validators: List[str],
+    complete_validator_identifiers: Dict[str, ValidatorIdentifier],
+) -> None:
+    """Logs inactive and duplicated validators to the console
+
+    Args:
+        provided_validators (List[str]): Provided validators by the user
+        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator
+        identifiers filtered for inactive ones and duplicates
+    """
+    active_validators = [
+        __get_validator_index_or_pubkey(provided_validators, identifier)
+        for identifier in complete_validator_identifiers.values()
+    ]
+    potentital_inactive_validators = list(
+        set(provided_validators).difference(set(active_validators))
+    )
+    duplicates = __get_duplicates_with_different_identifiers(
+        provided_validators, complete_validator_identifiers
+    )
+    inactive_validators = [
+        validator
+        for validator in potentital_inactive_validators
+        if validator not in duplicates
+    ]
+    if inactive_validators:
+        __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
+
+
+def __get_duplicates_with_different_identifiers(
+    provided_valdiators: List[str],
+    complete_validator_identifiers: Dict[str, ValidatorIdentifier],
+) -> List[str]:
+    """Filters for duplicated validators which where provided with different identifiers
+
+    Args:
+        provided_valdiators (List[str]): Provided validators by the user
+        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator
+        identifiers filtered for inactive ones and duplicates
+
+    Returns:
+        List[str]: Duplicated validator indices and pubkeys
+    """
+    duplicates = {
+        index: identifier
+        for (index, identifier) in complete_validator_identifiers.items()
+        if identifier.index in provided_valdiators
+        and identifier.validator.pubkey in provided_valdiators
+    }
+    if duplicates:
+        __LOGGER.warning(logging.DUPLICATE_VALIDATORS_MESSAGE, list(duplicates.keys()))
+    return list(duplicates.keys()) + [
+        duplicate.validator.pubkey for duplicate in duplicates.values()
+    ]
+
+
+def __create_raw_validator_identifiers() -> Dict[str, ValidatorIdentifier]:
+    """Parses the validators provided by the user.
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Raw validator identifiers as provided by the user
+    """
     if ARGUMENTS.validators:
-        provided_validators = {
-            __get_correct_validator_identifier(
-                None, __get_full_validator_identifier(str(validator))
-            ): __get_full_validator_identifier(str(validator))
+        return {
+            __get_validator_index_or_pubkey(
+                None, __create_raw_validator_identifier(str(validator))
+            ): __create_raw_validator_identifier(str(validator))
             for validator_list in ARGUMENTS.validators
             for validator in validator_list
         }
-    else:
-        provided_validators = {
-            __get_correct_validator_identifier(
-                None,
-                __get_full_validator_identifier(
-                    str(validator).strip().replace("\n", "").replace("\r\n", "")
-                ),
-            ): __get_full_validator_identifier(
-                str(validator).strip().replace("\n", "").replace("\r\n", "")
-            )
-            for validator in ARGUMENTS.validator_file
-        }
-    return provided_validators
-
-
-def __get_validator_identifiers_with_alias() -> Dict[str, ValidatorIdentifier]:
-    """Filters for validator identifiers where the user provided an alias
-
-    Returns:
-        Dict[str, ValidatorIdentifier]: Validator identifiers with alias
-    """
     return {
-        main_identifier: full_identifier
-        for (main_identifier, full_identifier) in PARSED_VALIDATORS.items()
-        if full_identifier.alias
+        __get_validator_index_or_pubkey(
+            None,
+            __create_raw_validator_identifier(
+                str(validator).strip().replace("\n", "").replace("\r\n", "")
+            ),
+        ): __create_raw_validator_identifier(
+            str(validator).strip().replace("\n", "").replace("\r\n", "")
+        )
+        for validator in ARGUMENTS.validator_file
     }
 
 
-def __get_full_validator_identifier(validator: str) -> ValidatorIdentifier:
-    """Creates validator identifier object
+def __create_raw_validator_identifier(validator: str) -> ValidatorIdentifier:
+    """Creates raw validator identifier object
 
     Args:
         validator (str): Validator provided by the user
@@ -158,9 +250,12 @@ def __get_full_validator_identifier(validator: str) -> ValidatorIdentifier:
         SystemExit: If provided validator contains not allowed characters
 
     Returns:
-        ValidatorIdentifier: Full validator identifier
+        ValidatorIdentifier: Raw validator identifier
     """
-    if any(character in validator for character in NOT_ALLOWED_CHARACTERS):
+    if any(
+        character in validator
+        for character in program.NOT_ALLOWED_CHARACTERS_FOR_VALIDATOR_PARSING
+    ):
         __LOGGER.error(
             logging.WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE,
             validator,
@@ -171,7 +266,7 @@ def __get_full_validator_identifier(validator: str) -> ValidatorIdentifier:
         alias_split = validator.split(";")
         index_or_pubkey = alias_split[0]
         alias = alias_split[1]
-        if alias_split[0].startswith("0x"):
+        if index_or_pubkey.startswith("0x"):
             if __is_valid_pubkey(index_or_pubkey[2:]):
                 return ValidatorIdentifier("", ValidatorData(index_or_pubkey), alias)
         return ValidatorIdentifier(index_or_pubkey, ValidatorData(""), alias)
@@ -179,6 +274,22 @@ def __get_full_validator_identifier(validator: str) -> ValidatorIdentifier:
         if __is_valid_pubkey(validator[2:]):
             return ValidatorIdentifier("", ValidatorData(validator), None)
     return ValidatorIdentifier(validator, ValidatorData(""), None)
+
+
+def __get_validator_identifiers_with_alias() -> Dict[str, ValidatorIdentifier]:
+    """Filters for validator identifiers where the user provided an alias
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Validator identifiers with alias
+    """
+    return {
+        index: validator_identifier
+        for (
+            index,
+            validator_identifier,
+        ) in COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS.items()
+        if validator_identifier.alias
+    }
 
 
 def __is_valid_pubkey(pubkey: str) -> bool:
@@ -205,5 +316,10 @@ def __is_valid_pubkey(pubkey: str) -> bool:
     return True
 
 
-PARSED_VALIDATORS = __get_validator_identifiers()
-PARSED_VALIDATORS_WITH_ALIAS = __get_validator_identifiers_with_alias()
+__RAW_PARSED_VALIDATOR_IDENTIFIERS = __create_raw_validator_identifiers()
+COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS = __create_active_validator_identifiers(
+    __RAW_PARSED_VALIDATOR_IDENTIFIERS
+)
+COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS = (
+    __get_validator_identifiers_with_alias()
+)
