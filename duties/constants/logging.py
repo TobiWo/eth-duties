@@ -1,8 +1,6 @@
 """Defines logging messages
 """
 
-from colorama import Back, Style
-
 CONNECTION_ERROR_MESSAGE = "Couldn't connect to beacon client. Retry in 2 second."
 READ_TIMEOUT_ERROR_MESSAGE = "Couldn't read from beacon client. Retry in 5 seconds."
 NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from the beacon client."
@@ -21,9 +19,8 @@ HIGHER_PROCESSING_TIME_INFO_MESSAGE = (
     "You provided %s validators. Fetching all necessary data may take some time."
 )
 INACTIVE_VALIDATORS_MESSAGE = (
-    f"{Back.YELLOW}The following provided validators are not active "
+    "The following provided validators are not active "
     "and therefore will be skipped for further processing: %s"
-    f"{Style.RESET_ALL}"
 )
 WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE = (
     "Provided character is not supported for validator '%s'. "
@@ -33,3 +30,6 @@ WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE = (
 )
 WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE = "Wrong or incomplete provided pubkey: 0x%s"
 PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE = "Pubkey 0x%s is not hexadecimal: %s"
+DUPLICATE_VALIDATORS_MESSAGE = (
+    "Filtered duplicated validators with different identifiers: %s"
+)
