@@ -1,0 +1,27 @@
+---
+# This is an example/template compose to add eth-duties to your present docker setup.
+# It assumes that you created a docker network called 'ethereum'.
+# Note: I don't know why but for some reason you cannot provide your validator indices
+# or pubkeys on one line via compose. Therefore you need to add each new index and
+# pubkey via a new line (see below).
+
+version: "3.9"
+name: "Compose for eth-duties helper tool"
+services:
+  eth-duties:
+    container_name: "eth-duties"
+    image: "tobiwo/eth-duties:<IMAGE_TAG>"
+    command:
+    - "--validators"
+    - "123"
+    - "456"
+    - "0x8472eb896af6de1e3d614e9b8fead626120291d5067edf15961c3e7385a0299d09f7f94eb6bbf96e904e7caf390ffd2f"
+    - "789;My_Validator"
+    - "--beacon-node"
+    - "http://<NAME_OF_YOUR_BEACON_NODE_CONTAINER>:<PORT_OF_BEACON_API>"
+    networks:
+      - "ethereum"
+networks:
+  ethereum:
+    external: true
+...
