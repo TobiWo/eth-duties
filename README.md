@@ -76,15 +76,20 @@ Just download the artifact for your OS and start optimizing your validator maint
 1. Print upcoming duties for two validators while connecting to a local beacon client:
 
     ```bash
-    ./eth-duties --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --beacon-node http://localhost:5052
+    ./eth-duties \
+    --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> \
+    --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming duties for multiple validators using different identifiers while connecting to a local beacon client:
 
     ```bash
-    # You can mixup indices and pubkeys as you like
+    # You can mix up indices and pubkeys as you like
     # You can add the flag '--validators' multiple times
-    ./eth-duties --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> --validators <VALIDATOR_PUBKEY_3> <VALIDATOR_INDEX_4> --beacon-node http://localhost:5052
+    ./eth-duties \
+    --validators <VALIDATOR_INDEX_1> <VALIDATOR_INDEX_2> \
+    --validators <VALIDATOR_PUBKEY_3> <VALIDATOR_INDEX_4> \
+    --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming duties for multiple validators using an alias for some of the provided validators while connecting to a local beacon client:
@@ -92,7 +97,10 @@ Just download the artifact for your OS and start optimizing your validator maint
     ```bash
     # If you want to set an alias for a validator pubkey or index you need to separate the index/pubkey from the alias with an ';'
     # Furthermore you need to put the expression in quotes or double quotes 
-    ./eth-duties --validators "<VALIDATOR_INDEX_1>;VALIDATOR_1" <VALIDATOR_INDEX_2> --validators "<VALIDATOR_PUBKEY_3>;VALIDATOR_3" <VALIDATOR_INDEX_4> --beacon-node http://localhost:5052
+    ./eth-duties \
+    --validators "<VALIDATOR_INDEX_1>;VALIDATOR_1" <VALIDATOR_INDEX_2> \
+    --validators "<VALIDATOR_PUBKEY_3>;VALIDATOR_3" <VALIDATOR_INDEX_4> \
+    --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming duties for validators which indices/pubkeys are located in a file:
@@ -100,13 +108,18 @@ Just download the artifact for your OS and start optimizing your validator maint
     ```bash
     # Mixing indices and pubkeys and/or adding aliases is also supported in files
     # Note that you do not need to put '<INDEX_OR_PUBKEY>;<ALIAS>' in quotes or double quotes in your validator file
-    ./eth-duties --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052
+    ./eth-duties \
+    --validator-file <PATH_TO_VALIDATOR_FILE> \
+    --beacon-node http://localhost:5052
     ```
 
 1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
 
     ```bash
-    ./eth-duties --validator-file <PATH_TO_VALIDATOR_FILE> --beacon-node http://localhost:5052 --omit-attestation-duties
+    ./eth-duties \
+    --validator-file <PATH_TO_VALIDATOR_FILE> \
+    --beacon-node http://localhost:5052 \
+    --omit-attestation-duties
     ```
 
 ## Contribute
@@ -186,7 +199,9 @@ As always you need to navigate to the root folder of this repository first. Make
     poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
     ```
 
-## Run in Docker
+## Docker
+
+### Run in Docker
 
 1. Build image
 
@@ -197,13 +212,25 @@ As always you need to navigate to the root folder of this repository first. Make
 1. Run container
 
     ```bash
-    docker run --rm --name eth-duties tobiwo/eth-duties:latest --validators 123456 456789 --validators 0x98... --beacon-node http://locahost:5052
+    docker run \
+    --rm \
+    --name eth-duties \
+    tobiwo/eth-duties:latest \
+    --validators 123456 456789 \
+    --validators 0x98... \
+    --beacon-node http://locahost:5052
     ```
 
 1. Run container on boot
 
     ```bash
-    docker run -d --restart always --name eth-duties tobiwo/eth-duties:latest --validators 123456 456789 --beacon-node http://locahost:5052
+    docker run \
+    -d \
+    --restart always \
+    --name eth-duties \
+    tobiwo/eth-duties:latest \
+    --validators 123456 456789 \
+    --beacon-node http://locahost:5052
     ```
 
 1. Print logs
@@ -211,6 +238,18 @@ As always you need to navigate to the root folder of this repository first. Make
     ```bash
     docker logs eth-duties --tail=20 -f
     ```
+
+### Docker compose
+
+You can find a template `compose.yaml` in the `docker` folder of this repository. Please replace all placeholders with actual values before using it. If you do not copy the compose to your own setup the commands for starting the container would be (from the root of this repo):
+
+```bash
+# Using compose plugin for docker
+docker compose -f docker/compose.yaml up -d
+
+# Using docker-compose binary
+docker-compose -f docker/compose.yaml up -d
+```
 
 ## ToDos
 
