@@ -190,7 +190,7 @@ def __get_duplicates_with_different_identifiers(
     provided_valdiators: List[str],
     complete_validator_identifiers: Dict[str, ValidatorIdentifier],
 ) -> List[str]:
-    """Filters for duplicated validators which where provided with different identifiers
+    """Filters for duplicated validators which were provided with different identifiers
 
     Args:
         provided_valdiators (List[str]): Provided validators by the user
