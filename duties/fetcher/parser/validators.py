@@ -9,7 +9,7 @@ from constants import endpoints, json, logging, program
 from eth_typing import BLSPubkey
 from fetcher.data_types import ValidatorData, ValidatorIdentifier
 from protocol import ethereum
-from protocol.request import send_beacon_api_request
+from protocol.request import CalldataType, send_beacon_api_request
 
 __LOGGER = getLogger(__name__)
 
@@ -43,7 +43,11 @@ def __create_active_validator_identifiers(
         __get_validator_index_or_pubkey(None, validator)
         for validator in __RAW_PARSED_VALIDATOR_IDENTIFIERS.values()
     ]
-    validator_infos = __fetch_validator_infos_from_beacon_chain(provided_validators)
+    validator_infos = send_beacon_api_request(
+        endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
+        calldata_type=CalldataType.PARAMETERS,
+        provided_validators=provided_validators,
+    )
     return __create_complete_active_validator_identifiers(
         validator_infos, provided_validators
     )
@@ -70,36 +74,6 @@ def __get_validator_index_or_pubkey(
     return raw_validator_identifier.validator.pubkey
 
 
-def __fetch_validator_infos_from_beacon_chain(
-    provided_validators: List[str],
-) -> List[Any]:
-    """Temporary function to fetch all validators with it's status
-    from the beacon chain. Temporary because chunking will be added
-    in general to the request functionality
-
-    Args:
-        provided_validators (List[str]): Provided validators by the user
-
-    Returns:
-        List[Any]: Fetched validator infos from the beacon chain
-    """
-    chunked_validators = [
-        provided_validators[index : index + 300]
-        for index in range(0, len(provided_validators), 300)
-    ]
-    fetched_validator_infos: List[Any] = []
-    for chunk in chunked_validators:
-        parameter_value = f"{','.join(chunk)}"
-        raw_response = send_beacon_api_request(
-            endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
-            parameters={"id": parameter_value},
-        )
-        fetched_validator_infos.extend(
-            raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
-        )
-    return fetched_validator_infos
-
-
 def __create_complete_active_validator_identifiers(
     fetched_validator_infos: List[Any], provided_validators: List[str]
 ) -> Dict[str, ValidatorIdentifier]:
@@ -119,10 +93,13 @@ def __create_complete_active_validator_identifiers(
         raw_identifier = __get_raw_validator_identifier(validator_info)
         if (
             raw_identifier
-            and validator_info["status"] in ethereum.ACTIVE_VALIDATOR_STATUS
+            and validator_info[json.RESPONSE_JSON_STATUS_FIELD_NAME]
+            in ethereum.ACTIVE_VALIDATOR_STATUS
         ):
-            raw_identifier.index = validator_info["index"]
-            raw_identifier.validator.pubkey = validator_info["validator"]["pubkey"]
+            raw_identifier.index = validator_info[json.RESPONSE_JSON_INDEX_FIELD_NAME]
+            raw_identifier.validator.pubkey = validator_info[
+                json.RESPONSE_JSON_VALIDATOR_FIELD_NAME
+            ][json.RESPONSE_JSON_PUBKEY_FIELD_NAME]
             complete_validator_identifiers[raw_identifier.index] = raw_identifier
     __log_inactive_and_duplicated_validators(
         provided_validators,
@@ -143,9 +120,13 @@ def __get_raw_validator_identifier(
     Returns:
         ValidatorIdentifier | None: Raw validator identifier
     """
-    identifier_index = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(validator_info["index"])
+    identifier_index = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(
+        validator_info[json.RESPONSE_JSON_INDEX_FIELD_NAME]
+    )
     identifier_pubkey = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(
-        validator_info["validator"]["pubkey"]
+        validator_info[json.RESPONSE_JSON_VALIDATOR_FIELD_NAME][
+            json.RESPONSE_JSON_PUBKEY_FIELD_NAME
+        ]
     )
     if identifier_index and identifier_pubkey:
         if identifier_index.alias:
@@ -261,17 +242,17 @@ def __create_raw_validator_identifier(validator: str) -> ValidatorIdentifier:
             validator,
         )
         raise SystemExit()
-    if ";" in validator:
+    if program.ALIAS_SEPARATOR in validator:
         validator = validator.replace(" ", "")
-        alias_split = validator.split(";")
+        alias_split = validator.split(program.ALIAS_SEPARATOR)
         index_or_pubkey = alias_split[0]
         alias = alias_split[1]
-        if index_or_pubkey.startswith("0x"):
-            if __is_valid_pubkey(index_or_pubkey[2:]):
+        if index_or_pubkey.startswith(program.PUBKEY_PREFIX):
+            if __is_valid_pubkey(index_or_pubkey[len(program.PUBKEY_PREFIX) :]):
                 return ValidatorIdentifier("", ValidatorData(index_or_pubkey), alias)
         return ValidatorIdentifier(index_or_pubkey, ValidatorData(""), alias)
-    if validator.startswith("0x"):
-        if __is_valid_pubkey(validator[2:]):
+    if validator.startswith(program.PUBKEY_PREFIX):
+        if __is_valid_pubkey(validator[len(program.PUBKEY_PREFIX) :]):
             return ValidatorIdentifier("", ValidatorData(validator), None)
     return ValidatorIdentifier(validator, ValidatorData(""), None)
 
@@ -307,7 +288,7 @@ def __is_valid_pubkey(pubkey: str) -> bool:
     """
     try:
         parsed_pubkey = BLSPubkey(bytes.fromhex(pubkey))
-        if len(parsed_pubkey) != 48:
+        if len(parsed_pubkey) != program.PUBKEY_LENGTH:
             __LOGGER.error(logging.WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE, pubkey)
             raise SystemExit()
     except ValueError as error:
