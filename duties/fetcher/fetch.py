@@ -1,32 +1,31 @@
 """Module which holds all logic for fetching validator duties
 """
 
-from logging import getLogger
 from math import ceil
 from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, json
+from constants import endpoints, program
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.parser.validators import get_active_validator_indices
 from protocol import ethereum
-from protocol.request import send_beacon_api_request
-from requests import Response
-
-__LOGGER = getLogger(__name__)
-
+from protocol.request import CalldataType, send_beacon_api_request
 
 __VALIDATORS = get_active_validator_indices()
 
 
-def is_provided_validator_count_too_high() -> bool:
-    """Checks whether the number of provided validators is too high for
-    upcoming api calls
+def is_provided_validator_count_too_high_for_fetching_attestation_duties() -> bool:
+    """Checks whether the number of provided validators is too high
+    for fetching attestation duties and therefore will not be displayed.
 
     Returns:
-        bool: is number of provided validators > 300
+        bool: is number of provided validators >
+        MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
     """
-    if len(__VALIDATORS) > 300:
+    if (
+        len(__VALIDATORS)
+        > program.MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
+    ):
         return True
     return False
 
@@ -40,15 +39,16 @@ def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
         for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
-    request_data = f"[{','.join(__VALIDATORS)}]"
     is_any_duty_outdated: List[bool] = [True]
     validator_duties: dict[str, ValidatorDuty] = {}
-    if ARGUMENTS.omit_attestation_duties:
+    if (
+        ARGUMENTS.omit_attestation_duties
+        or len(__VALIDATORS)
+        > program.MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
+    ):
         return validator_duties
     while is_any_duty_outdated:
-        response_data = __get_raw_response_data(
-            current_epoch, DutyType.ATTESTATION, request_data
-        )
+        response_data = __fetch_duty_responses(current_epoch, DutyType.ATTESTATION)
         validator_duties = {
             data.validator_index: __get_next_attestation_duty(data, validator_duties)
             for data in response_data
@@ -73,12 +73,9 @@ def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
         ceil(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
         * ethereum.EPOCHS_PER_SYNC_COMMITTEE
     )
-    request_data = f"[{','.join(__VALIDATORS)}]"
     validator_duties: dict[str, ValidatorDuty] = {}
     for epoch in [current_epoch, next_sync_committee_starting_epoch]:
-        response_data = __get_raw_response_data(
-            epoch, DutyType.SYNC_COMMITTEE, request_data
-        )
+        response_data = __fetch_duty_responses(epoch, DutyType.SYNC_COMMITTEE)
         for data in response_data:
             if data.validator_index not in validator_duties:
                 validator_duties[data.validator_index] = ValidatorDuty(
@@ -103,7 +100,7 @@ def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
     current_epoch = ethereum.get_current_epoch()
     validator_duties: dict[str, ValidatorDuty] = {}
     for index in [1, 1]:
-        response_data = __get_raw_response_data(current_epoch, DutyType.PROPOSING)
+        response_data = __fetch_duty_responses(current_epoch, DutyType.PROPOSING)
         for data in response_data:
             if (
                 str(data.validator_index) in __VALIDATORS
@@ -119,24 +116,6 @@ def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
                 )
         current_epoch += index
     return __filter_proposing_duties(validator_duties)
-
-
-def __get_raw_response_data(
-    target_epoch: int, duty_type: DutyType, request_data: str = ""
-) -> List[ValidatorDuty]:
-    """Fetches raw responses for provided duties
-
-    Args:
-        target_epoch (int): Epoch to check for duties
-        duty_type (DutyType): Type of the duty
-        request_data (str, optional): Request data if any. Defaults to "".
-
-    Returns:
-        List[ValidatorDuty]: List of all fetched validator duties for a specific epoch
-    """
-    response = __fetch_duty_response(target_epoch, duty_type, request_data)
-    response_data = response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
-    return [ValidatorDuty.from_dict(data) for data in response_data]
 
 
 def __get_next_attestation_duty(
@@ -186,33 +165,36 @@ def __filter_proposing_duties(
     return filtered_proposing_duties
 
 
-def __fetch_duty_response(
-    target_epoch: int, duty_type: DutyType, request_data: str = ""
-) -> Response:
+def __fetch_duty_responses(
+    target_epoch: int, duty_type: DutyType
+) -> List[ValidatorDuty]:
     """Fetches validator duties in dependence of the duty type from the beacon client
 
     Args:
         target_epoch (int): Epoch to fetch duties for
         duty_type (DutyType): Type of the duty
-        request_data (str, optional): Request data if any. Defaults to "".
 
     Returns:
-        Response: Raw response from the sent api request
+        List[ValidatorDuty]: List of fetched validator duties
     """
     match duty_type:
         case DutyType.ATTESTATION:
-            response = send_beacon_api_request(
-                f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}", request_data
+            responses = send_beacon_api_request(
+                f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}",
+                CalldataType.REQUEST_DATA,
+                __VALIDATORS,
             )
         case DutyType.SYNC_COMMITTEE:
-            response = send_beacon_api_request(
+            responses = send_beacon_api_request(
                 f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
-                request_data,
+                CalldataType.REQUEST_DATA,
+                __VALIDATORS,
             )
         case DutyType.PROPOSING:
-            response = send_beacon_api_request(
-                f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}"
+            responses = send_beacon_api_request(
+                f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}",
+                CalldataType.NONE,
             )
         case _:
-            response = Response()
-    return response
+            responses = []
+    return [ValidatorDuty.from_dict(data) for data in responses]
