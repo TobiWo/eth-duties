@@ -4,6 +4,8 @@
 
 ETH-duties logs upcoming validator duties to the console in order to find the best maintenance period for your validator(s). In general the tool was developed to mainly help home stakers but it still can be used on a larger scale (see [usage](#usage) examples).
 
+**Note on docker `latest` tag: Currently the docker image tag `latest` refers to the latest changes on the `main` branch. Please be aware of that if you decide to use this tag.**
+
 ## Table of Contents
 
 * [Caveat](#caveat)
@@ -26,8 +28,6 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
     * teku
 
     However, since it only calls official ETH2 spec endpoints it should work with every client. As a side node, I had issues with `Teku 22.10.1` as the tool crashed from time to time. I read in the teku release notes that they updated their REST API framework in version `22.10.2` and since then I did not experience any issues.
-
-1. The maximum number of validators (validator indices) which can be provided by the user is currently at 300. The reason for that is a simple one and will be fixed in a future release.
 
 ## What to expect
 
@@ -116,6 +116,7 @@ Just download the artifact for your OS and start optimizing your validator maint
 1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
 
     ```bash
+    # Note: If you provide more than 100 validators attestation related logs are omitted by default
     ./eth-duties \
     --validator-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052 \
