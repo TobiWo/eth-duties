@@ -1,9 +1,11 @@
 """Module for fetching data from a beacon client
 """
 
+from enum import Enum
+from itertools import chain
 from logging import getLogger
 from time import sleep
-from typing import Dict
+from typing import Any, List
 
 from cli.arguments import ARGUMENTS
 from constants import json, logging, program
@@ -13,16 +15,61 @@ from requests import ReadTimeout, Response, get, post
 __LOGGER = getLogger(__name__)
 
 
+class CalldataType(Enum):
+    """Defines the type of the calldata for the rest call"""
+
+    NONE = 0
+    REQUEST_DATA = 1
+    PARAMETERS = 2
+
+
 def send_beacon_api_request(
     endpoint: str,
-    request_data: str | None = None,
-    parameters: Dict[str, str] | None = None,
-) -> Response:
-    """Sends an api request to the beacon client
+    calldata_type: CalldataType,
+    provided_validators: List[str] | None = None,
+    flatten: bool = True,
+) -> List[Any]:
+    """Sends api requests to the beacon client and returns the subsequent data objects
+    from the responses
 
     Args:
         endpoint (str): The endpoint which will be called
-        request_data (str, optional): Request data if any. Defaults to "".
+        calldata_type (CalldataType): The type of calldata submitted with the request
+        provided_validators (List[str]): The validator indices or pubkey to get information for
+        flatten (bool): If True the returned list will be flattened
+
+    Returns:
+        List[Any]: List with data objects from responses
+    """
+
+    responses: List[Response] = []
+    if provided_validators:
+        chunked_validators = [
+            provided_validators[
+                index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+            ]
+            for index in range(
+                0, len(provided_validators), program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+            )
+        ]
+        for chunk in chunked_validators:
+            responses.append(__send_request(endpoint, calldata_type, chunk))
+    else:
+        responses.append(__send_request(endpoint, calldata_type, []))
+    return __convert_to_raw_data_responses(responses, flatten)
+
+
+def __send_request(
+    endpoint: str,
+    calldata_type: CalldataType,
+    provided_validators: List[str],
+) -> Response:
+    """Sends a single request to the beacon client
+
+    Args:
+        endpoint (str): The endpoint which will be called
+        calldata_type (CalldataType): The type of calldata submitted with the request
+        provided_validators (List[str]): The validator indices or pubkey to get information for
 
     Raises:
         SystemExit: Program exit if the response is not present at all
@@ -34,25 +81,27 @@ def send_beacon_api_request(
     """
     is_request_successful = False
     response = None
+    calldata = __get_processed_calldata(provided_validators, calldata_type)
     while not is_request_successful and not program.GRACEFUL_KILLER.kill_now:
         try:
-            if not request_data and not parameters:
-                response = get(
-                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                    timeout=program.REQUEST_TIMEOUT,
-                )
-            elif request_data and not parameters:
-                response = post(
-                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                    data=request_data,
-                    timeout=program.REQUEST_TIMEOUT,
-                )
-            else:
-                response = get(
-                    url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                    params=parameters,
-                    timeout=program.REQUEST_TIMEOUT,
-                )
+            match calldata_type:
+                case CalldataType.REQUEST_DATA:
+                    response = post(
+                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
+                        data=calldata,
+                        timeout=program.REQUEST_TIMEOUT,
+                    )
+                case CalldataType.PARAMETERS:
+                    response = get(
+                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
+                        params={"id": calldata},
+                        timeout=program.REQUEST_TIMEOUT,
+                    )
+                case _:
+                    response = get(
+                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
+                        timeout=program.REQUEST_TIMEOUT,
+                    )
             response.close()
             is_request_successful = __is_request_successful(response)
         except RequestsConnectionError:
@@ -65,6 +114,57 @@ def send_beacon_api_request(
         return response
     __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
     raise SystemExit()
+
+
+def __convert_to_raw_data_responses(
+    raw_responses: List[Response], flatten: bool
+) -> List[Any]:
+    """Creates a list with raw data response objects
+
+    Args:
+        raw_responses (List[Response]): List of fetched responses
+        flatten (bool): Should a possible list of lists be flattend. This assumes
+        some knowledge about the handled data strucutes.
+
+    Returns:
+        List[Any]: List of raw data objects from raw response objects
+    """
+    if flatten:
+        return list(
+            chain(
+                *[
+                    raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
+                    for raw_response in raw_responses
+                ]
+            )
+        )
+    return [
+        raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
+        for raw_response in raw_responses
+    ]
+
+
+def __get_processed_calldata(
+    validator_chunk: List[str], calldata_type: CalldataType
+) -> str:
+    """Processes calldata in dependence of calldata type
+
+    Args:
+        validator_chunk (List[str]): List of validators
+        calldata_type (CalldataType): Calldata type
+
+    Returns:
+        str: Calldata as specific formatted string
+    """
+    calldata: str = ""
+    match calldata_type:
+        case CalldataType.REQUEST_DATA:
+            calldata = f"[{','.join(validator_chunk)}]"
+        case CalldataType.PARAMETERS:
+            calldata = f"{','.join(validator_chunk)}"
+        case _:
+            calldata = ""
+    return calldata
 
 
 def __is_request_successful(response: Response) -> bool:
