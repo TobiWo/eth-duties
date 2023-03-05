@@ -5,7 +5,7 @@ from math import trunc
 from time import time
 
 from constants import endpoints, json
-from protocol.request import send_beacon_api_request
+from protocol.request import CalldataType, send_beacon_api_request
 
 
 def __fetch_genesis_time() -> int:
@@ -14,12 +14,10 @@ def __fetch_genesis_time() -> int:
     Returns:
         int: Genesis time as unix timestamp in seconds
     """
-    response = send_beacon_api_request(endpoints.BEACON_GENESIS_ENDPOINT)
-    return int(
-        response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME][
-            json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME
-        ]
+    response = send_beacon_api_request(
+        endpoints.BEACON_GENESIS_ENDPOINT, CalldataType.NONE, flatten=False
     )
+    return int(response[0][json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME])
 
 
 GENESIS_TIME = __fetch_genesis_time()
