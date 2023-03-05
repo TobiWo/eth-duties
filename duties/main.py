@@ -30,12 +30,16 @@ def __fetch_validator_duties(
     if not __is_current_data_outdated(duties):
         return duties
     next_attestation_duties: dict[str, ValidatorDuty] = {}
-    next_sync_committee_duties: dict[str, ValidatorDuty] = {}
-    if fetch.is_provided_validator_count_too_high():
-        logger.warning(logging.TOO_MANY_PROVIDED_VALIDATORS_MESSAGE)
+    if (
+        fetch.is_provided_validator_count_too_high_for_fetching_attestation_duties()
+        and not ARGUMENTS.omit_attestation_duties
+    ):
+        logger.warning(
+            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE
+        )
     else:
         next_attestation_duties = fetch.get_next_attestation_duties()
-        next_sync_committee_duties = fetch.get_next_sync_committee_duties()
+    next_sync_committee_duties = fetch.get_next_sync_committee_duties()
     next_proposing_duties = fetch.get_next_proposing_duties()
     duties = [
         duty
