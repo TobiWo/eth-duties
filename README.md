@@ -8,26 +8,29 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 
 ## Table of Contents
 
-* [Caveat](#caveat)
+* [Consensus client compatibility](#consensus-client-compatibility)
 * [What to expect](#what-to-expect)
   * [Examples](#examples)
-* [Compatibility](#compatibility)
+* [Binary/Executable Compatibility](#binary-executable-compatibility)
 * [Usage](#usage)
 * [Contribute](#contribute)
   * [Requirements](#requirements)
   * [Installation](#installation)
 * [Build on your own](#build-on-your-own)
-* [Run in Docker](#run-in-docker)
+* [Docker](#docker)
+  * [Run in Docker](#run-in-docker)
+  * [Docker compose](#docker-compose)
 * [ToDos](#todos)
 
-## Caveat
+## Consensus client compatibility
 
-1. I only tested the tool with the following beaon clients:
-
-    * lighthouse
-    * teku
-
-    However, since it only calls official ETH2 spec endpoints it should work with every client. As a side node, I had issues with `Teku 22.10.1` as the tool crashed from time to time. I read in the teku release notes that they updated their REST API framework in version `22.10.2` and since then I did not experience any issues.
+| client | tested | compatible |
+|  --- |  --- | --- |
+| prysm | :x: | :question: |
+| lighthouse | :heavy_check_mark: | :heavy_check_mark: |
+| teku | :heavy_check_mark: | :heavy_check_mark: |
+| nimbus | :heavy_check_mark: | :x: |
+| lodestar | :heavy_check_mark: | :x: |
 
 ## What to expect
 
@@ -47,7 +50,7 @@ The color coding comprises of:
 1. Block proposing duties for some validators ![proposing](./img/proposing.PNG)
 1. Sync committee duties for some validators ![sync_committee](./img/sync_committee.PNG)
 
-## Compatibility
+## Binary (executable) Compatibility
 
 **Note: The linux binary will only work on Ubuntu 22.04. That's due to the fact how pyinstaller bundles everything together for a specific OS. Since Ubuntu 20.04 is probably still widely in usage I will add another pipeline to build the binary specifically for Ubuntu 20.04. I will also rename the final artifact for better clarity.**
 
@@ -255,9 +258,7 @@ docker-compose -f docker/compose.yaml up -d
 ## ToDos
 
 * add validation of beacon client url
-* add support for more than 300 validators (split provided validators to chunks for api calls)
 * add some explainer at program start for color coding
 * improve fetching in case no duties could be detected
   * only fetch if new epoch started
 * implement asyncio to improve UX and optimize fetching logic
-* test with nimbus and lodestar
