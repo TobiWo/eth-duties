@@ -20,7 +20,8 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 * [Docker](#docker)
   * [Run in Docker](#run-in-docker)
   * [Docker compose](#docker-compose)
-* [ToDos](#todos)
+* [Donate](#donate)
+  * [Full disclosure](#full-disclosure)
 
 ## Consensus client compatibility
 
@@ -76,7 +77,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     ./eth-duties --help
     ```
 
-1. Print upcoming duties for two validators while connecting to a local beacon client:
+1. Print upcoming duties (block proposal, sync committee) for two validators while connecting to a local beacon client:
 
     ```bash
     ./eth-duties \
@@ -84,7 +85,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties for multiple validators using different identifiers while connecting to a local beacon client:
+1. Print upcoming duties (block proposal, sync committee) for multiple validators using different identifiers while connecting to a local beacon client:
 
     ```bash
     # You can mix up indices and pubkeys as you like
@@ -95,7 +96,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties for multiple validators using an alias for some of the provided validators while connecting to a local beacon client:
+1. Print upcoming duties (block proposal, sync committee) for multiple validators using an alias for some of the provided validators while connecting to a local beacon client:
 
     ```bash
     # If you want to set an alias for a validator pubkey or index you need to separate the index/pubkey from the alias with an ';'
@@ -106,24 +107,24 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties for validators which indices/pubkeys are located in a file:
+1. Print upcoming duties (block proposal, sync committee) for validators which indices/pubkeys are located in a file:
 
     ```bash
     # Mixing indices and pubkeys and/or adding aliases is also supported in files
-    # Note that you do not need to put '<INDEX_OR_PUBKEY>;<ALIAS>' in quotes or double quotes in your validator file
+    # Note that you do not need to put '<INDEX_OR_PUBKEY>;<ALIAS>' in quotes or double quotes in your validators file
     ./eth-duties \
-    --validator-file <PATH_TO_VALIDATOR_FILE> \
+    --validators-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming validator duties but omit attestation duties specifically. This can be useful for professional node operators or individuals with a lot of validators as printing upcoming attestation duties for a lot of validators might get messy and you want to concentrate on the important stuff:
+1. Print all upcoming validator duties (incl. attestation duties):
 
     ```bash
     # Note: If you provide more than 100 validators attestation related logs are omitted by default
     ./eth-duties \
-    --validator-file <PATH_TO_VALIDATOR_FILE> \
+    --validators-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052 \
-    --omit-attestation-duties
+    --log-attestation-duties
     ```
 
 ## Contribute
@@ -255,10 +256,10 @@ docker compose -f docker/compose.yaml up -d
 docker-compose -f docker/compose.yaml up -d
 ```
 
-## ToDos
+## Donate
 
-* add validation of beacon client url
-* add some explainer at program start for color coding
-* improve fetching in case no duties could be detected
-  * only fetch if new epoch started
-* implement asyncio to improve UX and optimize fetching logic
+If you like the tool and think this needs to be supported I highly appreciate any donations. Donations can be send in ETH, any ERC-20 or on Layer2 to the following address: `0x928Ae47264516F403Baf29871D8b43460F4f67aa`.
+
+### Full disclosure
+
+I'm currently applying at the EF for a small grant to support the further development of `eth-duties`.
