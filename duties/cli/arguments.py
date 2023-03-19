@@ -12,9 +12,12 @@ def __get_raw_arguments() -> Namespace:
     Returns:
         Namespace: Parsed cli arguments
     """
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        prog="eth-duties",
+        description="Tool for logging validator duties",
+        usage="eth-duties [...options]",
+    )
     parser.add_argument(
-        "-b",
         "--beacon-node",
         type=str,
         help="URL to access the beacon node api (default: http://localhost:5052)",
@@ -22,49 +25,68 @@ def __get_raw_arguments() -> Namespace:
         default="http://localhost:5052",
     )
     parser.add_argument(
-        "-f",
-        "--validator-file",
-        type=FileType("r"),
-        help="File with validator indices where every index is on a separate line",
-        action="store",
-    )
-    parser.add_argument(
-        "-i",
         "--interval",
         type=int,
-        help="Interval in seconds for fetching data from the beacon node (default: 15 seconds)",
+        help="Interval in seconds for fetching data from the beacon node (default: 15)",
         action="store",
         default=15,
     )
     parser.add_argument(
-        "-l",
         "--log",
         type=str,
-        help="Defines log level. Values are 'DEBUG' or 'INFO'. Default is 'INFO'",
+        help="Defines log level. Values are 'DEBUG' or 'INFO' (default: 'INFO')",
         action="store",
         default="INFO",
     )
     parser.add_argument(
-        "-o",
-        "--omit-attestation-duties",
-        help="If supplied upcoming attestation duties will not be printed to the console",
+        "--log-attestation-duties",
+        help="If supplied upcoming attestation duties will be logged to the console",
         action="store_true",
         default=False,
     )
     parser.add_argument(
-        "-p",
         "--log-pubkeys",
         help="If supplied the validator index will be replaced with the pubkey in log messages",
         action="store_true",
         default=False,
     )
     parser.add_argument(
-        "-v",
+        "--log-time-warning",
+        type=float,
+        help="The threshold at which a time to duty warning log (in seconds) "
+        "gets colored in YELLOW (default: 120)",
+        action="store",
+        default=120.0,
+    )
+    parser.add_argument(
+        "--log-time-critical",
+        type=float,
+        help="The threshold at which a time to duty critical log (in seconds) "
+        "gets colored in RED (default: 60)",
+        action="store",
+        default=60.0,
+    )
+    parser.add_argument(
+        "--max-attestation-duty-logs",
+        help=(
+            "The max. number of validators for which attestation duties will be logged "
+            "(default: 50)"
+        ),
+        action="store",
+        default=50,
+    )
+    parser.add_argument(
         "--validators",
         type=str,
-        help="One or many validator indices for which next duties will be fetched",
+        help="One or many validator identifiers for which next duties will be fetched",
         action="append",
         nargs="*",
+    )
+    parser.add_argument(
+        "--validators-file",
+        type=FileType("r"),
+        help="File with validator identifiers where every identifier is on a separate line",
+        action="store",
     )
     return parser.parse_args()
 
@@ -85,12 +107,24 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 
 
 def __validate_provided_validator_flag(
-    validators: List[str] | None, validator_file: str | None
+    validators: List[str] | None, validators_file: str | None
 ) -> None:
-    if (validators and validator_file) or (not validators and not validator_file):
+    if (validators and validators_file) or (not validators and not validators_file):
         raise ArgumentError(
             None,
             "ONE of the following flags is required: '--validators|-v', '--validator-file|-f'",
+        )
+
+
+def __validate_log_times(
+    passed_log_time_warning: float, passed_log_time_critical: float
+) -> None:
+    if passed_log_time_warning < passed_log_time_critical:
+        raise ArgumentError(
+            None,
+            f"Passed seconds for '--log-time-warning' (supplied or default: "
+            f"{passed_log_time_warning}) needs to be greater "
+            f"than for '--log-time-critical' (supplied or default: {passed_log_time_critical})",
         )
 
 
@@ -102,7 +136,8 @@ def __set_arguments() -> Namespace:
     """
     arguments = __get_raw_arguments()
     __validate_fetching_interval(arguments.interval)
-    __validate_provided_validator_flag(arguments.validators, arguments.validator_file)
+    __validate_provided_validator_flag(arguments.validators, arguments.validators_file)
+    __validate_log_times(arguments.log_time_warning, arguments.log_time_critical)
     return arguments
 
 

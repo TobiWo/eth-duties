@@ -217,7 +217,7 @@ def __create_raw_validator_identifiers() -> Dict[str, ValidatorIdentifier]:
         ): __create_raw_validator_identifier(
             str(validator).strip().replace("\n", "").replace("\r\n", "")
         )
-        for validator in ARGUMENTS.validator_file
+        for validator in ARGUMENTS.validators_file
     }
 
 
