@@ -1,12 +1,11 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators
 """
 
-from logging import Logger, getLogger
+from logging import getLogger
 from time import sleep
 from typing import Callable, List
 
 from cli.arguments import ARGUMENTS
-from constants import logging
 from constants.program import GRACEFUL_KILLER
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
@@ -17,7 +16,7 @@ __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
 def __fetch_validator_duties(
-    duties: List[ValidatorDuty], logger: Logger
+    duties: List[ValidatorDuty],
 ) -> List[ValidatorDuty]:
     """Fetches upcoming validator duties
 
@@ -29,16 +28,7 @@ def __fetch_validator_duties(
     """
     if not __is_current_data_outdated(duties):
         return duties
-    next_attestation_duties: dict[str, ValidatorDuty] = {}
-    if (
-        fetch.is_provided_validator_count_too_high_for_fetching_attestation_duties()
-        and not ARGUMENTS.omit_attestation_duties
-    ):
-        logger.warning(
-            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE
-        )
-    else:
-        next_attestation_duties = fetch.get_next_attestation_duties()
+    next_attestation_duties = fetch.get_next_attestation_duties()
     next_sync_committee_duties = fetch.get_next_sync_committee_duties()
     next_proposing_duties = fetch.get_next_proposing_duties()
     duties = [
@@ -81,7 +71,7 @@ if __name__ == "__main__":
     main_logger = getLogger(__name__)
     upcoming_duties: List[ValidatorDuty] = []
     while not GRACEFUL_KILLER.kill_now:
-        upcoming_duties = __fetch_validator_duties(upcoming_duties, main_logger)
+        upcoming_duties = __fetch_validator_duties(upcoming_duties)
         log_time_to_next_duties(upcoming_duties)
         sleep(ARGUMENTS.interval)
     main_logger.info("Happy staking. See you for next maintenance \U0001F642 !")

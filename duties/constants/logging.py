@@ -11,9 +11,10 @@ SYSTEM_EXIT_MESSAGE = "Detected user intervention (SIGINT). Shutting down."
 NEXT_INTERVAL_MESSAGE = "Logging next interval..."
 NO_UPCOMING_DUTIES_MESSAGE = "No upcoming duties detected!"
 TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE = (
-    "Provided number of validator indices for fetching attestion duties is high (> 100). "
+    "Provided number of validators for fetching attestion duties is high (> %s). "
     "This pollutes the console output and prevents checking important duties. "
-    "Checking attestion duties will be skipped!"
+    "Checking attestion duties will be skipped! "
+    "To increase the max. number of logged attestation duties use '--max-attestation-duty-logs'"
 )
 HIGHER_PROCESSING_TIME_INFO_MESSAGE = (
     "You provided %s validators. Fetching all necessary data may take some time."
