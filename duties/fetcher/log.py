@@ -114,13 +114,9 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
     Returns:
         str: ANSI codes for colorful logging
     """
-    if (
-        program.RED_PRINTING_THRESHOLD_IN_SECONDS
-        < seconds_to_next_duty
-        <= program.YELLOW_PRINTING_THRESHOLD_IN_SECONDS
-    ):
+    if ARGUMENTS.log_time_critical < seconds_to_next_duty <= ARGUMENTS.log_time_warning:
         return Back.YELLOW
-    if seconds_to_next_duty <= program.RED_PRINTING_THRESHOLD_IN_SECONDS:
+    if seconds_to_next_duty <= ARGUMENTS.log_time_critical:
         return Back.RED
     if duty.type is DutyType.PROPOSING:
         return Back.GREEN
