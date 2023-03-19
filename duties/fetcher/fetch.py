@@ -1,33 +1,19 @@
 """Module which holds all logic for fetching validator duties
 """
 
+from logging import getLogger
 from math import ceil
 from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, program
+from constants import endpoints, logging
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.parser.validators import get_active_validator_indices
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
 __VALIDATORS = get_active_validator_indices()
-
-
-def is_provided_validator_count_too_high_for_fetching_attestation_duties() -> bool:
-    """Checks whether the number of provided validators is too high
-    for fetching attestation duties and therefore will not be displayed.
-
-    Returns:
-        bool: is number of provided validators >
-        MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
-    """
-    if (
-        len(__VALIDATORS)
-        > program.MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
-    ):
-        return True
-    return False
+__LOGGER = getLogger(__name__)
 
 
 def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
@@ -41,22 +27,19 @@ def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
     current_epoch = ethereum.get_current_epoch()
     is_any_duty_outdated: List[bool] = [True]
     validator_duties: dict[str, ValidatorDuty] = {}
-    if (
-        ARGUMENTS.omit_attestation_duties
-        or len(__VALIDATORS)
-        > program.MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES
-    ):
-        return validator_duties
-    while is_any_duty_outdated:
-        response_data = __fetch_duty_responses(current_epoch, DutyType.ATTESTATION)
-        validator_duties = {
-            data.validator_index: __get_next_attestation_duty(data, validator_duties)
-            for data in response_data
-        }
-        is_any_duty_outdated = [
-            True for duty in validator_duties.values() if duty.slot == 0
-        ]
-        current_epoch += 1
+    if __should_fetch_attestation_duties():
+        while is_any_duty_outdated:
+            response_data = __fetch_duty_responses(current_epoch, DutyType.ATTESTATION)
+            validator_duties = {
+                data.validator_index: __get_next_attestation_duty(
+                    data, validator_duties
+                )
+                for data in response_data
+            }
+            is_any_duty_outdated = [
+                True for duty in validator_duties.values() if duty.slot == 0
+            ]
+            current_epoch += 1
     return validator_duties
 
 
@@ -116,6 +99,26 @@ def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
                 )
         current_epoch += index
     return __filter_proposing_duties(validator_duties)
+
+
+def __should_fetch_attestation_duties() -> bool:
+    """Checks if attestation duties should be fetched
+
+    Returns:
+        bool: Should attestation duties fetched
+    """
+    if (
+        len(__VALIDATORS) > ARGUMENTS.max_attestation_duty_logs
+        and ARGUMENTS.log_attestation_duties
+    ):
+        __LOGGER.warning(
+            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
+            ARGUMENTS.max_attestation_duty_logs,
+        )
+        return False
+    if not ARGUMENTS.log_attestation_duties:
+        return False
+    return True
 
 
 def __get_next_attestation_duty(
