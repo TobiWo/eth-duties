@@ -109,14 +109,14 @@ def __should_fetch_attestation_duties() -> bool:
     """
     if (
         len(__VALIDATORS) > ARGUMENTS.max_attestation_duty_logs
-        and ARGUMENTS.log_attestation_duties
+        and not ARGUMENTS.omit_attestation_duties
     ):
         __LOGGER.warning(
             logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
             ARGUMENTS.max_attestation_duty_logs,
         )
         return False
-    if not ARGUMENTS.log_attestation_duties:
+    if ARGUMENTS.omit_attestation_duties:
         return False
     return True
 
