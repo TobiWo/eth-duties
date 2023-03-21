@@ -39,12 +39,6 @@ def __get_raw_arguments() -> Namespace:
         default="INFO",
     )
     parser.add_argument(
-        "--log-attestation-duties",
-        help="If supplied upcoming attestation duties will be logged to the console",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--log-pubkeys",
         help="If supplied the validator index will be replaced with the pubkey in log messages",
         action="store_true",
@@ -74,6 +68,12 @@ def __get_raw_arguments() -> Namespace:
         ),
         action="store",
         default=50,
+    )
+    parser.add_argument(
+        "--omit-attestation-duties",
+        help="If supplied upcoming attestation duties will not be logged to the console",
+        action="store_true",
+        default=False,
     )
     parser.add_argument(
         "--validators",
