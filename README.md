@@ -77,7 +77,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     ./eth-duties --help
     ```
 
-1. Print upcoming duties (block proposal, sync committee) for two validators while connecting to a local beacon client:
+1. Print upcoming duties for two validators while connecting to a local beacon client:
 
     ```bash
     ./eth-duties \
@@ -85,7 +85,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties (block proposal, sync committee) for multiple validators using different identifiers while connecting to a local beacon client:
+1. Print upcoming duties for multiple validators using different identifiers while connecting to a local beacon client:
 
     ```bash
     # You can mix up indices and pubkeys as you like
@@ -96,7 +96,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties (block proposal, sync committee) for multiple validators using an alias for some of the provided validators while connecting to a local beacon client:
+1. Print upcoming duties for multiple validators using an alias for some of the provided validators while connecting to a local beacon client:
 
     ```bash
     # If you want to set an alias for a validator pubkey or index you need to separate the index/pubkey from the alias with an ';'
@@ -107,7 +107,7 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print upcoming duties (block proposal, sync committee) for validators which indices/pubkeys are located in a file:
+1. Print upcoming duties for validators which indices/pubkeys are located in a file:
 
     ```bash
     # Mixing indices and pubkeys and/or adding aliases is also supported in files
@@ -117,14 +117,15 @@ Just download the artifact for your OS and start optimizing your validator maint
     --beacon-node http://localhost:5052
     ```
 
-1. Print all upcoming validator duties (incl. attestation duties):
+1. Print upcoming validator duties but omit attestation duties:
 
     ```bash
-    # Note: If you provide more than 100 validators attestation related logs are omitted by default
+    # Note: If you provide more than 50 validators, attestation related logs are omitted by default
+    # This can be changed with '--max-attestation-duty-logs'
     ./eth-duties \
     --validators-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052 \
-    --log-attestation-duties
+    --omit-attestation-duties
     ```
 
 ## Contribute
