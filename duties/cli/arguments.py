@@ -119,6 +119,8 @@ def __validate_provided_validator_flag(
 def __validate_log_times(
     passed_log_time_warning: float, passed_log_time_critical: float
 ) -> None:
+    if passed_log_time_warning <= 0 or passed_log_time_critical <= 0:
+        raise ValueError("Passed time values should be > 0")
     if passed_log_time_warning < passed_log_time_critical:
         raise ArgumentError(
             None,
