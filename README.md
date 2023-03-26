@@ -224,7 +224,7 @@ As always you need to navigate to the root folder of this repository first. Make
     tobiwo/eth-duties:latest \
     --validators 123456 456789 \
     --validators 0x98... \
-    --beacon-node http://locahost:5052
+    --beacon-node http://localhost:5052
     ```
 
 1. Run container on boot
@@ -236,7 +236,7 @@ As always you need to navigate to the root folder of this repository first. Make
     --name eth-duties \
     tobiwo/eth-duties:latest \
     --validators 123456 456789 \
-    --beacon-node http://locahost:5052
+    --beacon-node http://localhost:5052
     ```
 
 1. Print logs
