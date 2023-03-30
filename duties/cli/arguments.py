@@ -5,6 +5,8 @@ Module for parsing CLI arguments
 from argparse import ArgumentError, ArgumentParser, FileType, Namespace
 from typing import List
 
+from cli.argument_types import Mode
+
 
 def __get_raw_arguments() -> Namespace:
     """Parses cli arguments passed by the user
@@ -62,12 +64,33 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--max-attestation-duty-logs",
+        type=int,
         help=(
             "The max. number of validators for which attestation duties will be logged "
             "(default: 50)"
         ),
         action="store",
         default=50,
+    )
+    parser.add_argument(
+        "--mode",
+        help=(
+            "The mode which eth-duties will run with. "
+            "Values are 'log', 'cicd-exit', 'cicd-wait' or 'exit' (default: 'log')"
+        ),
+        type=Mode,
+        choices=Mode,
+        default=Mode.LOG,
+    )
+    parser.add_argument(
+        "--mode-cicd-waiting-time",
+        type=int,
+        help=(
+            "The max. waiting time until eth-duties exits in cicd-wait mode "
+            "(default 780 sec. (approx. 2 epochs))"
+        ),
+        action="store",
+        default=780,
     )
     parser.add_argument(
         "--omit-attestation-duties",
@@ -130,6 +153,18 @@ def __validate_log_times(
         )
 
 
+def __validate_cicd_waiting_time(
+    passed_fetching_interval: int, passed_cicd_waiting_time: int, passed_mode: Mode
+) -> None:
+    if (
+        passed_cicd_waiting_time < passed_fetching_interval
+    ) and passed_mode == Mode.CICD_WAIT:
+        raise ValueError(
+            "The value for flag '--mode-cicd-waiting-time' should be >= "
+            "the passed fetching interval (defined with '--interval')"
+        )
+
+
 def __set_arguments() -> Namespace:
     """Parses cli arguments passed by the user
 
@@ -140,6 +175,9 @@ def __set_arguments() -> Namespace:
     __validate_fetching_interval(arguments.interval)
     __validate_provided_validator_flag(arguments.validators, arguments.validators_file)
     __validate_log_times(arguments.log_time_warning, arguments.log_time_critical)
+    __validate_cicd_waiting_time(
+        arguments.interval, arguments.mode_cicd_waiting_time, arguments.mode
+    )
     return arguments
 
 
