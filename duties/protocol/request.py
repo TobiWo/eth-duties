@@ -82,7 +82,7 @@ def __send_request(
     is_request_successful = False
     response = None
     calldata = __get_processed_calldata(provided_validators, calldata_type)
-    while not is_request_successful and not program.GRACEFUL_KILLER.kill_now:
+    while not is_request_successful and not program.GRACEFUL_TERMINATOR.kill_now:
         try:
             match calldata_type:
                 case CalldataType.REQUEST_DATA:
