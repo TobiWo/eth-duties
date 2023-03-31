@@ -9,6 +9,11 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 ## Table of Contents
 
 * [Consensus client compatibility](#consensus-client-compatibility)
+* [Configuration](#configuration)
+  * [--mode](#--mode)
+    * [cicd-exit](#cicd-exit)
+    * [cicd-wait](#cicd-wait)
+    * [exit](#exit)
 * [What to expect](#what-to-expect)
   * [Examples](#examples)
 * [Binary/Executable Compatibility](#binary-executable-compatibility)
@@ -32,6 +37,28 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 | teku | :heavy_check_mark: | :heavy_check_mark: |
 | nimbus | :heavy_check_mark: | :x: |
 | lodestar | :heavy_check_mark: | :x: |
+
+## Configuration
+
+Most of the available flags are self explanatory. However, some may not that obvious. Those flags are described in detail in the following chapter.
+
+### --mode
+
+The running mode of `eth-duties` in general is logging duties to the console (specied with value `log` which is default). However, professional node operators might leverage the tool in their cicd pipelines to e.g. prevent an unintentional client update when your validator is right before proposing a block or part of the sync committee. This is where the different `cicd` modes come into play. You can make your deployment job dependent from the `eth-duties` job so that the deployment job will only run when `eth-duties` exits gracefully with `exit code 0`.  
+
+**Note** If you do not omit attestation duties with `--omit-attestation-duties` these are also valid duties for the cicd modes.
+
+#### cicd-exit
+
+This mode results in a one time check whether one of your supplied validators has an upcoming duty. If there is an upcoming duty the tool exits with `exit code 1`. If there is none the tool exits with `exit code 0`.
+
+#### cicd-wait
+
+This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for upcoming duties until there is no upcoming duty. If there will be no upcoming duty the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends `eth-duties` exits with `exit code 1`.
+
+#### exit
+
+This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rational behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the mode value `exit`. In general this is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
 
 ## What to expect
 
