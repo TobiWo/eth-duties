@@ -2,6 +2,10 @@
 
 # eth-duties
 
+![python-badge](https://img.shields.io/badge/python-3.10-brightgreen)
+![poetry-badge](https://img.shields.io/badge/poetry-1.3.1-brightgreen)
+![black-badge](https://img.shields.io/badge/black-22.10.0-black)
+
 ETH-duties logs upcoming validator duties to the console in order to find the best maintenance period for your validator(s). In general the tool was developed to mainly help home stakers but it still can be used on a larger scale (see [usage](#usage) examples).
 
 **Note on docker `latest` tag: Currently the docker image tag `latest` refers to the latest changes on the `main` branch. Please be aware of that if you decide to use this tag.**
@@ -40,13 +44,15 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 
 ## Configuration
 
-Most of the available flags are self explanatory. However, some may not that obvious. Those flags are described in detail in the following chapter.
+Most of the available flags are self explanatory. However, some may not be that obvious. Those flags are described in detail in the following chapter.
+
+For all available cli flags please call `eth-duties --help` (see usage examples for further details).
 
 ### --mode
 
-The running mode of `eth-duties` in general is logging duties to the console (specied with value `log` which is default). However, professional node operators might leverage the tool in their cicd pipelines to e.g. prevent an unintentional client update when your validator is right before proposing a block or part of the sync committee. This is where the different `cicd` modes come into play. You can make your deployment job dependent from the `eth-duties` job so that the deployment job will only run when `eth-duties` exits gracefully with `exit code 0`.  
+The default running mode of `eth-duties` is logging duties to the console (specified with value `log`). However, professional node operators might leverage the tool in their cicd pipelines to e.g. prevent an unintentional client update when your validator is right before proposing a block or part of the sync committee. This is where the different `cicd` modes come into play. You can make your deployment job dependent from the `eth-duties` job so that the deployment job will only run when `eth-duties` exits gracefully with `exit code 0`.
 
-**Note** If you do not omit attestation duties with `--omit-attestation-duties` these are also valid duties for the cicd modes.
+**Note** If you do not omit attestation duties with `--omit-attestation-duties` these are also considered as valid duties for the cicd modes.
 
 #### cicd-exit
 
@@ -54,11 +60,11 @@ This mode results in a one time check whether one of your supplied validators ha
 
 #### cicd-wait
 
-This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for upcoming duties until there is no upcoming duty. If there will be no upcoming duty the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends `eth-duties` exits with `exit code 1`.
+This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for upcoming duties until there is none. If there will be no upcoming duty the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends, `eth-duties` exits with `exit code 1`.
 
 #### exit
 
-This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rational behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the mode value `exit`. In general this is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
+This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rationale behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the `exit` mode. In general how to setup your pipelines is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
 
 ## What to expect
 
@@ -290,4 +296,4 @@ If you like the tool and think this needs to be supported I highly appreciate an
 
 ### Full disclosure
 
-I'm currently applying at the EF for a small grant to support the further development of `eth-duties`.
+This project will be funded by the Ethereum Foundation with a small grant from the [ecosystem support program](https://esp.ethereum.foundation/applicants/small-grants=).
