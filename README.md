@@ -290,6 +290,14 @@ docker compose -f docker/compose.yaml up -d
 docker-compose -f docker/compose.yaml up -d
 ```
 
+## Helm
+
+Fit the `charts/eth-duties/values.yaml` to your needs and install the chart using [helm](https://helm.sh/).
+
+```bash
+helm install eth-duties charts/eth-duties
+```
+
 ## Donate
 
 If you like the tool and think this needs to be supported I highly appreciate any donations. Donations can be send in ETH, any ERC-20 or on Layer2 to the following address: `0x928Ae47264516F403Baf29871D8b43460F4f67aa`.

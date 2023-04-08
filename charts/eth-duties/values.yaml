@@ -1,0 +1,43 @@
+---
+
+cli:
+  beaconNode: "http://localhost:5052"
+  validatorIndices: "123456;val_1"
+  omitAttestationDuties: false
+
+image:
+  registry: "hub.docker.com"
+  repository: "tobiwo/eth-duties"
+  pullPolicy: "IfNotPresent"
+  tag: "v0.3.0"
+
+imagePullSecrets: {}
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+resources: {}
+  # limits:
+  #   cpu: "100m"
+  #   memory: "128Mi"
+  # requests:
+  #   cpu: "50m"
+  #   memory: "32Mi"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+...

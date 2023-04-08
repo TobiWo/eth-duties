@@ -1,0 +1,10 @@
+---
+
+apiVersion: "v2"
+name: "eth-duties"
+description: "Helm chart to monitor ethereum validator duties"
+type: "application"
+version: "0.1.0"
+appVersion: "1.16.0"
+
+...
