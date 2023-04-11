@@ -5,7 +5,7 @@ import signal
 from sys import exit as sys_exit
 from typing import Any, List
 
-from cli.arguments import Mode
+from cli.types import Mode
 from fetcher.data_types import ValidatorDuty
 
 
