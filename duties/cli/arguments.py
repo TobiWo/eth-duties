@@ -3,9 +3,11 @@ Module for parsing CLI arguments
 """
 
 from argparse import ArgumentError, ArgumentParser, FileType, Namespace
+from itertools import chain
 from typing import List
 
-from cli.argument_types import Mode
+from cli.parse import parse_validator_identifiers
+from cli.types import Mode
 
 
 def __get_raw_arguments() -> Namespace:
@@ -100,8 +102,12 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--validators",
-        type=str,
-        help="One or many validator identifiers for which next duties will be fetched",
+        type=parse_validator_identifiers,
+        help=(
+            "One or many validator identifiers for which next duties will be fetched. "
+            "Validator identifiers need to be separated by space or comma. "
+            "Argument can be provided multiple times."
+        ),
         action="append",
         nargs="*",
     )
@@ -135,7 +141,7 @@ def __validate_provided_validator_flag(
     if (validators and validators_file) or (not validators and not validators_file):
         raise ArgumentError(
             None,
-            "ONE of the following flags is required: '--validators|-v', '--validator-file|-f'",
+            "ONE of the following flags is required: '--validators', '--validators-file'",
         )
 
 
@@ -178,6 +184,8 @@ def __set_arguments() -> Namespace:
     __validate_cicd_waiting_time(
         arguments.interval, arguments.mode_cicd_waiting_time, arguments.mode
     )
+    if arguments.validators:
+        arguments.validators = list(chain(*list(arguments.validators)))
     return arguments
 
 
