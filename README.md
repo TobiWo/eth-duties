@@ -66,6 +66,19 @@ This mode results in an ongoing process (similar to the standard behavior) where
 
 This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rationale behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the `exit` mode. In general how to setup your pipelines is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
 
+### --validators
+
+This flag is self-explanatory in general but you need to respect the following separation rules:
+
+* Validator identifiers can be separated by comma or space e.g.:
+  * `--validators 123 456 --validators 678 999`
+  * `--validators 123,456 --validators 678,999`
+* If you provide a validator identifier with an alias you need to wrap the whole string of one identifier-alias-pair in quotes or double quotes e.g.:
+  * `--validators "123;val1" "456;val2" --validators 678 999` or
+  * `--validators "123;val1","456;val2" --validators 678,999`
+
+**Note: Wrapping an identifier-alias-pair in quotes or double quotes is not true for a `docker-compose`. Please check the example [compose](docker/compose.yaml).**
+
 ## What to expect
 
 Beside the actual functionality of logging upcoming duties I added some kind of UX in form of color coding.
@@ -248,7 +261,7 @@ As always you need to navigate to the root folder of this repository first. Make
     docker build -t tobiwo/eth-duties:latest -f docker/dockerfile .
     ```
 
-1. Run container
+1. Run container using space separation for --validators
 
     ```bash
     docker run \
@@ -257,10 +270,11 @@ As always you need to navigate to the root folder of this repository first. Make
     tobiwo/eth-duties:latest \
     --validators 123456 456789 \
     --validators 0x98... \
+    --validators "111;My_Validator" "222;Validator2" \
     --beacon-node http://localhost:5052
     ```
 
-1. Run container on boot
+1. Run container on boot using comma separation for --validators
 
     ```bash
     docker run \
@@ -268,7 +282,8 @@ As always you need to navigate to the root folder of this repository first. Make
     --restart always \
     --name eth-duties \
     tobiwo/eth-duties:latest \
-    --validators 123456 456789 \
+    --validators 123456,456789 \
+    --validators "111;My_Validator","222;Validator2" \
     --beacon-node http://localhost:5052
     ```
 
