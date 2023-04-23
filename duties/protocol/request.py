@@ -6,6 +6,7 @@ from itertools import chain
 from logging import getLogger
 from time import sleep
 from typing import Any, List
+from urllib.parse import urlencode
 
 from cli.arguments import ARGUMENTS
 from constants import json, logging, program
@@ -93,9 +94,10 @@ def __send_request(
                         headers=program.REQUEST_HEADER,
                     )
                 case CalldataType.PARAMETERS:
+                    payload = urlencode({"id": calldata}, safe=",")
                     response = get(
                         url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                        params={"id": calldata},
+                        params=payload,
                         timeout=program.REQUEST_TIMEOUT,
                     )
                 case _:
