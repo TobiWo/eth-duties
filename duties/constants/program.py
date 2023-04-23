@@ -9,6 +9,7 @@ from helper.terminate import GracefulTerminator
 REQUEST_TIMEOUT = (3, 5)
 REQUEST_CONNECTION_ERROR_WAITING_TIME = 2
 REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME = 5
+REQUEST_HEADER = {"Content-type": "application/json", "Accept": "text/plain"}
 PRINTER_TIME_FORMAT = "%M:%S"
 GRACEFUL_TERMINATOR = GracefulTerminator(
     floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)

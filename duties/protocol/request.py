@@ -90,6 +90,7 @@ def __send_request(
                         url=f"{ARGUMENTS.beacon_node}{endpoint}",
                         data=calldata,
                         timeout=program.REQUEST_TIMEOUT,
+                        headers=program.REQUEST_HEADER,
                     )
                 case CalldataType.PARAMETERS:
                     response = get(
@@ -159,7 +160,8 @@ def __get_processed_calldata(
     calldata: str = ""
     match calldata_type:
         case CalldataType.REQUEST_DATA:
-            calldata = f"[{','.join(validator_chunk)}]"
+            calldata = ",".join(f'"{validator}"' for validator in validator_chunk)
+            calldata = f"[{calldata}]"
         case CalldataType.PARAMETERS:
             calldata = f"{','.join(validator_chunk)}"
         case _:
