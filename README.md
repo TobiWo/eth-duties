@@ -36,11 +36,11 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 
 | client | tested | compatible |
 |  --- |  --- | --- |
-| prysm | :x: | :question: |
+| prysm | :heavy_check_mark: | :heavy_check_mark: |
 | lighthouse | :heavy_check_mark: | :heavy_check_mark: |
 | teku | :heavy_check_mark: | :heavy_check_mark: |
-| nimbus | :heavy_check_mark: | :x: |
-| lodestar | :heavy_check_mark: | :x: |
+| nimbus | :heavy_check_mark: | :heavy_check_mark: |
+| lodestar | :heavy_check_mark: | :heavy_check_mark: |
 
 ## Configuration
 
