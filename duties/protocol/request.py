@@ -94,10 +94,10 @@ def __send_request(
                         headers=program.REQUEST_HEADER,
                     )
                 case CalldataType.PARAMETERS:
-                    payload = urlencode({"id": calldata}, safe=",")
+                    parameters = urlencode({"id": calldata}, safe=",")
                     response = get(
                         url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                        params=payload,
+                        params=parameters,
                         timeout=program.REQUEST_TIMEOUT,
                     )
                 case _:
