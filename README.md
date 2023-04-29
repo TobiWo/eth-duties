@@ -307,7 +307,7 @@ docker-compose -f docker/compose.yaml up -d
 
 ## Donate
 
-If you like the tool and think this needs to be supported I highly appreciate any donations. Donations can be send in ETH, any ERC-20 or on Layer2 to the following address: `0x928Ae47264516F403Baf29871D8b43460F4f67aa`.
+If you like the tool and think this needs to be supported I highly appreciate any donations. Donations can be send in ETH, any ERC-20 or on Layer2 to the following address: `0x89a6EeC1FAbC802741475259cBdeAC7d45FAc14a`.
 
 ### Full disclosure
 
