@@ -30,9 +30,9 @@ async def __fetch_validator_duties(
     """
     if not __is_current_data_outdated(duties):
         return duties
-    next_attestation_duties = fetch.get_next_attestation_duties()
-    next_sync_committee_duties = fetch.get_next_sync_committee_duties()
-    next_proposing_duties = fetch.get_next_proposing_duties()
+    next_attestation_duties = await fetch.get_next_attestation_duties()
+    next_sync_committee_duties = await fetch.get_next_sync_committee_duties()
+    next_proposing_duties = await fetch.get_next_proposing_duties()
     duties = [
         duty
         for duties in [
