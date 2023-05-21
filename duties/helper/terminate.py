@@ -2,27 +2,28 @@
 """
 
 import signal
+from asyncio import all_tasks, create_task, current_task, gather, get_running_loop
 from sys import exit as sys_exit
-from typing import Any, List
+from typing import List
 
 from cli.types import Mode
 from fetcher.data_types import ValidatorDuty
 
 
-# pylint: disable=too-few-public-methods
 class GracefulTerminator:
     """Helper class for graceful termination"""
 
     def __init__(self, max_number_of_cicd_cycles: int) -> None:
-        self.kill_now = False
         self.__cicd_cycle_counter = 0
         self.__max_number_of_cicd_cycles = max_number_of_cicd_cycles
-        signal.signal(signal.SIGINT, self.__terminate_gracefully)
-        signal.signal(signal.SIGTERM, self.__terminate_gracefully)
 
-    def __terminate_gracefully(self, *_: Any) -> None:
-        """Main method to terminate program gracefully"""
-        self.kill_now = True
+    async def create_signal_handlers(self) -> None:
+        """Creates signal handlers for common signals"""
+        loop = get_running_loop()
+        for signal_name in ("SIGINT", "SIGTERM"):
+            loop.add_signal_handler(
+                getattr(signal, signal_name), lambda: create_task(self.__shutdown())
+            )
 
     def terminate_in_cicd_mode(
         self, running_mode: Mode, duties: List[ValidatorDuty]
@@ -49,3 +50,10 @@ class GracefulTerminator:
             case _:
                 pass
         self.__cicd_cycle_counter += 1
+
+    async def __shutdown(self) -> None:
+        """Cancels the task and raises exception if user generated SIGINT or SIGTERM is detected"""
+        tasks = [task for task in all_tasks() if task is not current_task()]
+        for task in tasks:
+            task.cancel()
+        await gather(*tasks, return_exceptions=True)
