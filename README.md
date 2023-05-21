@@ -93,9 +93,9 @@ The color coding comprises of:
 
 ### Examples
 
-1. Attestion duties for some validators ![attestations](./img/attestations.PNG)
-1. Block proposing duties for some validators ![proposing](./img/proposing.PNG)
-1. Sync committee duties for some validators ![sync_committee](./img/sync_committee.PNG)
+1. Attestion duties for some validators ![attestations](./img/attestations.png)
+1. Block proposing duties for some validators ![proposing](./img/proposing.png)
+1. Sync committee duties for some validators ![sync_committee](./img/sync_committee.png)
 
 ## Binary (executable) Compatibility
 
