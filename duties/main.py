@@ -1,11 +1,13 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators
 """
 
+from asyncio import CancelledError, run, sleep
 from logging import getLogger
-from time import sleep
+from platform import system
 from typing import Callable, List
 
 from cli.arguments import ARGUMENTS
+from constants import logging
 from constants.program import GRACEFUL_TERMINATOR
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
@@ -15,7 +17,7 @@ from protocol.ethereum import get_current_slot
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
-def __fetch_validator_duties(
+async def __fetch_validator_duties(
     duties: List[ValidatorDuty],
 ) -> List[ValidatorDuty]:
     """Fetches upcoming validator duties
@@ -67,12 +69,22 @@ def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
     return True
 
 
-if __name__ == "__main__":
-    main_logger = getLogger(__name__)
+async def main() -> None:
+    """eth-duties main function"""
+    if system() != "Windows":
+        await GRACEFUL_TERMINATOR.create_signal_handlers()
     upcoming_duties: List[ValidatorDuty] = []
-    while not GRACEFUL_TERMINATOR.kill_now:
-        upcoming_duties = __fetch_validator_duties(upcoming_duties)
+    while True:
+        upcoming_duties = await __fetch_validator_duties(upcoming_duties)
         log_time_to_next_duties(upcoming_duties)
         GRACEFUL_TERMINATOR.terminate_in_cicd_mode(ARGUMENTS.mode, upcoming_duties)
-        sleep(ARGUMENTS.interval)
+        await sleep(ARGUMENTS.interval)
+
+
+if __name__ == "__main__":
+    main_logger = getLogger(__name__)
+    try:
+        run(main())
+    except (CancelledError, KeyboardInterrupt) as exception:
+        main_logger.error(logging.SYSTEM_EXIT_MESSAGE)
     main_logger.info("Happy staking. See you for next maintenance \U0001F642 !")
