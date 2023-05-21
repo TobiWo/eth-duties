@@ -1,7 +1,9 @@
 """Module for parsing provided validator identifier
 """
 
+from asyncio import run
 from logging import getLogger
+from sys import exit as sys_exit
 from typing import Any, Dict, List
 
 from cli.arguments import ARGUMENTS
@@ -23,7 +25,7 @@ def get_active_validator_indices() -> List[str]:
     return list(COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS.keys())
 
 
-def __create_active_validator_identifiers(
+async def __create_active_validator_identifiers(
     validator_identifiers: Dict[str, ValidatorIdentifier]
 ) -> Dict[str, ValidatorIdentifier]:
     """Checks status from provided validators and filters inactives and duplicates
@@ -43,7 +45,7 @@ def __create_active_validator_identifiers(
         __get_validator_index_or_pubkey(None, validator)
         for validator in __RAW_PARSED_VALIDATOR_IDENTIFIERS.values()
     ]
-    validator_infos = send_beacon_api_request(
+    validator_infos = await send_beacon_api_request(
         endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
         calldata_type=CalldataType.PARAMETERS,
         provided_validators=provided_validators,
@@ -297,10 +299,14 @@ def __is_valid_pubkey(pubkey: str) -> bool:
     return True
 
 
-__RAW_PARSED_VALIDATOR_IDENTIFIERS = __create_raw_validator_identifiers()
-COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS = __create_active_validator_identifiers(
-    __RAW_PARSED_VALIDATOR_IDENTIFIERS
-)
-COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS = (
-    __get_validator_identifiers_with_alias()
-)
+try:
+    __RAW_PARSED_VALIDATOR_IDENTIFIERS = __create_raw_validator_identifiers()
+    COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS = run(
+        __create_active_validator_identifiers(__RAW_PARSED_VALIDATOR_IDENTIFIERS)
+    )
+    COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS = (
+        __get_validator_identifiers_with_alias()
+    )
+except KeyboardInterrupt:
+    __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
+    sys_exit(1)

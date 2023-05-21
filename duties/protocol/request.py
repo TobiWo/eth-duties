@@ -1,10 +1,10 @@
 """Module for fetching data from a beacon client
 """
 
+from asyncio import sleep
 from enum import Enum
 from itertools import chain
 from logging import getLogger
-from time import sleep
 from typing import Any, List
 from urllib.parse import urlencode
 
@@ -24,7 +24,7 @@ class CalldataType(Enum):
     PARAMETERS = 2
 
 
-def send_beacon_api_request(
+async def send_beacon_api_request(
     endpoint: str,
     calldata_type: CalldataType,
     provided_validators: List[str] | None = None,
@@ -50,17 +50,19 @@ def send_beacon_api_request(
                 index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
             ]
             for index in range(
-                0, len(provided_validators), program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+                0,
+                len(provided_validators),
+                program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
             )
         ]
         for chunk in chunked_validators:
-            responses.append(__send_request(endpoint, calldata_type, chunk))
+            responses.append(await __send_request(endpoint, calldata_type, chunk))
     else:
-        responses.append(__send_request(endpoint, calldata_type, []))
+        responses.append(await __send_request(endpoint, calldata_type, []))
     return __convert_to_raw_data_responses(responses, flatten)
 
 
-def __send_request(
+async def __send_request(
     endpoint: str,
     calldata_type: CalldataType,
     provided_validators: List[str],
@@ -81,9 +83,9 @@ def __send_request(
         Response: Response object with data provided by the endpoint
     """
     is_request_successful = False
-    response = None
+    response = Response()
     calldata = __get_processed_calldata(provided_validators, calldata_type)
-    while not is_request_successful and not program.GRACEFUL_TERMINATOR.kill_now:
+    while not is_request_successful:
         try:
             match calldata_type:
                 case CalldataType.REQUEST_DATA:
@@ -109,14 +111,11 @@ def __send_request(
             is_request_successful = __is_request_successful(response)
         except RequestsConnectionError:
             __LOGGER.error(logging.CONNECTION_ERROR_MESSAGE)
-            sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
+            await sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
         except (ReadTimeout, KeyError):
             __LOGGER.error(logging.READ_TIMEOUT_ERROR_MESSAGE)
-            sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
-    if response:
-        return response
-    __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
-    raise SystemExit()
+            await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
+    return response
 
 
 def __convert_to_raw_data_responses(
