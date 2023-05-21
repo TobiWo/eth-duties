@@ -7,6 +7,7 @@ from sys import exit as sys_exit
 from time import time
 
 from constants import endpoints, json, logging
+from fetcher.data_types import ValidatorDuty
 from protocol.request import CalldataType, send_beacon_api_request
 
 __LOGGER = getLogger()
@@ -53,3 +54,15 @@ def get_current_epoch() -> int:
     """
     now = time()
     return trunc((now - GENESIS_TIME) / (SLOTS_PER_EPOCH * SLOT_TIME))
+
+
+def get_time_to_duty(duty: ValidatorDuty) -> float:
+    """Calculates the time (seconds) left until provided duty needs to be sent
+
+    Args:
+        duty (ValidatorDuty): Validator duty
+
+    Returns:
+        float: Time in seconds
+    """
+    return duty.slot * SLOT_TIME + GENESIS_TIME - time()
