@@ -1,26 +1,35 @@
 """Defines ethereum related constants and functions
 """
-
+from asyncio import run
+from logging import getLogger
 from math import trunc
+from sys import exit as sys_exit
 from time import time
 
-from constants import endpoints, json
+from constants import endpoints, json, logging
 from protocol.request import CalldataType, send_beacon_api_request
 
+__LOGGER = getLogger()
 
-def __fetch_genesis_time() -> int:
+
+async def __fetch_genesis_time() -> int:
     """Fetches the genesis time from the beacon client
 
     Returns:
         int: Genesis time as unix timestamp in seconds
     """
-    response = send_beacon_api_request(
+    response = await send_beacon_api_request(
         endpoints.BEACON_GENESIS_ENDPOINT, CalldataType.NONE, flatten=False
     )
     return int(response[0][json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME])
 
 
-GENESIS_TIME = __fetch_genesis_time()
+try:
+    GENESIS_TIME = run(__fetch_genesis_time())
+except KeyboardInterrupt:
+    __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
+    sys_exit(1)
+
 SLOT_TIME = 12
 SLOTS_PER_EPOCH = 32
 EPOCHS_PER_SYNC_COMMITTEE = 256
