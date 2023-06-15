@@ -3,15 +3,16 @@
 
 from asyncio import CancelledError, run, sleep
 from logging import getLogger
+from math import floor
 from platform import system
 from typing import Callable, List
 
 from cli.arguments import ARGUMENTS
 from constants import logging
-from constants.program import GRACEFUL_TERMINATOR
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.log import log_time_to_next_duties
+from helper.terminate import GracefulTerminator
 from protocol.ethereum import get_current_slot
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
@@ -71,13 +72,16 @@ def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
 
 async def main() -> None:
     """eth-duties main function"""
+    graceful_terminator = GracefulTerminator(
+        floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)
+    )
     if system() != "Windows":
-        await GRACEFUL_TERMINATOR.create_signal_handlers()
+        await graceful_terminator.create_signal_handlers()
     upcoming_duties: List[ValidatorDuty] = []
     while True:
         upcoming_duties = await __fetch_validator_duties(upcoming_duties)
         log_time_to_next_duties(upcoming_duties)
-        GRACEFUL_TERMINATOR.terminate_in_cicd_mode(ARGUMENTS.mode, upcoming_duties)
+        graceful_terminator.terminate_in_cicd_mode(ARGUMENTS.mode, upcoming_duties)
         await sleep(ARGUMENTS.interval)
 
 
