@@ -95,6 +95,28 @@ def __get_raw_arguments() -> Namespace:
         default=780,
     )
     parser.add_argument(
+        "--mode-cicd-attestation-time",
+        type=int,
+        help=(
+            "If a defined proportion of attestion duties is above the defined time threshold "
+            "the application exits gracefully in any cicd-mode "
+            "(default 420 sec.)"
+        ),
+        action="store",
+        default=420,
+    )
+    parser.add_argument(
+        "--mode-cicd-attestation-proportion",
+        type=float,
+        help=(
+            "The proportion of attestation duties which needs to be above a defined "
+            "time threshold to force the application to exit gracefully "
+            "(default 0.8)"
+        ),
+        action="store",
+        default=0.8,
+    )
+    parser.add_argument(
         "--omit-attestation-duties",
         help="If supplied upcoming attestation duties will not be logged to the console",
         action="store_true",
@@ -138,6 +160,15 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 def __validate_provided_validator_flag(
     validators: List[str] | None, validators_file: str | None
 ) -> None:
+    """Validates that only one of the validator flags was provided
+
+    Args:
+        validators (List[str] | None): Provided validators
+        validators_file (str | None): Provided validators as file
+
+    Raises:
+        ArgumentError: Error that only one of the provided flags is allowed
+    """
     if (validators and validators_file) or (not validators and not validators_file):
         raise ArgumentError(
             None,
@@ -148,6 +179,16 @@ def __validate_provided_validator_flag(
 def __validate_log_times(
     passed_log_time_warning: float, passed_log_time_critical: float
 ) -> None:
+    """Validates the provided log time values
+
+    Args:
+        passed_log_time_warning (float): Provided log time warning value
+        passed_log_time_critical (float): Provided log time critical value
+
+    Raises:
+        ValueError: Error if any of the provided values is <= 0
+        ArgumentError: Error if warning value is smaller than critical value
+    """
     if passed_log_time_warning <= 0 or passed_log_time_critical <= 0:
         raise ValueError("Passed time values should be > 0")
     if passed_log_time_warning < passed_log_time_critical:
@@ -162,12 +203,45 @@ def __validate_log_times(
 def __validate_cicd_waiting_time(
     passed_fetching_interval: int, passed_cicd_waiting_time: int, passed_mode: Mode
 ) -> None:
+    """Validates whether provided cicd waiting time is greater then provided fetching interval
+    in cicd-wait mode
+
+    Args:
+        passed_fetching_interval (int): Provided fetching interval
+        passed_cicd_waiting_time (int): Provided cicd waiting time
+        passed_mode (Mode): Provided mode
+
+    Raises:
+        ValueError: Error if cicd waiting time is smaller than fetching interval
+    """
     if (
         passed_cicd_waiting_time < passed_fetching_interval
     ) and passed_mode == Mode.CICD_WAIT:
         raise ValueError(
             "The value for flag '--mode-cicd-waiting-time' should be >= "
             "the passed fetching interval (defined with '--interval')"
+        )
+
+
+def __validate_cicd_attestation_proportion(
+    passed_cicd_attestation_proportion: float, passed_mode: Mode
+) -> None:
+    """Validates whether provided cicd attestation proportion is between 0 and 1 while running
+    in any cicd mode
+
+    Args:
+        passed_cicd_attestation_proportion (float): Provided cicd attestation proportion
+
+    Raises:
+        ValueError: Error if cicd attestation proportion value is not between 0 and 1
+    """
+    if (
+        passed_cicd_attestation_proportion > 1
+        or passed_cicd_attestation_proportion < 0
+        and (passed_mode != Mode.LOG)
+    ):
+        raise ValueError(
+            "The value for flag '--mode-cicd-attestation-proportion' should be between 0 and 1"
         )
 
 
@@ -183,6 +257,9 @@ def __set_arguments() -> Namespace:
     __validate_log_times(arguments.log_time_warning, arguments.log_time_critical)
     __validate_cicd_waiting_time(
         arguments.interval, arguments.mode_cicd_waiting_time, arguments.mode
+    )
+    __validate_cicd_attestation_proportion(
+        arguments.mode_cicd_attestation_proportion, arguments.mode
     )
     if arguments.validators:
         arguments.validators = list(chain(*list(arguments.validators)))
