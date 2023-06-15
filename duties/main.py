@@ -81,7 +81,7 @@ async def main() -> None:
     while True:
         upcoming_duties = await __fetch_validator_duties(upcoming_duties)
         log_time_to_next_duties(upcoming_duties)
-        graceful_terminator.terminate_in_cicd_mode(ARGUMENTS.mode, upcoming_duties)
+        graceful_terminator.terminate_in_cicd_mode(upcoming_duties)
         await sleep(ARGUMENTS.interval)
 
 
