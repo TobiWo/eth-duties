@@ -57,8 +57,6 @@ The default running mode of `eth-duties` is logging duties to the console (speci
 
 **Note** If you do not omit attestation duties with `--omit-attestation-duties` these are also considered as valid duties for the cicd modes. For a more fine granular setting on attestation duties please check the [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
 
-**Note** You can run the cicd modes also just like the logging mode and check when `eth-duty` exits. However, you will not be able to distinguish whether `eth-duties` exits with code `0` or `1`.
-
 #### What are relevant duties
 
 In the following sub chapters I will often refer to relevant duties. This is a short explanation. Relevant are:
@@ -77,9 +75,9 @@ This mode results in a one time check whether one of your supplied validators ha
 
 This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for relevant upcoming duties until there is none. If there will be no relevant upcoming duty the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends, `eth-duties` exits with `exit code 1`.
 
-#### exit
+#### cicd-force-graceful-exit
 
-This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rationale behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the `exit` mode. In general how to setup your pipelines is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
+This mode results in an immediate graceful exit with `exit code 0` without checking for duties. The rationale behind this flag is the following: If your deployment job will not run because of upcoming duties but you need to force an update for whatever reason you can use the mode `cicd-force-graceful-exit`. I'm not an expert in github pipelines but in gitlab you can prefill environment variables when you start a pipeline manually via the web ui. This way you don't need to adapt your pipeline code but just restart a pipeline with the `cicd-force-graceful-exit` mode. In general how to setup your pipelines is out of scope of this documentation. For more information please check the respective platform documentation. For gitlab this would be [the following website](https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines).
 
 ### mode-cicd-attestation-time and mode-cicd-attestation-proportion
 
