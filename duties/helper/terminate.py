@@ -3,11 +3,13 @@
 
 import signal
 from asyncio import all_tasks, create_task, current_task, gather, get_running_loop
+from logging import getLogger
 from sys import exit as sys_exit
 from typing import List
 
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
+from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
 from protocol.ethereum import get_time_to_duty
 
@@ -18,6 +20,7 @@ class GracefulTerminator:
     def __init__(self, max_number_of_cicd_cycles: int) -> None:
         self.__cicd_cycle_counter = 0
         self.__max_number_of_cicd_cycles = max_number_of_cicd_cycles
+        self.logger = getLogger(__name__)
 
     async def create_signal_handlers(self) -> None:
         """Creates signal handlers for common signals"""
@@ -45,14 +48,19 @@ class GracefulTerminator:
         match running_mode:
             case Mode.CICD_EXIT:
                 if self.__no_relevant_upcoming_duties(duties):
+                    self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
                     sys_exit(0)
+                self.logger.info(logging.EXIT_CODE_MESSAGE, 1)
                 sys_exit(1)
             case Mode.CICD_WAIT:
                 if self.__no_relevant_upcoming_duties(duties):
+                    self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
                     sys_exit(0)
                 if self.__cicd_cycle_counter >= self.__max_number_of_cicd_cycles:
+                    self.logger.info(logging.EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE)
+                    self.logger.info(logging.EXIT_CODE_MESSAGE, 1)
                     sys_exit(1)
-            case Mode.EXIT_GRACEFULLY:
+            case Mode.CICD_FORCE_GRACEFUL_EXIT:
                 sys_exit(0)
             case _:
                 pass
@@ -95,6 +103,11 @@ class GracefulTerminator:
         )
         relevant_duty_proportion = len(attestion_duties_above_threshold) / len(
             attestation_duties
+        )
+        self.logger.info(
+            logging.PROPORTION_OF_ATTESTION_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
+            relevant_duty_proportion * 100,
+            ARGUMENTS.mode_cicd_attestation_time,
         )
         return relevant_duty_proportion >= ARGUMENTS.mode_cicd_attestation_proportion
 
