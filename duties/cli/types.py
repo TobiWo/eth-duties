@@ -10,4 +10,4 @@ class Mode(Enum):
     LOG = "log"
     CICD_EXIT = "cicd-exit"
     CICD_WAIT = "cicd-wait"
-    EXIT_GRACEFULLY = "exit"
+    CICD_FORCE_GRACEFUL_EXIT = "cicd-force-graceful-exit"

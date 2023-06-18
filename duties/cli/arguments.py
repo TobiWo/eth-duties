@@ -78,7 +78,7 @@ def __get_raw_arguments() -> Namespace:
         "--mode",
         help=(
             "The mode which eth-duties will run with. "
-            "Values are 'log', 'cicd-exit', 'cicd-wait' or 'exit' (default: 'log')"
+            "Values are 'log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' (default: 'log')"
         ),
         type=Mode,
         choices=Mode,
@@ -100,10 +100,10 @@ def __get_raw_arguments() -> Namespace:
         help=(
             "If a defined proportion of attestion duties is above the defined time threshold "
             "the application exits gracefully in any cicd-mode "
-            "(default 420 sec.)"
+            "(default 240 sec.)"
         ),
         action="store",
-        default=420,
+        default=240,
     )
     parser.add_argument(
         "--mode-cicd-attestation-proportion",
@@ -111,10 +111,10 @@ def __get_raw_arguments() -> Namespace:
         help=(
             "The proportion of attestation duties which needs to be above a defined "
             "time threshold to force the application to exit gracefully "
-            "(default 0.8)"
+            "(default 1)"
         ),
         action="store",
-        default=0.8,
+        default=1,
     )
     parser.add_argument(
         "--omit-attestation-duties",
