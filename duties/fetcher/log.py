@@ -21,16 +21,15 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
     logger = getLogger(__name__)
+    print("")
     logger.info(logging.NEXT_INTERVAL_MESSAGE)
     if validator_duties:
-        for index, duty in enumerate(validator_duties):
+        for duty in validator_duties:
             now = time()
             seconds_to_next_duty = (
                 duty.slot * ethereum.SLOT_TIME + ethereum.GENESIS_TIME - now
             )
             logging_message = __create_logging_message(seconds_to_next_duty, duty)
-            if index == len(validator_duties) - 1:
-                logging_message += "\n"
             logger.info(logging_message)
     else:
         logger.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
