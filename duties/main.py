@@ -87,6 +87,7 @@ async def main() -> None:
 
 if __name__ == "__main__":
     main_logger = getLogger(__name__)
+    main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
     try:
         run(main())
     except (CancelledError, KeyboardInterrupt) as exception:
