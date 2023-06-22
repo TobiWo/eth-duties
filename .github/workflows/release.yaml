@@ -10,11 +10,22 @@ jobs:
     strategy:
       matrix:
         include:
-          - OS: ubuntu-latest
+          - OS: ubuntu-22.04
             PYTHON_VERSION: 3.10.9
             BUILD_CMD: |
               export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-linux-amd64;
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2204-amd64;
+              mkdir ${BUILD_FILE_NAME};
+              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+              mkdir /tmp/artifacts;
+              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
+          - OS: ubuntu-20.04
+            PYTHON_VERSION: 3.10.9
+            BUILD_CMD: |
+              export PYTHONHASHSEED=42
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2004-amd64;
               mkdir ${BUILD_FILE_NAME};
               poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
@@ -75,7 +86,7 @@ jobs:
           path: C:\Users\runneradmin\AppData\Local\Temp\artifacts\*
           if-no-files-found: error
       - name: Upload UNIX artifacts
-        if: matrix.OS == 'ubuntu-latest' || matrix.OS == 'macos-latest'
+        if: matrix.OS != 'windows-latest'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.OS }}
@@ -102,8 +113,10 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-linux-amd64.tar.gz
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-linux-amd64.sha256
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.tar.gz
+            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.sha256
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
             /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
