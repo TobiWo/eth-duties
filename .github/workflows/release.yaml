@@ -113,10 +113,10 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.tar.gz
-            /tmp/artifacts/ubuntu-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.sha256
+            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
+            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
+            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.tar.gz
+            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.sha256
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
             /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
