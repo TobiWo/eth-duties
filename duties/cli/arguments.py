@@ -78,7 +78,7 @@ def __get_raw_arguments() -> Namespace:
         "--mode",
         help=(
             "The mode which eth-duties will run with. "
-            "Values are 'log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' (default: 'log')"
+            "Values are 'log', 'no-log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' (default: 'log')"
         ),
         type=Mode,
         choices=Mode,
@@ -119,6 +119,12 @@ def __get_raw_arguments() -> Namespace:
     parser.add_argument(
         "--omit-attestation-duties",
         help="If supplied upcoming attestation duties will not be logged to the console",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--rest",
+        help="If supplied a rest server is started on port 5000",
         action="store_true",
         default=False,
     )
