@@ -2,9 +2,9 @@
 """
 
 import sys
-from argparse import Namespace
 from logging import config as logging_config
 from os import path
+from typing import Any
 
 from cli.arguments import ARGUMENTS
 from colorama import init
@@ -13,18 +13,23 @@ from yaml import safe_load
 
 def __initialize() -> None:
     """Initializes logger and colorama"""
-    __initialize_logging(ARGUMENTS)
+    __initialize_logging(ARGUMENTS.log)
     __initialize_colorama()
 
 
-def __initialize_logging(arguments: Namespace) -> None:
+def __initialize_logging(log_level: str) -> None:
+    """Helper function to load and set logging configuration"""
+    logging_config.dictConfig(get_logging_config(log_level))
+
+
+def get_logging_config(log_level: str) -> Any:
     """Helper function to load and set logging configuration"""
     with open(
         file=__get_logging_configuration_path(), mode="r", encoding="utf-8"
     ) as configuration_file:
         config = safe_load(configuration_file.read())
-        config["handlers"]["console"]["level"] = arguments.log.upper()
-        logging_config.dictConfig(config)
+        config["handlers"]["console"]["level"] = log_level.upper()
+        return config
 
 
 def __get_logging_configuration_path() -> str:
