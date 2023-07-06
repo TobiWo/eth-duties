@@ -8,12 +8,14 @@ from platform import system
 from typing import Callable, List
 
 from cli.arguments import ARGUMENTS
+from cli.types import Mode
 from constants import logging
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.log import log_time_to_next_duties
 from helper.terminate import GracefulTerminator
 from protocol.ethereum import get_current_slot
+from rest.app import start_rest_server
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
@@ -79,17 +81,24 @@ async def main() -> None:
         await graceful_terminator.create_signal_handlers()
     upcoming_duties: List[ValidatorDuty] = []
     while True:
-        upcoming_duties = await __fetch_validator_duties(upcoming_duties)
-        log_time_to_next_duties(upcoming_duties)
-        graceful_terminator.terminate_in_cicd_mode(upcoming_duties)
-        await sleep(ARGUMENTS.interval)
+        if ARGUMENTS.mode != Mode.NO_LOG:
+            upcoming_duties = await __fetch_validator_duties(upcoming_duties)
+            log_time_to_next_duties(upcoming_duties)
+            graceful_terminator.terminate_in_cicd_mode(upcoming_duties)
+            await sleep(ARGUMENTS.interval)
+        else:
+            await sleep(ARGUMENTS.interval)
 
 
 if __name__ == "__main__":
     main_logger = getLogger(__name__)
     main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
     try:
-        run(main())
+        if ARGUMENTS.rest:
+            start_rest_server()
+            run(main())
+        else:
+            run(main())
     except (CancelledError, KeyboardInterrupt) as exception:
         main_logger.error(logging.SYSTEM_EXIT_MESSAGE)
-    main_logger.info("Happy staking. See you for next maintenance \U0001F642 !")
+    main_logger.info(logging.MAIN_EXIT_MESSAGE)
