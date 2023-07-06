@@ -40,3 +40,5 @@ PROPORTION_OF_ATTESTION_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE = (
 )
 EXIT_CODE_MESSAGE = "Exiting with code: %d"
 EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE = "Reached max. waiting time for mode 'cicd-wait'"
+MAIN_EXIT_MESSAGE = "Happy staking. See you for next maintenance \U0001F642 !"
+START_REST_SERVER_MESSAGE = "Started rest api server on localhost:%s"
