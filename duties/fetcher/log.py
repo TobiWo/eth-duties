@@ -10,7 +10,7 @@ from cli.arguments import ARGUMENTS
 from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.parser.validators import COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS
+from fetcher.parser.validators import complete_active_validator_identifiers_with_alias
 from protocol import ethereum
 
 
@@ -20,7 +20,7 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     Args:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
-    logger = getLogger(__name__)
+    logger = getLogger()
     print("")
     logger.info(logging.NEXT_INTERVAL_MESSAGE)
     if validator_duties:
@@ -132,12 +132,12 @@ def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
 
 
 def __get_alias(duty: ValidatorDuty) -> str | None:
-    validator_with_alias = COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS.get(
+    validator_with_alias = complete_active_validator_identifiers_with_alias.get(
         duty.validator_index
     )
     if validator_with_alias and validator_with_alias.alias:
         return validator_with_alias.alias
-    validator_with_alias = COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS.get(
+    validator_with_alias = complete_active_validator_identifiers_with_alias.get(
         duty.pubkey
     )
     if validator_with_alias and validator_with_alias.alias:

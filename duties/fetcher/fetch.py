@@ -13,7 +13,13 @@ from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
 __VALIDATORS = get_active_validator_indices()
-__LOGGER = getLogger(__name__)
+__LOGGER = getLogger()
+
+
+def update_validator_identifiers() -> None:
+    """Updates the validator identifiers for the fetch module"""
+    __VALIDATORS.clear()
+    __VALIDATORS.extend(get_active_validator_indices())
 
 
 async def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
