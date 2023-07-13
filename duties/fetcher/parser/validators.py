@@ -1,10 +1,12 @@
 """Module for parsing provided validator identifier
 """
 
+import pickle
 from asyncio import run
 from logging import getLogger
+from shutil import rmtree
 from sys import exit as sys_exit
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 from cli.arguments import ARGUMENTS
 from constants import endpoints, json, logging, program
@@ -12,8 +14,9 @@ from eth_typing import BLSPubkey
 from fetcher.data_types import ValidatorData, ValidatorIdentifier
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
+from rest.core.types import HttpMethod
 
-__LOGGER = getLogger(__name__)
+__LOGGER = getLogger()
 
 
 def get_active_validator_indices() -> List[str]:
@@ -22,12 +25,129 @@ def get_active_validator_indices() -> List[str]:
     Returns:
         List[str]: List of active validator indices based on the provided user input
     """
-    return list(COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS.keys())
+    return list(__complete_active_validator_identifiers.keys())
 
 
-async def __create_active_validator_identifiers(
-    validator_identifiers: Dict[str, ValidatorIdentifier]
+async def update_validator_identifiers(
+    http_method: str,
+    validator_identifiers: List[str],
+) -> Dict[str, ValidatorIdentifier] | None:
+    """Adds or deletes validator identifiers from rest call in dependence of the used http method
+
+    Args:
+        http_method (str): The used http method
+        validator_identifiers (List[str]): Provided validator identifiers
+    """
+    if http_method == HttpMethod.DELETE.value:
+        __delete_validator_identifiers(validator_identifiers)
+    elif http_method == HttpMethod.POST.value:
+        provided_raw_validator_identifiers = (
+            __create_raw_validator_identifiers_from_list(validator_identifiers)
+        )
+        __raw_parsed_validator_identifiers.update(provided_raw_validator_identifiers)
+        return provided_raw_validator_identifiers
+    elif http_method != HttpMethod.GET:
+        __LOGGER.warning(logging.NOT_SUPPORTED_HTTP_METHOD_MESSAGE, http_method)
+    return None
+
+
+def __delete_validator_identifiers(validator_identifiers: List[str]) -> None:
+    """Deletes validator identifiers
+
+    Args:
+        validator_identifiers (List[str]): Provided validator identifiers
+    """
+    for provided_identifier in validator_identifiers:
+        is_validator_identifier_present = (
+            provided_identifier in __raw_parsed_validator_identifiers.keys()
+        )
+        if is_validator_identifier_present:
+            __raw_parsed_validator_identifiers.pop(provided_identifier, None)
+            continue
+        for (
+            complete_active_validator_identifier
+        ) in __complete_active_validator_identifiers.values():
+            if provided_identifier in (
+                complete_active_validator_identifier.index,
+                complete_active_validator_identifier.validator.pubkey,
+            ):
+                __raw_parsed_validator_identifiers.pop(
+                    complete_active_validator_identifier.validator.pubkey, None
+                )
+                __raw_parsed_validator_identifiers.pop(
+                    complete_active_validator_identifier.index, None
+                )
+
+
+def __create_raw_validator_identifiers_from_list(
+    validator_list: List[str],
 ) -> Dict[str, ValidatorIdentifier]:
+    """Parses validators provided by the user via rest call.
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Raw validator identifiers as provided by the user
+    """
+    return {
+        __get_validator_index_or_pubkey(
+            None, __create_raw_validator_identifier(str(validator))
+        ): __create_raw_validator_identifier(str(validator))
+        for validator in validator_list
+    }
+
+
+async def write_updated_validator_identifiers_to_disk() -> None:
+    """Writes the updated validator identifiers temporarily to disk. This is used to share
+    data between different processes. This will be changed in the future to a more
+    enhanced solution.
+    """
+    program.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    with open(program.VALIDATOR_IDENTIFIER_TEMP_PATH, "wb") as file_path:
+        pickle.dump(__raw_parsed_validator_identifiers, file_path)
+
+
+async def load_updated_validator_identifiers_into_memory(
+    update_identifiers_for_fetcher: Callable[[], None]
+) -> None:
+    """Loads the temporarily saved identifiers from disk (file) into memory
+
+    Args:
+        update_identifiers_for_fetcher (Callable[[], None]): Function to update the validator
+        identifiers in the fetch module
+    """
+    # pylint: disable=global-statement, invalid-name
+    global __raw_parsed_validator_identifiers
+    global __complete_active_validator_identifiers
+    global complete_active_validator_identifiers_with_alias
+    if program.TEMP_DIR.exists():
+        with open(program.VALIDATOR_IDENTIFIER_TEMP_PATH, "rb") as file_path:
+            __raw_parsed_validator_identifiers = pickle.load(file_path)
+        __complete_active_validator_identifiers = (
+            await __create_active_validator_identifiers()
+        )
+        complete_active_validator_identifiers_with_alias = (
+            __get_validator_identifiers_with_alias()
+        )
+        rmtree(program.TEMP_DIR)
+        update_identifiers_for_fetcher()
+
+
+def __get_validator_identifiers_with_alias() -> Dict[str, ValidatorIdentifier]:
+    """Filters for validator identifiers where the user provided an alias
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Validator identifiers with alias
+    """
+    return {
+        index: validator_identifier
+        for (
+            index,
+            validator_identifier,
+        ) in __complete_active_validator_identifiers.items()
+        if validator_identifier.alias
+    }
+
+
+async def __create_active_validator_identifiers() -> Dict[str, ValidatorIdentifier]:
     """Checks status from provided validators and filters inactives and duplicates
 
     Args:
@@ -37,13 +157,17 @@ async def __create_active_validator_identifiers(
     Returns:
         Dict[str, ValidatorIdentifier]: Active validator identifiers
     """
-    if len(validator_identifiers) > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD:
+    if (
+        len(__raw_parsed_validator_identifiers)
+        > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD
+    ):
         __LOGGER.info(
-            logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE, len(validator_identifiers)
+            logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE,
+            len(__raw_parsed_validator_identifiers),
         )
     provided_validators = [
         __get_validator_index_or_pubkey(None, validator)
-        for validator in __RAW_PARSED_VALIDATOR_IDENTIFIERS.values()
+        for validator in __raw_parsed_validator_identifiers.values()
     ]
     validator_infos = await send_beacon_api_request(
         endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
@@ -122,10 +246,10 @@ def __get_raw_validator_identifier(
     Returns:
         ValidatorIdentifier | None: Raw validator identifier
     """
-    identifier_index = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(
+    identifier_index = __raw_parsed_validator_identifiers.get(
         validator_info[json.RESPONSE_JSON_INDEX_FIELD_NAME]
     )
-    identifier_pubkey = __RAW_PARSED_VALIDATOR_IDENTIFIERS.get(
+    identifier_pubkey = __raw_parsed_validator_identifiers.get(
         validator_info[json.RESPONSE_JSON_VALIDATOR_FIELD_NAME][
             json.RESPONSE_JSON_PUBKEY_FIELD_NAME
         ]
@@ -259,22 +383,6 @@ def __create_raw_validator_identifier(validator: str) -> ValidatorIdentifier:
     return ValidatorIdentifier(validator, ValidatorData(""), None)
 
 
-def __get_validator_identifiers_with_alias() -> Dict[str, ValidatorIdentifier]:
-    """Filters for validator identifiers where the user provided an alias
-
-    Returns:
-        Dict[str, ValidatorIdentifier]: Validator identifiers with alias
-    """
-    return {
-        index: validator_identifier
-        for (
-            index,
-            validator_identifier,
-        ) in COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS.items()
-        if validator_identifier.alias
-    }
-
-
 def __is_valid_pubkey(pubkey: str) -> bool:
     """Checks whether the provided pubkey is valid
 
@@ -300,11 +408,11 @@ def __is_valid_pubkey(pubkey: str) -> bool:
 
 
 try:
-    __RAW_PARSED_VALIDATOR_IDENTIFIERS = __create_raw_validator_identifiers()
-    COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS = run(
-        __create_active_validator_identifiers(__RAW_PARSED_VALIDATOR_IDENTIFIERS)
+    __raw_parsed_validator_identifiers = __create_raw_validator_identifiers()
+    __complete_active_validator_identifiers = run(
+        __create_active_validator_identifiers()
     )
-    COMPLETE_ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS = (
+    complete_active_validator_identifiers_with_alias = (
         __get_validator_identifiers_with_alias()
     )
 except KeyboardInterrupt:
