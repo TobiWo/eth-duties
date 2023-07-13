@@ -20,7 +20,7 @@ class GracefulTerminator:
     def __init__(self, max_number_of_cicd_cycles: int) -> None:
         self.__cicd_cycle_counter = 0
         self.__max_number_of_cicd_cycles = max_number_of_cicd_cycles
-        self.logger = getLogger(__name__)
+        self.logger = getLogger()
 
     async def create_signal_handlers(self) -> None:
         """Creates signal handlers for common signals"""
