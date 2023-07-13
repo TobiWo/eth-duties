@@ -5,19 +5,20 @@ from asyncio import CancelledError, run, sleep
 from logging import getLogger
 from math import floor
 from platform import system
-from typing import Callable, List
+from typing import List
 
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
-from constants import logging
+from constants import logging, program
 from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.fetch import update_validator_identifiers
 from fetcher.log import log_time_to_next_duties
+from fetcher.parser.validators import load_updated_validator_identifiers_into_memory
+from helper.help import sort_duties
 from helper.terminate import GracefulTerminator
 from protocol.ethereum import get_current_slot
 from rest.app import start_rest_server
-
-__sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
 async def __fetch_validator_duties(
@@ -31,7 +32,7 @@ async def __fetch_validator_duties(
     Returns:
         List[ValidatorDuty]: Sorted list with all upcoming validator duties
     """
-    if not __is_current_data_outdated(duties):
+    if not await __is_current_data_outdated(duties):
         return duties
     next_attestation_duties = await fetch.get_next_attestation_duties()
     next_sync_committee_duties = await fetch.get_next_sync_committee_duties()
@@ -45,11 +46,11 @@ async def __fetch_validator_duties(
         ]
         for duty in duties.values()
     ]
-    duties.sort(key=__sort_duties)
+    duties.sort(key=sort_duties)
     return duties
 
 
-def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
+async def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
     """Checks if the current fetched validator duties are outdated.
 
     Args:
@@ -63,6 +64,11 @@ def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> bool:
         filter(lambda duty: duty.type is not DutyType.SYNC_COMMITTEE, current_duties),
         None,
     )
+    if program.TEMP_DIR.exists():
+        await load_updated_validator_identifiers_into_memory(
+            update_validator_identifiers
+        )
+        return True
     if (
         current_duties
         and first_non_sync_committee_duty
