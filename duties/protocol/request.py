@@ -13,7 +13,7 @@ from constants import json, logging, program
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
 
-__LOGGER = getLogger(__name__)
+__LOGGER = getLogger()
 
 
 class CalldataType(Enum):
