@@ -2,12 +2,13 @@
 """
 from asyncio import run
 from logging import getLogger
-from math import trunc
+from math import ceil, trunc
 from sys import exit as sys_exit
 from time import time
+from typing import Tuple
 
 from constants import endpoints, json, logging
-from fetcher.data_types import ValidatorDuty
+from fetcher.data_types import DutyType, ValidatorDuty
 from protocol.request import CalldataType, send_beacon_api_request
 
 __LOGGER = getLogger()
@@ -56,13 +57,73 @@ def get_current_epoch() -> int:
     return trunc((now - GENESIS_TIME) / (SLOTS_PER_EPOCH * SLOT_TIME))
 
 
-def get_time_to_duty(duty: ValidatorDuty) -> float:
-    """Calculates the time (seconds) left until provided duty needs to be sent
+def set_time_to_duty(duty: ValidatorDuty) -> None:
+    """Sets the time (in seconds) until the provided duty is due, via call by reference
 
     Args:
         duty (ValidatorDuty): Validator duty
+    """
+    match duty.type:
+        case DutyType.NONE:
+            pass
+        case DutyType.SYNC_COMMITTEE:
+            current_slot = get_current_slot()
+            current_epoch = get_current_epoch()
+            current_sync_committee_epoch_boundaries = (
+                get_sync_committee_epoch_boundaries(current_epoch)
+            )
+            if duty.epoch in range(
+                current_sync_committee_epoch_boundaries[0],
+                current_sync_committee_epoch_boundaries[1] + 1,
+                1,
+            ):
+                duty.time_to_duty = 0
+            else:
+                duty.time_to_duty = get_time_to_next_sync_committee(
+                    current_sync_committee_epoch_boundaries, current_slot
+                )
+        case _:
+            duty.time_to_duty = int(duty.slot * SLOT_TIME + GENESIS_TIME - time())
+
+
+def get_time_to_next_sync_committee(
+    sync_committee_boundaries: Tuple[int, int], current_slot: int
+) -> int:
+    """Gets the remaining time (in seconds) until next sync committee starts
+
+    Args:
+        sync_committee_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries
+        for provided sync committee
+        current_slot (int): The current slot
 
     Returns:
-        float: Time in seconds
+        int: Time (in seconds) until next sync committee starts
     """
-    return duty.slot * SLOT_TIME + GENESIS_TIME - time()
+    next_sync_committee_starting_slot = SLOTS_PER_EPOCH * (
+        sync_committee_boundaries[1] + 1
+    )
+    number_of_slots_to_next_sync_committee = (
+        next_sync_committee_starting_slot - current_slot
+    )
+    return number_of_slots_to_next_sync_committee * SLOT_TIME
+
+
+def get_sync_committee_epoch_boundaries(epoch: int) -> Tuple[int, int]:
+    """Gets sync committee lower and upper epoch boundaries based on the provided epoch
+
+    Args:
+        epoch (int): Provided epoch
+
+    Returns:
+        Tuple[int, int]: Lower and upper sync committee epoch boundaries
+    """
+    current_sync_committee_epoch_lower_bound: int = (
+        trunc(epoch / EPOCHS_PER_SYNC_COMMITTEE) * EPOCHS_PER_SYNC_COMMITTEE
+    )
+    current_sync_committee_epoch_upper_bound: int = (
+        ceil(epoch / EPOCHS_PER_SYNC_COMMITTEE) * EPOCHS_PER_SYNC_COMMITTEE
+    ) - 1
+    return (
+        current_sync_committee_epoch_lower_bound,
+        current_sync_committee_epoch_upper_bound,
+    )
