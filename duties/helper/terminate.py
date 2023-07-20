@@ -11,7 +11,6 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
-from protocol.ethereum import get_time_to_duty
 
 
 class GracefulTerminator:
@@ -125,5 +124,5 @@ class GracefulTerminator:
         return [
             duty
             for duty in attestation_duties
-            if get_time_to_duty(duty) >= ARGUMENTS.mode_cicd_attestation_time
+            if duty.time_to_duty >= ARGUMENTS.mode_cicd_attestation_time
         ]
