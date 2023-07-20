@@ -11,10 +11,10 @@ from dataclass_wizard import JSONWizard
 class DutyType(Enum):
     """Defines a validator duty type"""
 
-    NONE = 0
-    ATTESTATION = 1
-    SYNC_COMMITTEE = 2
-    PROPOSING = 3
+    NONE = "none"
+    ATTESTATION = "attestation"
+    SYNC_COMMITTEE = "sync_committee"
+    PROPOSING = "proposing"
 
 
 @dataclass
@@ -27,6 +27,7 @@ class ValidatorDuty(JSONWizard):
     slot: int = 0
     validator_sync_committee_indices: List[int] = field(default_factory=list)
     type: DutyType = DutyType.NONE
+    time_to_duty: int = 0
 
 
 @dataclass
