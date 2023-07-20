@@ -69,7 +69,7 @@ async def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
         response_data = await __fetch_duty_responses(epoch, DutyType.SYNC_COMMITTEE)
         for data in response_data:
             if data.validator_index not in validator_duties:
-                validator_duties[data.validator_index] = ValidatorDuty(
+                sync_committee_duty = ValidatorDuty(
                     data.pubkey,
                     data.validator_index,
                     epoch,
@@ -77,6 +77,8 @@ async def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
                     data.validator_sync_committee_indices,
                     DutyType.SYNC_COMMITTEE,
                 )
+                ethereum.set_time_to_duty(sync_committee_duty)
+                validator_duties[data.validator_index] = sync_committee_duty
     return validator_duties
 
 
@@ -97,7 +99,7 @@ async def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
                 str(data.validator_index) in __VALIDATORS
                 and data.validator_index not in validator_duties
             ):
-                validator_duties[data.validator_index] = ValidatorDuty(
+                proposing_duty = ValidatorDuty(
                     data.pubkey,
                     data.validator_index,
                     0,
@@ -105,6 +107,8 @@ async def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
                     [],
                     DutyType.PROPOSING,
                 )
+                ethereum.set_time_to_duty(proposing_duty)
+                validator_duties[data.validator_index] = proposing_duty
         current_epoch += index
     return __filter_proposing_duties(validator_duties)
 
@@ -152,6 +156,7 @@ def __get_next_attestation_duty(
     if current_slot >= data.slot:
         return attestation_duty
     attestation_duty.slot = data.slot
+    ethereum.set_time_to_duty(attestation_duty)
     return attestation_duty
 
 
