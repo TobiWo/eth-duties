@@ -2,9 +2,8 @@
 """
 
 from logging import getLogger
-from math import ceil, trunc
-from time import gmtime, strftime, time
-from typing import List
+from time import gmtime, strftime
+from typing import List, Tuple
 
 from cli.arguments import ARGUMENTS
 from colorama import Back, Style
@@ -25,17 +24,13 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     logger.info(logging.NEXT_INTERVAL_MESSAGE)
     if validator_duties:
         for duty in validator_duties:
-            now = time()
-            seconds_to_next_duty = (
-                duty.slot * ethereum.SLOT_TIME + ethereum.GENESIS_TIME - now
-            )
-            logging_message = __create_logging_message(seconds_to_next_duty, duty)
+            logging_message = __create_logging_message(duty)
             logger.info(logging_message)
     else:
         logger.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
 
 
-def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
+def __create_logging_message(duty: ValidatorDuty) -> str:
     """Creates the logging message for the provided duty
 
     Args:
@@ -47,7 +42,7 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
     """
     if duty.type is DutyType.SYNC_COMMITTEE:
         logging_message = __create_sync_committee_logging_message(duty)
-    elif seconds_to_next_duty < 0:
+    elif duty.time_to_duty < 0:
         logging_message = (
             f"Upcoming {duty.type.name} duty "
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
@@ -55,10 +50,11 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
         )
     else:
         time_to_next_duty = strftime(
-            program.PRINTER_TIME_FORMAT, gmtime(float(seconds_to_next_duty))
+            program.DUTY_LOGGING_TIME_FORMAT,
+            gmtime(duty.time_to_duty),
         )
         logging_message = (
-            f"{__get_logging_color(seconds_to_next_duty, duty)}"
+            f"{__get_logging_color(duty.time_to_duty, duty)}"
             f"Validator {__get_validator_identifier_for_logging(duty)} "
             f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){Style.RESET_ALL}"
@@ -66,7 +62,7 @@ def __create_logging_message(seconds_to_next_duty: float, duty: ValidatorDuty) -
     return logging_message
 
 
-def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
+def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) -> str:
     """Create a sync committee duty related logging message
 
     Args:
@@ -76,31 +72,57 @@ def __create_sync_committee_logging_message(duty: ValidatorDuty) -> str:
         str: sync committee duty related logging message
     """
     current_epoch = ethereum.get_current_epoch()
-    current_sync_committee_epoch_lower_bound: int = (
-        trunc(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
-        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
+    current_sync_committee_epoch_boundaries = (
+        ethereum.get_sync_committee_epoch_boundaries(current_epoch)
     )
-    current_sync_committee_epoch_upper_bound: int = (
-        ceil(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
-        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
-    ) - 1
-    if duty.epoch in range(
-        current_sync_committee_epoch_lower_bound,
-        current_sync_committee_epoch_upper_bound + 1,
-        1,
-    ):
+    time_to_next_sync_committee = __get_time_to_next_sync_committee(
+        sync_committee_duty, current_sync_committee_epoch_boundaries
+    )
+    if sync_committee_duty.time_to_duty == 0:
         logging_message = (
-            f"{Back.RED}Validator {__get_validator_identifier_for_logging(duty)} "
+            f"{Back.RED}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
             f"is in current sync committee (next sync committee starts at epoch "
-            f"{current_sync_committee_epoch_upper_bound + 1}){Style.RESET_ALL}"
+            f"{current_sync_committee_epoch_boundaries[1] + 1} / "
+            f"in {time_to_next_sync_committee}){Style.RESET_ALL}"
         )
     else:
         logging_message = (
             f"{Back.YELLOW}Validator "
-            f"{__get_validator_identifier_for_logging(duty)} will be in sync committee "
-            f"starting at epoch {current_sync_committee_epoch_upper_bound + 1}{Style.RESET_ALL}"
+            f"{__get_validator_identifier_for_logging(sync_committee_duty)} will be in sync committee "
+            f"starting at epoch {current_sync_committee_epoch_boundaries[1] + 1} "
+            f"(in {time_to_next_sync_committee}){Style.RESET_ALL}"
         )
     return logging_message
+
+
+def __get_time_to_next_sync_committee(
+    sync_committee_duty: ValidatorDuty,
+    current_sync_committee_epoch_boundaries: Tuple[int, int],
+) -> str:
+    """Gets the time when next sync committee starts
+
+    Args:
+        sync_committee_duty (ValidatorDuty): Sync committee duty
+        current_sync_committee_epoch_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries
+        for current sync committee
+
+    Returns:
+        str: Time to next sync committee start in format %H:%M:%S
+    """
+    if sync_committee_duty.time_to_duty > 0:
+        return strftime(
+            program.SYNC_COMMITTEE_DUTY_LOGGING_TIME_FORMAT,
+            gmtime(sync_committee_duty.time_to_duty),
+        )
+    current_slot = ethereum.get_current_slot()
+    return strftime(
+        program.SYNC_COMMITTEE_DUTY_LOGGING_TIME_FORMAT,
+        gmtime(
+            ethereum.get_time_to_next_sync_committee(
+                current_sync_committee_epoch_boundaries, current_slot
+            )
+        ),
+    )
 
 
 def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str:
