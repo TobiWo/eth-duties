@@ -17,6 +17,7 @@ from fetcher.log import log_time_to_next_duties
 from fetcher.parser.validators import load_updated_validator_identifiers_into_memory
 from helper.help import sort_duties
 from helper.terminate import GracefulTerminator
+from protocol import ethereum
 from protocol.ethereum import get_current_slot
 from rest.app import start_rest_server
 
@@ -78,6 +79,16 @@ async def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> boo
     return True
 
 
+def __update_time_to_duty(duties: List[ValidatorDuty]) -> None:
+    """Updates the time to duty field via call by reference
+
+    Args:
+        duties (List[ValidatorDuty]): Upcoming validator duties
+    """
+    for duty in duties:
+        ethereum.set_time_to_duty(duty)
+
+
 async def main() -> None:
     """eth-duties main function"""
     graceful_terminator = GracefulTerminator(
@@ -89,6 +100,7 @@ async def main() -> None:
     while True:
         if ARGUMENTS.mode != Mode.NO_LOG:
             upcoming_duties = await __fetch_validator_duties(upcoming_duties)
+            __update_time_to_duty(upcoming_duties)
             log_time_to_next_duties(upcoming_duties)
             graceful_terminator.terminate_in_cicd_mode(upcoming_duties)
             await sleep(ARGUMENTS.interval)
