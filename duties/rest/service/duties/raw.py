@@ -12,7 +12,7 @@ from fetcher.fetch import (
 
 
 async def fetch_raw_attestation_duties() -> List[ValidatorDuty]:
-    """Fetches upcoming attestation duties for provided validators
+    """Fetch upcoming attestation duties for provided validators
 
     Returns:
         List[ValidatorDuty]: The upcoming attestation duties
@@ -22,7 +22,7 @@ async def fetch_raw_attestation_duties() -> List[ValidatorDuty]:
 
 
 async def fetch_raw_sync_committeen_duties() -> List[ValidatorDuty]:
-    """Fetches upcoming sync-committee duties for provided validators
+    """Fetch upcoming sync-committee duties for provided validators
 
     Returns:
         List[ValidatorDuty]: The upcoming sync-committee duties
@@ -32,7 +32,7 @@ async def fetch_raw_sync_committeen_duties() -> List[ValidatorDuty]:
 
 
 async def fetch_raw_proposing_duties() -> List[ValidatorDuty]:
-    """Fetches upcoming block proposing duties for provided validators
+    """Fetch upcoming block proposing duties for provided validators
 
     Returns:
         List[ValidatorDuty]: The upcoming block proposing duties
