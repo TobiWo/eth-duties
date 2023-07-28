@@ -43,3 +43,5 @@ EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE = "Reached max. waiting time for mode 'cicd
 MAIN_EXIT_MESSAGE = "Happy staking. See you for next maintenance \U0001F642 !"
 START_REST_SERVER_MESSAGE = "Started rest api server on localhost:%s"
 NOT_SUPPORTED_HTTP_METHOD_MESSAGE = "HTTP method %s is not supported yet"
+CANNOT_READ_SHARED_MEMORY_MESSAGE = "Could not read from shared memory. Exiting!"
+CANNOT_WRITE_SHARED_MEMORY_MESSAGE = "Could not write to shared memory. Exiting!"
