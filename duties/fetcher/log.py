@@ -9,8 +9,14 @@ from cli.arguments import ARGUMENTS
 from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.parser.validators import complete_active_validator_identifiers_with_alias
+from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from protocol import ethereum
+
+__validator_identifiers_with_alias = read_validator_identifiers_from_shared_memory(
+    program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME
+)
+
+__LOGGER = getLogger()
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -19,15 +25,24 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     Args:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
-    logger = getLogger()
+    __set_global_validator_identifiers_with_alias()
     print("")
-    logger.info(logging.NEXT_INTERVAL_MESSAGE)
+    __LOGGER.info(logging.NEXT_INTERVAL_MESSAGE)
     if validator_duties:
         for duty in validator_duties:
             logging_message = __create_logging_message(duty)
-            logger.info(logging_message)
+            __LOGGER.info(logging_message)
     else:
-        logger.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
+        __LOGGER.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
+
+
+def __set_global_validator_identifiers_with_alias() -> None:
+    """Sets the validator identifiers with alias"""
+    # pylint: disable-next=invalid-name, global-statement
+    global __validator_identifiers_with_alias
+    __validator_identifiers_with_alias = read_validator_identifiers_from_shared_memory(
+        program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME
+    )
 
 
 def __create_logging_message(duty: ValidatorDuty) -> str:
@@ -81,16 +96,16 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     if sync_committee_duty.time_to_duty == 0:
         logging_message = (
             f"{Back.RED}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
-            f"is in current sync committee (next sync committee starts at epoch "
-            f"{current_sync_committee_epoch_boundaries[1] + 1} / "
-            f"in {time_to_next_sync_committee}){Style.RESET_ALL}"
+            f"is in current sync committee (next sync committee starts in "
+            f"{time_to_next_sync_committee} / "
+            f"epoch {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
         )
     else:
         logging_message = (
             f"{Back.YELLOW}Validator "
-            f"{__get_validator_identifier_for_logging(sync_committee_duty)} will be in sync committee "
-            f"starting at epoch {current_sync_committee_epoch_boundaries[1] + 1} "
-            f"(in {time_to_next_sync_committee}){Style.RESET_ALL}"
+            f"{__get_validator_identifier_for_logging(sync_committee_duty)} will be in next "
+            f"sync committee which starts in {time_to_next_sync_committee} "
+            f"(epoch {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
         )
     return logging_message
 
@@ -145,6 +160,14 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
 
 
 def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
+    """Gets the validator identifier for logging
+
+    Args:
+        duty (ValidatorDuty): Validator duty
+
+    Returns:
+        str: Validator identifier
+    """
     alias = __get_alias(duty)
     if alias:
         return alias
@@ -154,14 +177,15 @@ def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
 
 
 def __get_alias(duty: ValidatorDuty) -> str | None:
-    validator_with_alias = complete_active_validator_identifiers_with_alias.get(
-        duty.validator_index
-    )
-    if validator_with_alias and validator_with_alias.alias:
-        return validator_with_alias.alias
-    validator_with_alias = complete_active_validator_identifiers_with_alias.get(
-        duty.pubkey
-    )
+    """Gets the validator alias
+
+    Args:
+        duty (ValidatorDuty): Validator duty
+
+    Returns:
+        str | None: Validator alias
+    """
+    validator_with_alias = __validator_identifiers_with_alias.get(duty.validator_index)
     if validator_with_alias and validator_with_alias.alias:
         return validator_with_alias.alias
     return None
