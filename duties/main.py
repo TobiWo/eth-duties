@@ -4,6 +4,7 @@
 from asyncio import CancelledError, run, sleep
 from logging import getLogger
 from math import floor
+from multiprocessing.shared_memory import SharedMemory
 from platform import system
 from typing import List
 
@@ -14,7 +15,6 @@ from fetcher import fetch
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.fetch import update_validator_identifiers
 from fetcher.log import log_time_to_next_duties
-from fetcher.parser.validators import load_updated_validator_identifiers_into_memory
 from helper.help import sort_duties
 from helper.terminate import GracefulTerminator
 from protocol import ethereum
@@ -65,10 +65,7 @@ async def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> boo
         filter(lambda duty: duty.type is not DutyType.SYNC_COMMITTEE, current_duties),
         None,
     )
-    if program.TEMP_DIR.exists():
-        await load_updated_validator_identifiers_into_memory(
-            update_validator_identifiers
-        )
+    if __has_updated_validator_identifiers():
         return True
     if (
         current_duties
@@ -79,6 +76,23 @@ async def __is_current_data_outdated(current_duties: List[ValidatorDuty]) -> boo
     return True
 
 
+def __has_updated_validator_identifiers() -> bool:
+    """Checks shared memory instances for updates
+
+    Returns:
+        bool: Whether or not shared memory objects got updated
+    """
+    try:
+        identifiers_got_updated = SharedMemory("updated", False)
+        update_validator_identifiers()
+        identifiers_got_updated.close()
+        identifiers_got_updated.unlink()
+        return True
+    except FileNotFoundError:
+        pass
+    return False
+
+
 def __update_time_to_duty(duties: List[ValidatorDuty]) -> None:
     """Updates the time to duty field via call by reference
 
@@ -87,6 +101,18 @@ def __update_time_to_duty(duties: List[ValidatorDuty]) -> None:
     """
     for duty in duties:
         ethereum.set_time_to_duty(duty)
+
+
+def __clean_shared_memory() -> None:
+    """Releases shared memory instances"""
+    for (
+        validator_identifier_shared_memory_name
+    ) in program.ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES:
+        shared_memory_validator_identifiers = SharedMemory(
+            validator_identifier_shared_memory_name, False
+        )
+        shared_memory_validator_identifiers.close()
+        shared_memory_validator_identifiers.unlink()
 
 
 async def main() -> None:
@@ -118,5 +144,6 @@ if __name__ == "__main__":
         else:
             run(main())
     except (CancelledError, KeyboardInterrupt) as exception:
+        __clean_shared_memory()
         main_logger.error(logging.SYSTEM_EXIT_MESSAGE)
     main_logger.info(logging.MAIN_EXIT_MESSAGE)
