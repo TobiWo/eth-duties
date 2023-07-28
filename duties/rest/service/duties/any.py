@@ -10,7 +10,7 @@ from helper.help import sort_duties
 
 
 async def any_upcoming_duties_in_queue() -> bool:
-    """Checks whether there are upcoming duties for the provided validators
+    """Check whether there are upcoming duties for the provided validators
 
     Returns:
         bool: Are there any upcoming duties in the queue for the provided validators
