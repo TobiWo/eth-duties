@@ -1,6 +1,7 @@
 """Module for logging validator duties
 """
 
+from datetime import timedelta
 from logging import getLogger
 from time import gmtime, strftime
 from typing import List, Tuple
@@ -98,14 +99,14 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
             f"{Back.RED}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
             f"is in current sync committee (next sync committee starts in "
             f"{time_to_next_sync_committee} / "
-            f"epoch {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
+            f"epoch: {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
         )
     else:
         logging_message = (
             f"{Back.YELLOW}Validator "
             f"{__get_validator_identifier_for_logging(sync_committee_duty)} will be in next "
             f"sync committee which starts in {time_to_next_sync_committee} "
-            f"(epoch {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
+            f"(epoch: {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
         )
     return logging_message
 
@@ -113,8 +114,8 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
 def __get_time_to_next_sync_committee(
     sync_committee_duty: ValidatorDuty,
     current_sync_committee_epoch_boundaries: Tuple[int, int],
-) -> str:
-    """Gets the time when next sync committee starts
+) -> timedelta:
+    """Get the time when next sync committee starts
 
     Args:
         sync_committee_duty (ValidatorDuty): Sync committee duty
@@ -122,21 +123,15 @@ def __get_time_to_next_sync_committee(
         for current sync committee
 
     Returns:
-        str: Time to next sync committee start in format %H:%M:%S
+        str: Time to next sync committee start
     """
     if sync_committee_duty.time_to_duty > 0:
-        return strftime(
-            program.SYNC_COMMITTEE_DUTY_LOGGING_TIME_FORMAT,
-            gmtime(sync_committee_duty.time_to_duty),
-        )
+        return timedelta(seconds=sync_committee_duty.time_to_duty)
     current_slot = ethereum.get_current_slot()
-    return strftime(
-        program.SYNC_COMMITTEE_DUTY_LOGGING_TIME_FORMAT,
-        gmtime(
-            ethereum.get_time_to_next_sync_committee(
-                current_sync_committee_epoch_boundaries, current_slot
-            )
-        ),
+    return timedelta(
+        seconds=ethereum.get_time_to_next_sync_committee(
+            current_sync_committee_epoch_boundaries, current_slot
+        )
     )
 
 
