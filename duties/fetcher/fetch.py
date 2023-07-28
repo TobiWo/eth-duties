@@ -8,7 +8,7 @@ from typing import List
 from cli.arguments import ARGUMENTS
 from constants import endpoints, logging
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.parser.validators import get_active_validator_indices
+from fetcher.identifier.parser import get_active_validator_indices
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
