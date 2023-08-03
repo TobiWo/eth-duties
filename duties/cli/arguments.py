@@ -124,9 +124,16 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--rest",
-        help="If supplied a rest server is started on port 5000",
+        help="Starts a rest server on port 5000",
         action="store_true",
         default=False,
+    )
+    parser.add_argument(
+        "--rest-port",
+        type=int,
+        help="Port where the rest server is exposed (default 5000)",
+        action="store",
+        default=5000,
     )
     parser.add_argument(
         "--validators",
