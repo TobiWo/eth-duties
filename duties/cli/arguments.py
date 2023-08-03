@@ -52,7 +52,7 @@ def __get_raw_arguments() -> Namespace:
         "--log-time-warning",
         type=float,
         help="The threshold at which a time to duty warning log (in seconds) "
-        "gets colored in YELLOW (default: 120)",
+        "will be colored in YELLOW (default: 120)",
         action="store",
         default=120.0,
     )
@@ -60,7 +60,7 @@ def __get_raw_arguments() -> Namespace:
         "--log-time-critical",
         type=float,
         help="The threshold at which a time to duty critical log (in seconds) "
-        "gets colored in RED (default: 60)",
+        "will be colored in RED (default: 60)",
         action="store",
         default=60.0,
     )
@@ -78,7 +78,8 @@ def __get_raw_arguments() -> Namespace:
         "--mode",
         help=(
             "The mode which eth-duties will run with. "
-            "Values are 'log', 'no-log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' (default: 'log')"
+            "Values are 'log', 'no-log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' "
+            "(default: 'log')"
         ),
         type=Mode,
         choices=Mode,

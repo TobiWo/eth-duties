@@ -22,7 +22,7 @@ def update_validator_identifiers() -> None:
     __VALIDATORS.extend(get_active_validator_indices())
 
 
-async def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
+async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
     """Fetches upcoming attestations (for current and upcoming epoch)
     for all validators which were provided by the user.
 
@@ -51,7 +51,7 @@ async def get_next_attestation_duties() -> dict[str, ValidatorDuty]:
     return validator_duties
 
 
-async def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
+async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
     """Fetches current and upcoming sync committee duties for all validators
     provided by the user.
 
@@ -82,7 +82,7 @@ async def get_next_sync_committee_duties() -> dict[str, ValidatorDuty]:
     return validator_duties
 
 
-async def get_next_proposing_duties() -> dict[str, ValidatorDuty]:
+async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
     """Fetches upcoming block proposals for all validators which were
     provided by the user.
 
