@@ -45,3 +45,6 @@ START_REST_SERVER_MESSAGE = "Started rest api server on localhost:%s"
 NOT_SUPPORTED_HTTP_METHOD_MESSAGE = "HTTP method %s is not supported yet"
 CANNOT_READ_SHARED_MEMORY_MESSAGE = "Could not read from shared memory. Exiting!"
 CANNOT_WRITE_SHARED_MEMORY_MESSAGE = "Could not write to shared memory. Exiting!"
+PORT_ALREADY_IN_USAE_MESSAGE = (
+    "Port %s is already in use. Starting eth-duties without rest server."
+)
