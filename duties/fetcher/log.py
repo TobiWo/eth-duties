@@ -9,13 +9,11 @@ from typing import List, Tuple
 from cli.arguments import ARGUMENTS
 from colorama import Back, Style
 from constants import logging, program
-from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from protocol import ethereum
 
-__validator_identifiers_with_alias = read_validator_identifiers_from_shared_memory(
-    program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME
-)
+__validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 
 __LOGGER = getLogger()
 
