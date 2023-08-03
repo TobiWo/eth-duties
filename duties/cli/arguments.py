@@ -6,7 +6,7 @@ from argparse import ArgumentError, ArgumentParser, FileType, Namespace
 from itertools import chain
 from typing import List
 
-from cli.parse import parse_validator_identifiers
+from cli import parse
 from cli.types import Mode
 
 
@@ -23,7 +23,7 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--beacon-node",
-        type=str,
+        type=parse.set_beacon_node_url,
         help="URL to access the beacon node api (default: http://localhost:5052)",
         action="store",
         default="http://localhost:5052",
@@ -138,7 +138,7 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--validators",
-        type=parse_validator_identifiers,
+        type=parse.set_validator_identifiers,
         help=(
             "One or many validator identifiers for which next duties will be fetched. "
             "Validator identifiers need to be separated by space or comma. "
