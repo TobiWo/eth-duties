@@ -6,10 +6,13 @@ from typing import Callable, List
 
 from constants.program import ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.fetch import update_validator_identifiers
+from fetcher.fetch import (
+    get_next_attestation_duties,
+    get_next_proposing_duties,
+    get_next_sync_committee_duties,
+    update_validator_identifiers,
+)
 from protocol.ethereum import get_current_epoch, get_current_slot, set_time_to_duty
-
-sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
 
 
 def is_current_data_up_to_date(current_duties: List[ValidatorDuty]) -> bool:
@@ -111,3 +114,28 @@ def clean_shared_memory() -> None:
         )
         shared_memory_validator_identifiers.close()
         shared_memory_validator_identifiers.unlink()
+
+
+async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
+    """Fetch upcoming validator duties
+
+    Returns:
+        List[ValidatorDuty]: Sorted list with all upcoming validator duties
+    """
+    upcoming_attestation_duties = await get_next_attestation_duties()
+    upcoming_sync_committee_duties = await get_next_sync_committee_duties()
+    upcoming_proposing_duties = await get_next_proposing_duties()
+    duties = [
+        duty
+        for duties in [
+            upcoming_attestation_duties,
+            upcoming_proposing_duties,
+            upcoming_sync_committee_duties,
+        ]
+        for duty in duties.values()
+    ]
+    duties.sort(key=__sort_duties)
+    return duties
+
+
+__sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
