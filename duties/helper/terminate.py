@@ -11,6 +11,7 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
+from helper.help import clean_shared_memory
 
 
 class GracefulTerminator:
@@ -48,18 +49,23 @@ class GracefulTerminator:
             case Mode.CICD_EXIT:
                 if self.__no_relevant_upcoming_duties(duties):
                     self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
+                    clean_shared_memory()
                     sys_exit(0)
                 self.logger.info(logging.EXIT_CODE_MESSAGE, 1)
+                clean_shared_memory()
                 sys_exit(1)
             case Mode.CICD_WAIT:
                 if self.__no_relevant_upcoming_duties(duties):
                     self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
+                    clean_shared_memory()
                     sys_exit(0)
                 if self.__cicd_cycle_counter >= self.__max_number_of_cicd_cycles:
                     self.logger.info(logging.EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE)
                     self.logger.info(logging.EXIT_CODE_MESSAGE, 1)
+                    clean_shared_memory()
                     sys_exit(1)
             case Mode.CICD_FORCE_GRACEFUL_EXIT:
+                clean_shared_memory()
                 sys_exit(0)
             case _:
                 pass
