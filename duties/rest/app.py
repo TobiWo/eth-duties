@@ -24,7 +24,7 @@ def create_rest_server() -> RestServer:
     """
     config = UvicornConfig(
         "rest.app:app",
-        host="127.0.0.1",
+        host=ARGUMENTS.rest_host,
         port=ARGUMENTS.rest_port,
         log_config=get_logging_config(ARGUMENTS.log),
     )
