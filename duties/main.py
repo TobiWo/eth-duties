@@ -19,7 +19,8 @@ from helper.help import (
     update_time_to_duty,
 )
 from helper.terminate import GracefulTerminator
-from rest.app import start_rest_server
+from rest.app import create_rest_server
+from rest.core.server import RestServer
 
 
 async def __fetch_validator_duties(
@@ -38,7 +39,7 @@ async def __fetch_validator_duties(
     return await fetch_upcoming_validator_duties()
 
 
-async def main() -> None:
+async def __main() -> None:
     """eth-duties main function"""
     graceful_terminator = GracefulTerminator(
         floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)
@@ -57,16 +58,32 @@ async def main() -> None:
             await sleep(ARGUMENTS.interval)
 
 
+def __start_processes(rest_server: RestServer) -> None:
+    """Starts the relevant processes
+
+    Args:
+        rest_server (RestServer): Rest server object
+    """
+    if ARGUMENTS.rest and not "cicd" in ARGUMENTS.mode.value:
+        rest_server.start()
+        rest_server.server.started = True
+        run(__main())
+    elif ARGUMENTS.rest and "cicd" in ARGUMENTS.mode.value:
+        main_logger.info(logging.IGNORED_REST_FLAG_MESSAGE)
+        run(__main())
+    else:
+        run(__main())
+
+
 if __name__ == "__main__":
-    main_logger = getLogger(__name__)
+    main_logger = getLogger()
     main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
+    rest_api_server = create_rest_server()
     try:
-        if ARGUMENTS.rest:
-            start_rest_server()
-            run(main())
-        else:
-            run(main())
-    except (CancelledError, KeyboardInterrupt) as exception:
+        __start_processes(rest_api_server)
+    except (CancelledError, KeyboardInterrupt):
+        if rest_api_server.server.started:
+            rest_api_server.stop()
         clean_shared_memory()
         main_logger.error(logging.SYSTEM_EXIT_MESSAGE)
     main_logger.info(logging.MAIN_EXIT_MESSAGE)
