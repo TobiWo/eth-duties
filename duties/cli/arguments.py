@@ -130,6 +130,13 @@ def __get_raw_arguments() -> Namespace:
         default=False,
     )
     parser.add_argument(
+        "--rest-host",
+        type=str,
+        help="Host from which requests will be accepted (default 0.0.0.0)",
+        action="store",
+        default="0.0.0.0",
+    )
+    parser.add_argument(
         "--rest-port",
         type=int,
         help="Port where the rest server is exposed (default 5000)",
