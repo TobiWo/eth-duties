@@ -108,6 +108,12 @@ This flag is self-explanatory in general but you need to respect the following s
 
 **Note: Wrapping an identifier-alias-pair in quotes or double quotes is not true for a `docker-compose`. Please check the example [compose](docker/compose.yaml).**
 
+### rest
+
+Eth-duties offers the possibility to start a rest server with some basic endpoints. This is a very simple implemenation which starts a rest server on your localhost. The server can be started with flag `--rest`. The port can be modified with `--rest-port`. The full swagger spec can be accessed (using default port 5000) via [http://localhost:5000/docs](http://localhost:5000/docs).
+
+This functionality can be used to e.g. create own automation scripts for updating your Ethereum clients. Beside that it is now also possible to add and remove validator indices via rest calls.
+
 ## What to expect
 
 Beside the actual functionality of logging upcoming duties I added some kind of UX in form of color coding.
@@ -284,6 +290,8 @@ As always you need to navigate to the root folder of this repository first. Make
 
 ### Run in Docker
 
+**Note: You might have realized the `--tty` option for the `docker run` command. During development of the rest feature I realized that there is an issue with the server package I'm using to run the rest server and the colorful logging which eth-duties offers. Without adding the `tty` flag the logging wouldn't be colored for some reason. I will furhter investigate and hopefully find a more consistent solution in the future but for now please add the `tty` flag if you want colorful logging. The compose files where updated as well.**
+
 1. Build image
 
     ```bash
@@ -294,6 +302,7 @@ As always you need to navigate to the root folder of this repository first. Make
 
     ```bash
     docker run \
+    --tty \
     --rm \
     --name eth-duties \
     tobiwo/eth-duties:latest \
@@ -308,6 +317,7 @@ As always you need to navigate to the root folder of this repository first. Make
     ```bash
     docker run \
     -d \
+    --tty \
     --restart always \
     --name eth-duties \
     tobiwo/eth-duties:latest \
