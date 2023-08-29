@@ -5,12 +5,13 @@ from asyncio import run
 from logging import getLogger
 from multiprocessing.shared_memory import SharedMemory
 from sys import exit as sys_exit
-from typing import List
+from typing import Dict, List
 
 from cli.arguments import ARGUMENTS
 from constants import logging, program
 from fetcher.data_types import ValidatorIdentifier
 from fetcher.identifier import core
+from fetcher.identifier.filter import filter_empty_validator_identifier
 from rest.core.types import HttpMethod
 
 __LOGGER = getLogger()
@@ -44,41 +45,44 @@ async def create_shared_active_validator_identifiers_at_startup() -> None:
     core.create_shared_active_validator_identifiers_with_alias()
 
 
-def __get_raw_validator_identifiers_from_cli() -> dict[str, ValidatorIdentifier]:
+def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdentifier]:
     """Parse the validator identifiers provided by the user
 
     Returns:
-        dict[str, ValidatorIdentifier]: Validator identifiers_
+        Dict[str, ValidatorIdentifier]: Validator identifiers
     """
+    raw_validator_identifiers = {}
     if ARGUMENTS.validators:
-        return {
+        raw_validator_identifiers = {
             core.get_validator_index_or_pubkey(
-                None, core.create_raw_validator_identifier(str(validator))
-            ): core.create_raw_validator_identifier(str(validator))
+                None, core.create_raw_validator_identifier(str(validator), True)
+            ): core.create_raw_validator_identifier(str(validator), False)
             for validator_list in ARGUMENTS.validators
             for validator in validator_list
         }
-    return {
-        core.get_validator_index_or_pubkey(
-            None,
-            core.create_raw_validator_identifier(
-                str(validator).strip().replace("\n", "").replace("\r\n", "")
-            ),
-        ): core.create_raw_validator_identifier(
-            str(validator).strip().replace("\n", "").replace("\r\n", "")
-        )
-        for validator in ARGUMENTS.validators_file
-    }
+    elif ARGUMENTS.validators_file:
+        raw_validator_identifiers = {
+            core.get_validator_index_or_pubkey(
+                None,
+                core.create_raw_validator_identifier(
+                    str(validator).strip().replace("\n", "").replace("\r\n", ""), True
+                ),
+            ): core.create_raw_validator_identifier(
+                str(validator).strip().replace("\n", "").replace("\r\n", ""), False
+            )
+            for validator in ARGUMENTS.validators_file
+        }
+    return filter_empty_validator_identifier(raw_validator_identifiers)
 
 
 async def update_shared_active_validator_identifiers(
-    provided_raw_validator_identifiers: dict[str, ValidatorIdentifier],
+    provided_raw_validator_identifiers: Dict[str, ValidatorIdentifier],
     http_method: str,
 ) -> None:
     """Update the active validator identifiers in shared memory
 
     Args:
-        provided_raw_validator_identifiers (dict[str, ValidatorIdentifier]): Provided validator
+        provided_raw_validator_identifiers (Dict[str, ValidatorIdentifier]): Provided validator
         identifiers by the user
         http_method (str): REST method
     """

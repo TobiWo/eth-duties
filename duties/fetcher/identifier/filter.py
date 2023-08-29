@@ -11,6 +11,24 @@ from fetcher.identifier import core
 __LOGGER = getLogger()
 
 
+def filter_empty_validator_identifier(
+    validator_identifiers: Dict[str, ValidatorIdentifier]
+) -> Dict[str, ValidatorIdentifier]:
+    """Filter for empty validator identifiers
+
+    Args:
+        validator_identifiers (Dict[str, ValidatorIdentifier]): Raw validator identifiers
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Filtered validator identifiers
+    """
+    return {
+        index_or_pubkey: validator_identifier
+        for (index_or_pubkey, validator_identifier) in validator_identifiers.items()
+        if index_or_pubkey != ""
+    }
+
+
 def log_inactive_and_duplicated_validators(
     provided_validators: List[str],
     complete_validator_identifiers: Dict[str, ValidatorIdentifier],
