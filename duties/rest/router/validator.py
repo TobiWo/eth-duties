@@ -3,40 +3,55 @@
 
 from typing import List
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request, Response, status
 from fetcher.data_types import ValidatorIdentifier
+from rest.core.types import BadValidatorIdentifiers
 from rest.service.validator import update_validator_identifiers
 
 validator_router = APIRouter(prefix="/validator", tags=["validator"])
 
 
-@validator_router.post("/identifier", status_code=status.HTTP_201_CREATED)
+@validator_router.post(
+    "/identifier",
+    status_code=status.HTTP_201_CREATED,
+    responses={400: {"model": BadValidatorIdentifiers}},
+)
 async def add_validator_identifier(
-    validator_identifiers: List[str], request: Request
-) -> List[ValidatorIdentifier]:
-    """Add validator identifiers to the running eth-duties instance (only in memory)_summary_
+    validator_identifiers: List[str], request: Request, response: Response
+) -> List[ValidatorIdentifier] | BadValidatorIdentifiers:
+    """Add validator identifiers to the running eth-duties instance (only in memory)
 
     Args:
         validator_identifiers (List[str]): Provided validator identifiers
         request (Request): Sent request
+        response (Response): Sent server response
 
     Returns:
-        List[ValidatorIdentifier]: Provided validator identifiers
+        List[ValidatorIdentifier] | BadValidatorIdentifiers: Added validator identifiers
     """
-    response = await update_validator_identifiers(validator_identifiers, request.method)
-    if response:
-        return response
-    return []
+    return await update_validator_identifiers(
+        validator_identifiers, request.method, response
+    )
 
 
-@validator_router.delete("/identifier", status_code=status.HTTP_204_NO_CONTENT)
+@validator_router.delete(
+    "/identifier",
+    status_code=status.HTTP_200_OK,
+    responses={400: {"model": BadValidatorIdentifiers}},
+)
 async def delete_validator_identifier(
-    validator_identifier: List[str], request: Request
-) -> None:
+    validator_identifiers: List[str], request: Request, response: Response
+) -> List[ValidatorIdentifier] | BadValidatorIdentifiers:
     """Delete validator identifiers from the running eth-duties instance (only in memory)
 
     Args:
-        validator_identifier (List[str]): Provided validator identifiers
+        validator_identifiers (List[str]): Provided validator identifiers
         request (Request): Sent request
+        response (Response): Sent server response
+
+        Returns:
+        List[ValidatorIdentifier] | BadValidatorIdentifiers: Deleted validator identifiers
     """
-    await update_validator_identifiers(validator_identifier, request.method)
+    return await update_validator_identifiers(
+        validator_identifiers, request.method, response
+    )
