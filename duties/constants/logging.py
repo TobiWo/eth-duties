@@ -23,11 +23,8 @@ INACTIVE_VALIDATORS_MESSAGE = (
     "The following provided validators are not active "
     "and therefore will be skipped for further processing: %s"
 )
-WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE = (
-    "Provided character is not supported for validator '%s'. "
-    "Please only use ';' for separation of <INDEX_OR_PUBKEY> "
-    "and <ALIAS> (e.g. 123;Validator_1). "
-    "Furthermore only '-' and '_' are allowed for multiword alias.",
+SKIPPING_PROVIDED_IDENTIFIER_MESSAGE = (
+    "Skipping provided validator %s for further processing due to bad format"
 )
 WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE = "Wrong or incomplete provided pubkey: 0x%s"
 PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE = "Pubkey 0x%s is not hexadecimal: %s"
@@ -51,3 +48,4 @@ PORT_ALREADY_IN_USAGE_MESSAGE = (
 IGNORED_REST_FLAG_MESSAGE = (
     "Rest server will not be started in any cicd-mode. Flag '--rest' will be ignored!"
 )
+MODIFIED_VALIDATOR_IDENTIFIER_MESSAGE = "%s validator identifiers: %s"
