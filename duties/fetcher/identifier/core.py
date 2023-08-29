@@ -111,51 +111,77 @@ def get_validator_index_or_pubkey(
     return raw_validator_identifier.validator.pubkey
 
 
-def create_raw_validator_identifier(validator: str) -> ValidatorIdentifier:
+def create_raw_validator_identifier(
+    provided_validator_identifier: str, is_logged: bool
+) -> ValidatorIdentifier:
     """Create raw validator identifier object
 
     Args:
-        validator (str): Validator provided by the user
-
-    Raises:
-        SystemExit: If provided validator contains not allowed characters
+        provided_validator_identifier (str): Validator identifier provided by the user
+        is_logged (bool): Will log warnings about the provided identifier
 
     Returns:
         ValidatorIdentifier: Raw validator identifier
     """
-    if any(
-        character in validator
-        for character in program.NOT_ALLOWED_CHARACTERS_FOR_VALIDATOR_PARSING
-    ):
-        __LOGGER.error(
-            logging.WRONG_CHARACTER_IN_PROVIDED_VALIDATOR_IDENTIFIER_MESSAGE,
-            validator,
+    if program.ALIAS_SEPARATOR in provided_validator_identifier:
+        full_validator_identifier = __parse_validator_identifier_with_alias(
+            provided_validator_identifier, is_logged
         )
-        raise SystemExit()
-    if program.ALIAS_SEPARATOR in validator:
-        validator = validator.replace(" ", "")
-        alias_split = validator.split(program.ALIAS_SEPARATOR)
-        index_or_pubkey = alias_split[0]
-        alias = alias_split[1]
-        if index_or_pubkey.startswith(program.PUBKEY_PREFIX):
-            if __is_valid_pubkey(index_or_pubkey[len(program.PUBKEY_PREFIX) :]):
-                return ValidatorIdentifier("", ValidatorData(index_or_pubkey), alias)
+        if full_validator_identifier:
+            return full_validator_identifier
+    if provided_validator_identifier.startswith(program.PUBKEY_PREFIX):
+        if __is_valid_pubkey(
+            provided_validator_identifier[len(program.PUBKEY_PREFIX) :], is_logged
+        ):
+            return ValidatorIdentifier(
+                "", ValidatorData(provided_validator_identifier), None
+            )
+    if provided_validator_identifier.isdigit():
+        return ValidatorIdentifier(
+            provided_validator_identifier, ValidatorData(""), None
+        )
+    if is_logged:
+        __LOGGER.warning(
+            logging.SKIPPING_PROVIDED_IDENTIFIER_MESSAGE,
+            provided_validator_identifier,
+        )
+    return ValidatorIdentifier()
+
+
+def __parse_validator_identifier_with_alias(
+    provided_validator_identifier_with_alias: str, is_logged: bool
+) -> ValidatorIdentifier | None:
+    """Parse the provided identifier and alias
+
+    Args:
+        provided_validator_identifier (str): Validator identifier provided by the user
+        is_logged (bool): Will log errors about the provided pubkey
+
+    Returns:
+        ValidatorIdentifier | None: Raw validator identifier with alias
+    """
+    provided_validator_identifier_with_alias = (
+        provided_validator_identifier_with_alias.replace(" ", "")
+    )
+    alias_split = provided_validator_identifier_with_alias.split(
+        program.ALIAS_SEPARATOR
+    )
+    index_or_pubkey = alias_split[0]
+    alias = alias_split[1]
+    if index_or_pubkey.startswith(program.PUBKEY_PREFIX):
+        if __is_valid_pubkey(index_or_pubkey[len(program.PUBKEY_PREFIX) :], is_logged):
+            return ValidatorIdentifier("", ValidatorData(index_or_pubkey), alias)
+    if index_or_pubkey.isdigit():
         return ValidatorIdentifier(index_or_pubkey, ValidatorData(""), alias)
-    if validator.startswith(program.PUBKEY_PREFIX):
-        if __is_valid_pubkey(validator[len(program.PUBKEY_PREFIX) :]):
-            return ValidatorIdentifier("", ValidatorData(validator), None)
-    return ValidatorIdentifier(validator, ValidatorData(""), None)
+    return None
 
 
-def __is_valid_pubkey(pubkey: str) -> bool:
+def __is_valid_pubkey(pubkey: str, is_logged: bool) -> bool:
     """Check whether the provided pubkey is valid
 
     Args:
         pubkey (str): Provided pubkey by the user
-
-    Raises:
-        SystemExit: If provided pubkey has wrong length
-        SystemExit: If provided pubkey is not hexadecimal
+        is_logged (bool): Will log errors about the provided pubkey
 
     Returns:
         bool: True if pubkey is valid
@@ -163,11 +189,13 @@ def __is_valid_pubkey(pubkey: str) -> bool:
     try:
         parsed_pubkey = BLSPubkey(bytes.fromhex(pubkey))
         if len(parsed_pubkey) != program.PUBKEY_LENGTH:
-            __LOGGER.error(logging.WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE, pubkey)
-            raise SystemExit()
+            if is_logged:
+                __LOGGER.error(logging.WRONG_OR_INCOMPLETE_PUBKEY_MESSAGE, pubkey)
+            return False
     except ValueError as error:
-        __LOGGER.error(logging.PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE, pubkey, error)
-        raise SystemExit() from error
+        if is_logged:
+            __LOGGER.error(logging.PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE, pubkey, error)
+        return False
     return True
 
 
