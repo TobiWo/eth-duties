@@ -97,22 +97,41 @@ These new flags will be only useful until a certain threshold of monitored valid
 
 ### validators
 
-This flag is self-explanatory in general but you need to respect the following separation rules:
+#### Accepted formats
+
+The following formats are accepted:
+
+* validator index e.g. 123456
+* validator pubkey e.g. 0xaffc434cf8138634a4cd0ef6cb815febd3db25760b1b6c522f9b4aa78e599b60336d7dd2e953192e45d4ac91f66f0723
+* validator index/pubkey with alias e.g. "123456;my-validator"
+
+#### Separation
+
+The following separation rules apply while adding multiple identifiers:
 
 * Validator identifiers can be separated by comma or space e.g.:
   * `--validators 123 456 --validators 678 999`
   * `--validators 123,456 --validators 678,999`
 * If you provide a validator identifier with an alias you need to wrap the whole string of one identifier-alias-pair in quotes or double quotes e.g.:
   * `--validators "123;val1" "456;val2" --validators 678 999` or
-  * `--validators "123;val1","456;val2" --validators 678,999`
+  * `--validators '123;val1','456;val2' --validators 678,999`
 
 **Note: Wrapping an identifier-alias-pair in quotes or double quotes is not true for a `docker-compose`. Please check the example [compose](docker/compose.yaml).**
 
 ### rest
 
-Eth-duties offers the possibility to start a rest server with some basic endpoints. This is a very simple implemenation which starts a rest server on your localhost. The server can be started with flag `--rest`. The port can be modified with `--rest-port`. The full swagger spec can be accessed (using default port 5000) via [http://localhost:5000/docs](http://localhost:5000/docs).
+Eth-duties offers the possibility to start a rest server with some basic endpoints. This is a very simple implemenation which starts a rest server on your localhost. The server can be started with flag `--rest`. The port can be modified with `--rest-port`. Additionally you can change the host from which connections are accepted with `--rest-host`. The full swagger spec can be accessed (using default port 5000) via [http://localhost:5000/docs](http://localhost:5000/docs).
 
-This functionality can be used to e.g. create own automation scripts for updating your Ethereum clients. Beside that it is now also possible to add and remove validator indices via rest calls.
+This functionality can be used to e.g. create own automation scripts for updating your Ethereum clients.
+
+Beside that it is now also possible to add and remove validator identifiers via rest calls. Some notes for these endpoints:
+
+1. You will receive a **201 (ADD)** or **200 (DELETE)** with the corresponding added/deleted validator identifiers
+    * If the number of returned identifiers does not match the number of provided identifiers, the missing ones are in a bad format
+    * If identifiers already exist (while calling the **ADD** endpoint) or are not present (while calling the **DELETE** endpoint) no error will be returned
+    * For adding new identifiers the rest endpoint accepts the same formats as the [--validators](#accepted-formats) flag during startup
+1. You will receive a 400 while only providing bad formatted identifiers
+1. Check also the logs which are more verbose if you sent a bad formatted identifier
 
 ## What to expect
 
