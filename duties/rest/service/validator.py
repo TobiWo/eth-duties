@@ -7,6 +7,9 @@ from typing import Dict, List
 from constants import logging
 from fastapi import Response, status
 from fetcher.data_types import ValidatorIdentifier
+from fetcher.fetch import (
+    update_validator_identifiers as update_validator_identifiers_for_fetcher,
+)
 from fetcher.identifier import core
 from fetcher.identifier.filter import filter_empty_validator_identifier
 from fetcher.identifier.parser import update_shared_active_validator_identifiers
@@ -37,6 +40,7 @@ async def update_validator_identifiers(
     await update_shared_active_validator_identifiers(
         provided_raw_validator_identifiers, http_method
     )
+    update_validator_identifiers_for_fetcher()
     __LOGGER.info(
         logging.MODIFIED_VALIDATOR_IDENTIFIER_MESSAGE,
         http_method,
