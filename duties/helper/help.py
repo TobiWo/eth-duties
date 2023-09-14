@@ -74,7 +74,8 @@ def __is_first_sync_committee_duty_up_to_date(
         current_epoch = get_current_epoch()
         if first_duty.epoch >= current_epoch:
             return True
-    return False
+        return False
+    return True
 
 
 def __has_updated_validator_identifiers() -> bool:
