@@ -22,10 +22,12 @@ def __get_raw_arguments() -> Namespace:
         usage="eth-duties [...options]",
     )
     parser.add_argument(
-        "--beacon-node",
-        type=parse.set_beacon_node_url,
-        help="URL to access the beacon node api (default: http://localhost:5052)",
-        action="store",
+        "--beacon-nodes",
+        type=parse.set_beacon_node_urls,
+        help=(
+            "Comma separated list of URLs to access the beacon node api "
+            "(default: http://localhost:5052)"
+        ),
         default="http://localhost:5052",
     )
     parser.add_argument(
