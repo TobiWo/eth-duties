@@ -19,8 +19,12 @@ from helper.help import (
     update_time_to_duty,
 )
 from helper.terminate import GracefulTerminator
+from protocol.connection import BeaconNode
 from rest.app import create_rest_server
 from rest.core.server import RestServer
+
+__LOGGER = getLogger()
+beacon_node = BeaconNode()
 
 
 async def __fetch_validator_duties(
@@ -35,8 +39,18 @@ async def __fetch_validator_duties(
         List[ValidatorDuty]: Sorted list with all upcoming validator duties
     """
     if is_current_data_up_to_date(duties):
+        __check_beacon_node_connection()
         return duties
     return await fetch_upcoming_validator_duties()
+
+
+def __check_beacon_node_connection() -> None:
+    """Check healthiness of beacon node connections while using cached data"""
+    beacon_node.get_healthy_beacon_node(True)
+    if not beacon_node.is_any_node_healthy:
+        __LOGGER.warning(
+            "Cached data will only be used until next upcoming duty is due"
+        )
 
 
 async def __main() -> None:
