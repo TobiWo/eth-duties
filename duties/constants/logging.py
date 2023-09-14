@@ -3,12 +3,12 @@
 
 CONNECTION_ERROR_MESSAGE = "Couldn't connect to beacon client. Retry in 2 second."
 READ_TIMEOUT_ERROR_MESSAGE = "Couldn't read from beacon client. Retry in 5 seconds."
-NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from the beacon client."
+NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from the beacon client"
 NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE = (
     "Response object does not include a 'data' field"
 )
 SYSTEM_EXIT_MESSAGE = "Detected user intervention (SIGINT). Shutting down."
-NEXT_INTERVAL_MESSAGE = "Logging next interval..."
+NEXT_INTERVAL_MESSAGE = "Logging next duties interval..."
 NO_UPCOMING_DUTIES_MESSAGE = "No upcoming duties detected!"
 TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE = (
     "Provided number of validators for fetching attestion duties is high (> %s). "
@@ -49,3 +49,11 @@ IGNORED_REST_FLAG_MESSAGE = (
     "Rest server will not be started in any cicd-mode. Flag '--rest' will be ignored!"
 )
 MODIFIED_VALIDATOR_IDENTIFIER_MESSAGE = "%s validator identifiers: %s"
+NO_AVAILABLE_BEACON_NODE_MESSAGE = (
+    "Non of the provided beacon nodes is ready to accept requests"
+)
+USED_BEACON_NODE_MESSAGE = "Using beacon node %s"
+PRIMARY_BEACON_NODE_DOWN_MESSAGE = (
+    "Primary beacon node %s is not ready to accept requests"
+)
+TRYING_BACKUP_NODES_MESSAGE = "Trying backup nodes"
