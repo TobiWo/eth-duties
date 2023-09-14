@@ -8,12 +8,13 @@ from logging import getLogger
 from typing import Any, List
 from urllib.parse import urlencode
 
-from cli.arguments import ARGUMENTS
 from constants import json, logging, program
+from protocol.connection import BeaconNode
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
 
 __LOGGER = getLogger()
+beacon_node = BeaconNode()
 
 
 class CalldataType(Enum):
@@ -86,27 +87,9 @@ async def __send_request(
     response = Response()
     calldata = __get_processed_calldata(provided_validators, calldata_type)
     while not is_request_successful:
+        ready_beacon_node = beacon_node.get_healthy_beacon_node(True)
         try:
-            match calldata_type:
-                case CalldataType.REQUEST_DATA:
-                    response = post(
-                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                        data=calldata,
-                        timeout=program.REQUEST_TIMEOUT,
-                        headers=program.REQUEST_HEADER,
-                    )
-                case CalldataType.PARAMETERS:
-                    parameters = urlencode({"id": calldata}, safe=",")
-                    response = get(
-                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                        params=parameters,
-                        timeout=program.REQUEST_TIMEOUT,
-                    )
-                case _:
-                    response = get(
-                        url=f"{ARGUMENTS.beacon_node}{endpoint}",
-                        timeout=program.REQUEST_TIMEOUT,
-                    )
+            response = __call_rest(ready_beacon_node, endpoint, calldata, calldata_type)
             response.close()
             is_request_successful = __is_request_successful(response)
         except RequestsConnectionError:
@@ -115,6 +98,37 @@ async def __send_request(
         except (ReadTimeout, KeyError):
             __LOGGER.error(logging.READ_TIMEOUT_ERROR_MESSAGE)
             await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
+    return response
+
+
+def __call_rest(
+    beacon_node_url: str | None,
+    endpoint: str,
+    calldata: str,
+    calldata_type: CalldataType,
+) -> Response:
+    response = Response()
+    match calldata_type:
+        case CalldataType.REQUEST_DATA:
+            response = post(
+                url=f"{beacon_node_url}{endpoint}",
+                data=calldata,
+                timeout=program.REQUEST_TIMEOUT,
+                headers=program.REQUEST_HEADER,
+            )
+        case CalldataType.PARAMETERS:
+            parameters = urlencode({"id": calldata}, safe=",")
+            response = get(
+                url=f"{beacon_node_url}{endpoint}",
+                params=parameters,
+                timeout=program.REQUEST_TIMEOUT,
+            )
+        case _:
+            response = get(
+                url=f"{beacon_node_url}{endpoint}",
+                timeout=program.REQUEST_TIMEOUT,
+            )
+    response.close()
     return response
 
 
