@@ -5,13 +5,18 @@ from asyncio import run
 from logging import getLogger
 from multiprocessing.shared_memory import SharedMemory
 from sys import exit as sys_exit
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from cli.arguments import ARGUMENTS
-from constants import logging, program
+from constants import endpoints, json, logging, program
 from fetcher.data_types import ValidatorIdentifier
 from fetcher.identifier import core
-from fetcher.identifier.filter import filter_empty_validator_identifier
+from fetcher.identifier.filter import (
+    filter_empty_validator_identifier,
+    log_inactive_and_duplicated_validators,
+)
+from protocol.ethereum import ACTIVE_VALIDATOR_STATUS
+from protocol.request import CalldataType, send_beacon_api_request
 from rest.core.types import HttpMethod
 
 __LOGGER = getLogger()
@@ -36,13 +41,116 @@ async def create_shared_active_validator_identifiers_at_startup() -> None:
     shared_active_validator_identifiers = SharedMemory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME, False
     )
-    active_validator_identifiers = await core.fetch_active_validator_identifiers(
+    active_validator_identifiers = await __fetch_active_validator_identifiers(
         __get_raw_validator_identifiers_from_cli()
     )
     core.write_validator_identifiers_to_shared_memory(
         shared_active_validator_identifiers, active_validator_identifiers
     )
     core.create_shared_active_validator_identifiers_with_alias()
+
+
+async def __fetch_active_validator_identifiers(
+    provided_raw_validator_identifiers: dict[str, ValidatorIdentifier]
+) -> dict[str, ValidatorIdentifier]:
+    """Fetch active validators based on on-chain status
+
+    Args:
+        provided_raw_validator_identifiers (dict[str, ValidatorIdentifier]): Provided validator
+        identifiers by the user
+    Returns:
+        dict[str, ValidatorIdentifier]: Active validator identifiers
+    """
+    if (
+        len(provided_raw_validator_identifiers)
+        > program.THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD
+    ):
+        __LOGGER.info(
+            logging.HIGHER_PROCESSING_TIME_INFO_MESSAGE,
+            len(provided_raw_validator_identifiers),
+        )
+    provided_validators = [
+        core.get_validator_index_or_pubkey(None, validator)
+        for validator in provided_raw_validator_identifiers.values()
+    ]
+    validator_infos = await send_beacon_api_request(
+        endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
+        calldata_type=CalldataType.PARAMETERS,
+        provided_validators=provided_validators,
+    )
+    provided_active_validator_identifiers = (
+        __create_complete_active_validator_identifiers(
+            validator_infos, provided_validators, provided_raw_validator_identifiers
+        )
+    )
+    return provided_active_validator_identifiers
+
+
+def __create_complete_active_validator_identifiers(
+    fetched_validator_infos: List[Any],
+    provided_validators: List[str],
+    raw_validator_identifiers: dict[str, ValidatorIdentifier],
+) -> Dict[str, ValidatorIdentifier]:
+    """Create complete validator identifiers (index, pubkey, alias) and filters
+    for inactive ones and duplicates
+
+    Args:
+        fetched_validator_infos (List[Any]): Fetched validator infos from the beacon chain
+        provided_validators (List[str]): Provided validators by the user
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Complete validator identifiers
+        filtered for inactive ones and duplicates
+    """
+    complete_validator_identifiers: Dict[str, ValidatorIdentifier] = {}
+    for validator_info in fetched_validator_infos:
+        raw_identifier = __get_raw_validator_identifier(
+            validator_info, raw_validator_identifiers
+        )
+        if (
+            raw_identifier
+            and validator_info[json.RESPONSE_JSON_STATUS_FIELD_NAME]
+            in ACTIVE_VALIDATOR_STATUS
+        ):
+            raw_identifier.index = validator_info[json.RESPONSE_JSON_INDEX_FIELD_NAME]
+            raw_identifier.validator.pubkey = validator_info[
+                json.RESPONSE_JSON_VALIDATOR_FIELD_NAME
+            ][json.RESPONSE_JSON_PUBKEY_FIELD_NAME]
+            complete_validator_identifiers[raw_identifier.index] = raw_identifier
+    log_inactive_and_duplicated_validators(
+        provided_validators, complete_validator_identifiers
+    )
+    return complete_validator_identifiers
+
+
+def __get_raw_validator_identifier(
+    validator_info: Any,
+    raw_validator_identifiers: dict[str, ValidatorIdentifier],
+) -> ValidatorIdentifier | None:
+    """Get raw validator identifier as provided by the user based on the
+    fetched validator infos from the beacon chain
+
+    Args:
+        validator_info (Any): Validator infos from the beacon chain
+
+    Returns:
+        ValidatorIdentifier | None: Raw validator identifier
+    """
+    identifier_index = raw_validator_identifiers.get(
+        validator_info[json.RESPONSE_JSON_INDEX_FIELD_NAME]
+    )
+    identifier_pubkey = raw_validator_identifiers.get(
+        validator_info[json.RESPONSE_JSON_VALIDATOR_FIELD_NAME][
+            json.RESPONSE_JSON_PUBKEY_FIELD_NAME
+        ]
+    )
+    if identifier_index and identifier_pubkey:
+        if identifier_index.alias:
+            return identifier_index
+        return identifier_pubkey
+    if identifier_index:
+        return identifier_index
+    return identifier_pubkey
 
 
 def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdentifier]:
@@ -86,10 +194,8 @@ async def update_shared_active_validator_identifiers(
         identifiers by the user
         http_method (str): REST method
     """
-    provided_active_validator_identifiers = (
-        await core.fetch_active_validator_identifiers(
-            provided_raw_validator_identifiers
-        )
+    provided_active_validator_identifiers = await __fetch_active_validator_identifiers(
+        provided_raw_validator_identifiers
     )
     current_active_validator_identifiers = (
         core.read_validator_identifiers_from_shared_memory(
