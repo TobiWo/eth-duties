@@ -27,3 +27,10 @@ class BadValidatorIdentifiers(BaseModel):
     provided validators which are provided in a bad format"""
 
     identifiers: List[str] = list("")
+
+
+class NoBeaconNodeConnection(BaseModel):
+    """DTO for rest path /duties/raw which indicates that non
+    of the provided beacon nodes is available"""
+
+    message: str = "No healthy beacon node connection available"
