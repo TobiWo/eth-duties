@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
 
-from dataclass_wizard import JSONWizard
+from dataclass_wizard import JSONWizard  # type: ignore[import]
 
 
 class DutyType(Enum):
