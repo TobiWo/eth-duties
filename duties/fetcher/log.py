@@ -7,11 +7,11 @@ from time import gmtime, strftime
 from typing import List, Tuple
 
 from cli.arguments import ARGUMENTS
-from colorama import Back, Style
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from protocol import ethereum
+from sty import bg, rs  # type: ignore[import]
 
 __validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 
@@ -71,7 +71,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"{__get_logging_color(duty.time_to_duty, duty)}"
             f"Validator {__get_validator_identifier_for_logging(duty)} "
             f"has next {duty.type.name} duty in: "
-            f"{time_to_next_duty} min. (slot: {duty.slot}){Style.RESET_ALL}"
+            f"{time_to_next_duty} min. (slot: {duty.slot}){rs.all}"
         )
     return logging_message
 
@@ -94,17 +94,17 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     )
     if sync_committee_duty.time_to_duty == 0:
         logging_message = (
-            f"{Back.RED}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
+            f"{bg.red}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
             f"is in current sync committee (next sync committee starts in "
             f"{time_to_next_sync_committee} / "
-            f"epoch: {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
+            f"epoch: {current_sync_committee_epoch_boundaries[1] + 1}){rs.all}"
         )
     else:
         logging_message = (
-            f"{Back.YELLOW}Validator "
+            f"{bg.yellow}Validator "
             f"{__get_validator_identifier_for_logging(sync_committee_duty)} will be in next "
             f"sync committee which starts in {time_to_next_sync_committee} "
-            f"(epoch: {current_sync_committee_epoch_boundaries[1] + 1}){Style.RESET_ALL}"
+            f"(epoch: {current_sync_committee_epoch_boundaries[1] + 1}){rs.all}"
         )
     return logging_message
 
@@ -144,12 +144,12 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
         str: ANSI codes for colorful logging
     """
     if ARGUMENTS.log_time_critical < seconds_to_next_duty <= ARGUMENTS.log_time_warning:
-        return Back.YELLOW
+        return bg.yellow
     if seconds_to_next_duty <= ARGUMENTS.log_time_critical:
-        return Back.RED
+        return bg.red
     if duty.type is DutyType.PROPOSING:
-        return Back.GREEN
-    return Style.RESET_ALL
+        return bg.green
+    return rs.all
 
 
 def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
