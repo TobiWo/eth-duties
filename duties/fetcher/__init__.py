@@ -3,18 +3,20 @@
 
 import sys
 from logging import config as logging_config
-from os import path
+from os import path, system
 from typing import Any
 
 from cli.arguments import ARGUMENTS
-from colorama import init
+from constants.program import USED_STY_BACKGROUND_COLOR_NAMES
+from sty import RgbBg, Style, bg  # type: ignore[import]
 from yaml import safe_load
 
 
 def __initialize() -> None:
     """Initializes logger and colorama"""
+    system("")
     __initialize_logging(ARGUMENTS.log)
-    __initialize_colorama()
+    __set_colors()
 
 
 def __initialize_logging(log_level: str) -> None:
@@ -49,9 +51,26 @@ def __get_logging_configuration_path() -> str:
     return logging_configuration_path
 
 
-def __initialize_colorama() -> None:
-    """Initializes coloroma so that colorful logging works independent from OS"""
-    init()
+def __set_colors() -> None:
+    """Overrides used color attributes of sty package"""
+    log_color_arguments = [
+        argument
+        # pylint: disable-next=protected-access
+        for argument in ARGUMENTS._get_kwargs()
+        if argument[0].startswith("log_color")
+    ]
+    for index, color_name in enumerate(USED_STY_BACKGROUND_COLOR_NAMES):
+        setattr(
+            bg,
+            color_name,
+            Style(
+                RgbBg(
+                    log_color_arguments[index][1][0],
+                    log_color_arguments[index][1][1],
+                    log_color_arguments[index][1][2],
+                )
+            ),
+        )
 
 
 __initialize()
