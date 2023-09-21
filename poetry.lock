@@ -26,25 +26,25 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "3.7.1"
+version = "4.0.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "anyio-3.7.1-py3-none-any.whl", hash = "sha256:91dee416e570e92c64041bd18b900d1d6fa78dff7048769ce5ac5ddad004fbb5"},
-    {file = "anyio-3.7.1.tar.gz", hash = "sha256:44a3c9aba0f5defa43261a8b3efb97891f2bd7d804e0e1f56419befa1adfc780"},
+    {file = "anyio-4.0.0-py3-none-any.whl", hash = "sha256:cfdb2b588b9fc25ede96d8db56ed50848b0b649dca3dd1df0b11f683bb9e0b5f"},
+    {file = "anyio-4.0.0.tar.gz", hash = "sha256:f7ed51751b2c2add651e5747c891b47e26d2a21be5d32d9311dfe9692f3e5d7a"},
 ]
 
 [package.dependencies]
-exceptiongroup = {version = "*", markers = "python_version < \"3.11\""}
+exceptiongroup = {version = ">=1.0.2", markers = "python_version < \"3.11\""}
 idna = ">=2.8"
 sniffio = ">=1.1"
 
 [package.extras]
-doc = ["Sphinx", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.2.2)", "sphinxcontrib-jquery"]
-test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=4)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
-trio = ["trio (<0.22)"]
+doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)"]
+test = ["anyio[trio]", "coverage[toml] (>=7)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
+trio = ["trio (>=0.22)"]
 
 [[package]]
 name = "astroid"
@@ -717,14 +717,14 @@ hook-testing = ["execnet (>=1.5.0)", "psutil", "pytest (>=2.7.3)"]
 
 [[package]]
 name = "pyinstaller-hooks-contrib"
-version = "2023.7"
+version = "2023.8"
 description = "Community maintained hooks for PyInstaller"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyinstaller-hooks-contrib-2023.7.tar.gz", hash = "sha256:0c436a4c3506020e34116a8a7ddfd854c1ad6ddca9a8cd84500bd6e69c9e68f9"},
-    {file = "pyinstaller_hooks_contrib-2023.7-py2.py3-none-any.whl", hash = "sha256:3c10df14c0f71ab388dfbf1625375b087e7330d9444cbfd2b310ba027fa0cff0"},
+    {file = "pyinstaller-hooks-contrib-2023.8.tar.gz", hash = "sha256:318ccc316fb2b8c0bbdff2456b444bf1ce0e94cb3948a0f4dd48f6fc33d41c01"},
+    {file = "pyinstaller_hooks_contrib-2023.8-py2.py3-none-any.whl", hash = "sha256:d091a52fbeed71cde0359aa9ad66288521a8441cfba163d9446606c5136c72a8"},
 ]
 
 [[package]]
@@ -880,20 +880,20 @@ doc = ["pytoolconfig[doc]", "sphinx (>=4.5.0)", "sphinx-autodoc-typehints (>=1.1
 
 [[package]]
 name = "setuptools"
-version = "68.1.2"
+version = "68.2.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-68.1.2-py3-none-any.whl", hash = "sha256:3d8083eed2d13afc9426f227b24fd1659489ec107c0e86cec2ffdde5c92e790b"},
-    {file = "setuptools-68.1.2.tar.gz", hash = "sha256:3d4dfa6d95f1b101d695a6160a7626e15583af71a5f52176efa5d39a054d475d"},
+    {file = "setuptools-68.2.2-py3-none-any.whl", hash = "sha256:b454a35605876da60632df1a60f736524eb73cc47bbc9f3f1ef1b644de74fd2a"},
+    {file = "setuptools-68.2.2.tar.gz", hash = "sha256:4ac1475276d2f1c48684874089fefcd83bd7162ddaafb81fac866ba0db282a87"},
 ]
 
 [package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx (>=3.5,<=7.1.2)", "sphinx-favicon", "sphinx-hoverxref (<2)", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (==0.8.3)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-hoverxref (<2)", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
 testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[lite] (>=0.9)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pip (>=19.1)", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1)", "pytest-perf", "pytest-ruff", "pytest-timeout", "pytest-xdist", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
-testing-integration = ["build[virtualenv]", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
+testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.1)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
 name = "sniffio"
@@ -926,6 +926,17 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "sty"
+version = "1.0.4"
+description = "String styling for your terminal"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sty-1.0.4-py3-none-any.whl", hash = "sha256:3e3352f05770a37e11c9dfc303cbccb1c6acc13710e15d181cb43be7df89f8ea"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -947,18 +958,6 @@ python-versions = ">=3.7"
 files = [
     {file = "tomlkit-0.12.1-py3-none-any.whl", hash = "sha256:712cbd236609acc6a3e2e97253dfc52d4c2082982a88f61b640ecf0817eab899"},
     {file = "tomlkit-0.12.1.tar.gz", hash = "sha256:38e1ff8edb991273ec9f6181244a6a391ac30e9f5098e7535640ea6be97a7c86"},
-]
-
-[[package]]
-name = "types-colorama"
-version = "0.4.15.12"
-description = "Typing stubs for colorama"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-colorama-0.4.15.12.tar.gz", hash = "sha256:fbdfc5d9d24d85c33bd054fbe33adc6cec44eedb19cfbbabfbbb57dc257ae4b8"},
-    {file = "types_colorama-0.4.15.12-py3-none-any.whl", hash = "sha256:23c9d4a00961227f7ef018d5a1c190c4bbc282119c3ee76a17677a793f13bb82"},
 ]
 
 [[package]]
@@ -1002,26 +1001,26 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.7.1"
-description = "Backported and Experimental Type Hints for Python 3.7+"
+version = "4.8.0"
+description = "Backported and Experimental Type Hints for Python 3.8+"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.7.1-py3-none-any.whl", hash = "sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36"},
-    {file = "typing_extensions-4.7.1.tar.gz", hash = "sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2"},
+    {file = "typing_extensions-4.8.0-py3-none-any.whl", hash = "sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0"},
+    {file = "typing_extensions-4.8.0.tar.gz", hash = "sha256:df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef"},
 ]
 
 [[package]]
 name = "urllib3"
-version = "2.0.4"
+version = "2.0.5"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "urllib3-2.0.4-py3-none-any.whl", hash = "sha256:de7df1803967d2c2a98e4b11bb7d6bd9210474c46e8a0401514e3a42a75ebde4"},
-    {file = "urllib3-2.0.4.tar.gz", hash = "sha256:8d22f86aae8ef5e410d4f539fde9ce6b2113a001bb4d189e0aed70642d602b11"},
+    {file = "urllib3-2.0.5-py3-none-any.whl", hash = "sha256:ef16afa8ba34a1f989db38e1dbbe0c302e4289a47856990d0682e374563ce35e"},
+    {file = "urllib3-2.0.5.tar.gz", hash = "sha256:13abf37382ea2ce6fb744d4dad67838eec857c9f4f57009891805e0b5e123594"},
 ]
 
 [package.extras]
@@ -1138,4 +1137,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.0,<3.11"
-content-hash = "558cfb0e9b9b4f8e04a45443464eee55a9ff8f052957723c6028fb8ef0a07ae0"
+content-hash = "0f472bd8f5050718c80dcbac127ffe0b223b8e1699286234bee3684b7b2c2d61"
