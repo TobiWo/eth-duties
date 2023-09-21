@@ -3,6 +3,8 @@
 
 from typing import List
 
+from constants.program import HEX_COLOR_STARTING_POSITIONS, HEX_TO_INT_BASE
+
 
 def set_validator_identifiers(validators: str) -> List[str]:
     """Parse provided validators for space and comma separation
@@ -42,3 +44,32 @@ def set_beacon_node_urls(beacon_node_urls: str) -> List[str]:
     if not beacon_node_urls.startswith(("http://", "https://")):
         raise ValueError()
     return [beacon_node_urls]
+
+
+def set_logging_color(logging_color: str) -> List[int]:
+    """Parse provided logging color
+
+    Args:
+        logging_color (str): Logging color in hex or RGB code
+
+    Raises:
+        ValueError: Error if RGB codes are not in range 0-255
+
+    Returns:
+        List[int]: RGB color code
+    """
+    if logging_color.startswith("#"):
+        logging_color = logging_color[1:]
+        rgb_color_codes = [
+            int(logging_color[position : position + 2], HEX_TO_INT_BASE)
+            for position in HEX_COLOR_STARTING_POSITIONS
+        ]
+    else:
+        string_rgb_color_codes = logging_color.split(",")
+        rgb_color_codes = [int(rgb_code) for rgb_code in string_rgb_color_codes]
+    filtered_rgb_color_codes = [
+        rgb_code for rgb_code in rgb_color_codes if rgb_code >= 0 if rgb_code <= 255
+    ]
+    if len(filtered_rgb_color_codes) != 3:
+        raise ValueError()
+    return filtered_rgb_color_codes
