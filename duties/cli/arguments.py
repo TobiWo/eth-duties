@@ -51,6 +51,32 @@ def __get_raw_arguments() -> Namespace:
         default=False,
     )
     parser.add_argument(
+        "--log-color-warning",
+        type=parse.set_logging_color,
+        help=(
+            "The logging color as hex or rgb code for warning logs (default: '255,255,0' - yellow)"
+        ),
+        action="store",
+        default=[255, 255, 0],
+    )
+    parser.add_argument(
+        "--log-color-critical",
+        type=parse.set_logging_color,
+        help="The logging color as hex or rgb code for critical logs (default: '255, 0, 0' - red)",
+        action="store",
+        default=[255, 0, 0],
+    )
+    parser.add_argument(
+        "--log-color-proposing",
+        type=parse.set_logging_color,
+        help=(
+            "The logging color as hex or rgb code for proposing duty logs "
+            "(default: '0, 128, 0' - green)"
+        ),
+        action="store",
+        default=[0, 128, 0],
+    )
+    parser.add_argument(
         "--log-time-warning",
         type=float,
         help="The threshold at which a time to duty warning log (in seconds) "
