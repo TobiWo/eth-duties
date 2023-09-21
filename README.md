@@ -133,6 +133,31 @@ Beside that it is now also possible to add and remove validator identifiers via 
 1. You will receive a 400 while only providing bad formatted identifiers
 1. Check also the logs which are more verbose if you sent a bad formatted identifier
 
+### beacon-nodes
+
+This option accepts a comma separated list of beacon nodes which will be used to fetch the necessary duty data.
+
+The list should be in the following format:
+
+* `--beacon-nodes http://localhost:5052,http://localhost:5051,...`
+
+Which beacon node connection is used is some kind of round robin behavior while the focus is on the first node of the list which is available/ready to accept requests.
+
+#### Example scenario
+
+Provided flag: `--beacon-nodes http://node1:5052,http://node2:5052,http://node3:5052`
+
+1. node1 fails
+    * node2 will be used for all calls
+1. node2 fails as well
+    * node3 will be used for all calls
+1. node3 fails as well
+    * no calls can be made but cached duties are used until the next upcoming duty is due
+1. node2 and node3 are available again
+    * node2 will be used for all calls
+1. node1 is available again
+    * node1 will be used for all calls
+
 ## What to expect
 
 Beside the actual functionality of logging upcoming duties I added some kind of UX in form of color coding.
