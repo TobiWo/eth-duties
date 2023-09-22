@@ -360,7 +360,7 @@ As always you need to navigate to the root folder of this repository first. Make
 
 ### Run in Docker
 
-**Note: You might have realized the `--tty` option for the `docker run` command. During development of the rest feature I realized that there is an issue with the server package I'm using to run the rest server and the colorful logging which eth-duties offers. Without adding the `tty` flag the logging wouldn't be colored for some reason. I will furhter investigate and hopefully find a more consistent solution in the future but for now please add the `tty` flag if you want colorful logging. The compose files where updated as well.**
+**Note: You might have realized the `--tty` option for the `docker run` command. During development of the rest feature I realized that there is an issue with the server package I'm using, to run the rest server, and the colorful logging which eth-duties offers. Without adding the `tty` flag the logging wouldn't be colored for some reason. I will further investigate and hopefully find a more consistent solution in the future but for now please add the `tty` flag if you want colorful logging. The compose files also consider this change.**
 
 1. Build image
 
