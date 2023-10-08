@@ -118,7 +118,7 @@ The following separation rules apply while adding multiple identifiers:
 
 **Note: Wrapping an identifier-alias-pair in quotes or double quotes is not true for a `docker-compose`. Please check the example [compose](docker/compose.yaml).**
 
-### rest
+### RESTful API
 
 Eth-duties offers the possibility to start a rest server with some basic endpoints. This is a very simple implemenation which starts a rest server on your localhost. The server can be started with flag `--rest`. The port can be modified with `--rest-port`. Additionally you can change the host from which connections are accepted with `--rest-host`. The full swagger spec can be accessed (using default port 5000) via [http://localhost:5000/docs](http://localhost:5000/docs).
 
@@ -141,22 +141,7 @@ The list should be in the following format:
 
 * `--beacon-nodes http://localhost:5052,http://localhost:5051,...`
 
-Which beacon node connection is used is some kind of round robin behavior while the focus is on the first node of the list which is available/ready to accept requests.
-
-#### Example scenario
-
-Provided flag: `--beacon-nodes http://node1:5052,http://node2:5052,http://node3:5052`
-
-1. node1 fails
-    * node2 will be used for all calls
-1. node2 fails as well
-    * node3 will be used for all calls
-1. node3 fails as well
-    * no calls can be made but cached duties are used until the next upcoming duty is due
-1. node2 and node3 are available again
-    * node2 will be used for all calls
-1. node1 is available again
-    * node1 will be used for all calls
+The first beacon node in the provided list which is ready to accept requests is used for every API call as long as it stays ready. If this changes the next ready node will be used and so on and so forth.
 
 ### log-colors
 
