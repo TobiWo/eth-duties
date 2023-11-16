@@ -13,13 +13,13 @@ services:
     container_name: "eth-duties"
     image: "tobiwo/eth-duties:<IMAGE_TAG>"
     command:
-    - "--validators"
-    - "1,3,5,7,9,10,12,124,45346,366"
-    - "--beacon-node"
-    - "http://<NAME_OF_YOUR_BEACON_NODE_CONTAINER>:<PORT_OF_BEACON_API>"
-    - "--mode"
-    - "cicd-wait"
-    - "--omit-attestation-duties"
+      - "--validators"
+      - "1,3,5,7,9,10,12,124,45346,366"
+      - "--beacon-node"
+      - "http://<NAME_OF_YOUR_BEACON_NODE_CONTAINER>:<PORT_OF_BEACON_API>"
+      - "--mode"
+      - "cicd-wait"
+      - "--omit-attestation-duties"
     networks:
       - "ethereum"
 

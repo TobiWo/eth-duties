@@ -1,17 +1,18 @@
-name: Release
+---
+name: "Release"
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
-  build:
+  build-artifact-job:
     strategy:
       matrix:
         include:
-          - OS: ubuntu-22.04
-            PYTHON_VERSION: 3.10.9
+          - OS: "ubuntu-22.04"
+            PYTHON_VERSION: "3.10.9"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2204-amd64;
@@ -21,8 +22,8 @@ jobs:
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
-          - OS: ubuntu-20.04
-            PYTHON_VERSION: 3.10.9
+          - OS: "ubuntu-20.04"
+            PYTHON_VERSION: "3.10.9"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2004-amd64;
@@ -32,8 +33,8 @@ jobs:
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
-          - OS: macos-latest
-            PYTHON_VERSION: 3.10.9
+          - OS: "macos-latest"
+            PYTHON_VERSION: "3.10.9"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-darwin-amd64;
@@ -43,8 +44,8 @@ jobs:
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               shasum -a 256 ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256
-          - OS: windows-latest
-            PYTHON_VERSION: 3.10.9
+          - OS: "windows-latest"
+            PYTHON_VERSION: "3.10.9"
             BUILD_CMD: |
               source $VENV
               export PYTHONHASHSEED=42
@@ -57,58 +58,60 @@ jobs:
               sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
     defaults:
       run:
-        shell: bash
-    runs-on: ${{ matrix.OS }}
+        shell: "bash"
+    runs-on: "${{ matrix.OS }}"
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4.1.1"
+      - name: "Set up python"
+        uses: "actions/setup-python@v4.7.1"
         with:
-          python-version: ${{ matrix.PYTHON_VERSION }}
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+          python-version: "${{ matrix.PYTHON_VERSION }}"
+      - name: "Install Poetry"
+        uses: "snok/install-poetry@v1.3.4"
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
-      - name: Get the version
-        id: get_version
-        run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
-      - name: Build executable for ${{ matrix.OS }}
+      - name: "Install dependencies"
+        run: "poetry install --no-interaction --no-root"
+      - name: "Get new application version"
+        id: "get_version"
+        run: "echo \"VERSION=$(echo $GITHUB_REF | cut -d / -f 3)\" >> $GITHUB_OUTPUT"
+      - name: "Build executable for ${{ matrix.OS }}"
         env:
-          RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
-        run: ${{ matrix.BUILD_CMD }}
-      - name: Upload windows artifacts 
-        if: matrix.OS == 'windows-latest'
-        uses: actions/upload-artifact@v3
+          RELEASE_VERSION: "${{ steps.get_version.outputs.VERSION }}"
+        run: "${{ matrix.BUILD_CMD }}"
+      - name: "Upload windows artifacts"
+        if: "matrix.OS == 'windows-latest'"
+        uses: "actions/upload-artifact@v3.1.3"
         with:
-          name: ${{ matrix.OS }}
-          path: C:\Users\runneradmin\AppData\Local\Temp\artifacts\*
-          if-no-files-found: error
-      - name: Upload UNIX artifacts
-        if: matrix.OS != 'windows-latest'
-        uses: actions/upload-artifact@v3
+          name: "${{ matrix.OS }}"
+          path: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\artifacts\\*"
+          if-no-files-found: "error"
+      - name: "Upload UNIX artifacts"
+        if: "matrix.OS != 'windows-latest'"
+        uses: "actions/upload-artifact@v3.1.3"
         with:
-          name: ${{ matrix.OS }}
-          path: /tmp/artifacts/*
-          if-no-files-found: error
+          name: "${{ matrix.OS }}"
+          path: "/tmp/artifacts/*"
+          if-no-files-found: "error"
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
+  release-job:
+    needs: "build"
+    runs-on: "ubuntu-latest"
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
+      - name: "Download all artifacts"
+        uses: "actions/download-artifact@v3.0.2"
         with:
-          path: /tmp/artifacts
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: /tmp/artifacts
-      - name: Get the version
-        id: get_version
-        run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
-      - name: Release
-        uses: softprops/action-gh-release@v1
+          path: "/tmp/artifacts"
+      - name: "Display structure of downloaded files"
+        run: "ls -R"
+        working-directory: "/tmp/artifacts"
+      - name: "Get new application version"
+        id: "get_version"
+        run: "echo \"VERSION=$(echo $GITHUB_REF | cut -d / -f 3)\" >> $GITHUB_OUTPUT"
+      - name: "Release"
+        uses: "softprops/action-gh-release@v1"
         with:
           generate_release_notes: true
           fail_on_unmatched_files: true
@@ -121,3 +124,4 @@ jobs:
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
             /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
             /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
+...

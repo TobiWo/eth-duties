@@ -1,22 +1,23 @@
-name: Build and Push
+---
+name: "Build and Push docker image"
 
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
-  docker:
-    name: Build and push docker image
-    runs-on: ubuntu-latest
+  build-docker-image-job:
+    name: "Build and push docker image"
+    runs-on: "ubuntu-latest"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
+      - name: "Checkout"
+        uses: "actions/checkout@v4.1.1"
+      - name: "Extract metadata for image tags and labels"
+        id: "meta"
+        uses: "docker/metadata-action@v4.6.0"
         with:
           images: |
             ${{ secrets.DOCKER_REPOSITORY }}
@@ -25,19 +26,20 @@ jobs:
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
             type=raw,value=latest
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v2.2.0"
+      - name: "Set up Docker Buildx"
+        uses: "docker/setup-buildx-action@v2.10.0"
+      - name: "Login to Docker Hub"
+        uses: "docker/login-action@v2.2.0"
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v3
+          username: "${{ secrets.DOCKER_USERNAME }}"
+          password: "${{ secrets.DOCKER_PASSWORD }}"
+      - name: "Build and push image"
+        uses: "docker/build-push-action@v3.3.1"
         with:
-          file: ./docker/Dockerfile
+          file: "./docker/Dockerfile"
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: "${{ steps.meta.outputs.tags }}"
+          labels: "${{ steps.meta.outputs.labels }}"
+...

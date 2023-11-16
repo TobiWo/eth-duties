@@ -1,3 +1,4 @@
+---
 version: 1
 
 disable_existing_loggers: true
@@ -5,17 +6,17 @@ disable_existing_loggers: true
 formatters:
   stdout-formatter:
     format: "%(asctime)s - [%(levelname)-4s] %(message)s"
-    datefmt: '%d-%m-%Y %H:%M:%S'
+    datefmt: "%d-%m-%Y %H:%M:%S"
 
 handlers:
   console:
-    class: logging.StreamHandler
-    level: INFO
-    formatter: stdout-formatter
-    stream: ext://sys.stdout
+    class: "logging.StreamHandler"
+    level: "INFO"
+    formatter: "stdout-formatter"
+    stream: "ext://sys.stdout"
 
 root:
-  level: DEBUG
-  handlers: [console]
-  propagate: yes
-
+  level: "DEBUG"
+  handlers: ["console"]
+  propagate: "yes"
+...
