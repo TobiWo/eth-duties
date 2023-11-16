@@ -242,7 +242,7 @@ Just download the artifact for your OS and start optimizing your validator maint
 
     ```bash
     # If you want to set an alias for a validator pubkey or index you need to separate the index/pubkey from the alias with an ';'
-    # Furthermore you need to put the expression in quotes or double quotes 
+    # Furthermore you need to put the expression in quotes or double quotes
     ./eth-duties \
     --validators "<VALIDATOR_INDEX_1>;VALIDATOR_1" <VALIDATOR_INDEX_2> \
     --validators "<VALIDATOR_PUBKEY_3>;VALIDATOR_3" <VALIDATOR_INDEX_4> \
