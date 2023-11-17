@@ -1,0 +1,33 @@
+---
+name: "Main"
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  mkdocs-deploy-job:
+    runs-on: "ubuntu-22.04"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4.1.1"
+      - name: "Set up python and pip cache"
+        uses: "actions/setup-python@v4.7.1"
+        with:
+          python-version: "3.11.6"
+          cache: "pip"
+      - name: "Install dependencies"
+        run: "pip install -r requirements.txt"
+      - name: "Generate mkdocs cache id"
+        run: "echo \"cache_id=$(date --utc '+%V')\" >> $GITHUB_ENV"
+      - name: "Set up mkdocs cache"
+        uses: "actions/cache@v3.3.2"
+        with:
+          path: "~/.cache/"
+          key: "mkdocs-material-${{ env.cache_id }}"
+          restore-keys: |
+            mkdocs-material-
+      - name: "Deploy documentation"
+        run: "mkdocs gh-deploy --force"
+...
