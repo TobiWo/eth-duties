@@ -76,6 +76,6 @@ nav:
     - Log colors: "./configuration/log-colors.md"
     - Mode: "./configuration/mode.md"
     - RESTful API: "./configuration/restful-api.md"
-    - Validator identifiers: "./configuration/validator-identifiers.md"   
+    - Validator identifiers: "./configuration/validator-identifiers.md"
   - Contribute: "./contribute.md"
 ...
