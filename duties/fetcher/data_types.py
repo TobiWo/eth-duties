@@ -1,11 +1,11 @@
 """Defines different data types
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
-from dataclass_wizard import JSONWizard  # type: ignore[import]
+from pydantic import BaseModel, Field
 
 
 class DutyType(Enum):
@@ -17,17 +17,16 @@ class DutyType(Enum):
     PROPOSING = "proposing"
 
 
-@dataclass
-class ValidatorDuty(JSONWizard):
+class ValidatorDuty(BaseModel):
     """Validator duty relevant data points"""
 
     pubkey: str
     validator_index: str
-    epoch: int = 0
-    slot: int = 0
-    validator_sync_committee_indices: List[int] = field(default_factory=list)
-    type: DutyType = DutyType.NONE
-    time_to_duty: int = 0
+    epoch: int = Field(default=0)
+    slot: int = Field(default=0)
+    validator_sync_committee_indices: List[int] = Field(default_factory=list)
+    type: DutyType = Field(default=DutyType.NONE)
+    time_to_duty: int = Field(default=0)
 
 
 @dataclass
@@ -37,12 +36,11 @@ class ValidatorData:
     pubkey: str
 
 
-@dataclass
-class ValidatorIdentifier(JSONWizard):
+class ValidatorIdentifier(BaseModel):
     """Representation of validator metadata as returned by
     /eth/v1/beacon/states/<state>/validators
     """
 
-    index: str = ""
-    validator: ValidatorData = ValidatorData("")
-    alias: str | None = None
+    index: str = Field(default="")
+    validator: ValidatorData = Field(default=ValidatorData(""))
+    alias: str | None = Field(default=None)

@@ -131,12 +131,10 @@ def create_raw_validator_identifier(
             provided_validator_identifier[len(program.PUBKEY_PREFIX) :], is_logged
         ):
             return ValidatorIdentifier(
-                "", ValidatorData(provided_validator_identifier), None
+                validator=ValidatorData(provided_validator_identifier)
             )
     if provided_validator_identifier.isdigit():
-        return ValidatorIdentifier(
-            provided_validator_identifier, ValidatorData(""), None
-        )
+        return ValidatorIdentifier(index=provided_validator_identifier)
     if is_logged:
         __LOGGER.warning(
             logging.SKIPPING_PROVIDED_IDENTIFIER_MESSAGE,
@@ -167,9 +165,11 @@ def __parse_validator_identifier_with_alias(
     alias = alias_split[1]
     if index_or_pubkey.startswith(program.PUBKEY_PREFIX):
         if __is_valid_pubkey(index_or_pubkey[len(program.PUBKEY_PREFIX) :], is_logged):
-            return ValidatorIdentifier("", ValidatorData(index_or_pubkey), alias)
+            return ValidatorIdentifier(
+                validator=ValidatorData(index_or_pubkey), alias=alias
+            )
     if index_or_pubkey.isdigit():
-        return ValidatorIdentifier(index_or_pubkey, ValidatorData(""), alias)
+        return ValidatorIdentifier(index=index_or_pubkey, alias=alias)
     return None
 
 
