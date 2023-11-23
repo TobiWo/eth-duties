@@ -70,12 +70,11 @@ async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
         for data in response_data:
             if data.validator_index not in validator_duties:
                 sync_committee_duty = ValidatorDuty(
-                    data.pubkey,
-                    data.validator_index,
-                    epoch,
-                    0,
-                    data.validator_sync_committee_indices,
-                    DutyType.SYNC_COMMITTEE,
+                    pubkey=data.pubkey,
+                    validator_index=data.validator_index,
+                    epoch=epoch,
+                    validator_sync_committee_indices=data.validator_sync_committee_indices,
+                    type=DutyType.SYNC_COMMITTEE,
                 )
                 ethereum.set_time_to_duty(sync_committee_duty)
                 validator_duties[data.validator_index] = sync_committee_duty
@@ -100,12 +99,10 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
                 and data.validator_index not in validator_duties
             ):
                 proposing_duty = ValidatorDuty(
-                    data.pubkey,
-                    data.validator_index,
-                    0,
-                    data.slot,
-                    [],
-                    DutyType.PROPOSING,
+                    pubkey=data.pubkey,
+                    validator_index=data.validator_index,
+                    slot=data.slot,
+                    type=DutyType.PROPOSING,
                 )
                 ethereum.set_time_to_duty(proposing_duty)
                 validator_duties[data.validator_index] = proposing_duty
@@ -151,7 +148,9 @@ def __get_next_attestation_duty(
         if present_validator_duty.slot != 0:
             return present_validator_duty
     attestation_duty = ValidatorDuty(
-        data.pubkey, data.validator_index, 0, 0, [], DutyType.ATTESTATION
+        pubkey=data.pubkey,
+        validator_index=data.validator_index,
+        type=DutyType.ATTESTATION,
     )
     if current_slot >= data.slot:
         return attestation_duty
@@ -213,4 +212,4 @@ async def __fetch_duty_responses(
             )
         case _:
             responses = []
-    return [ValidatorDuty.from_dict(data) for data in responses]
+    return [ValidatorDuty.model_validate(data) for data in responses]
