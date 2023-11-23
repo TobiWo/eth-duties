@@ -2,10 +2,10 @@
 # yaml to create conda environment
 # Note: You need to install anaconda first
 # create basic env with: conda env create -f poetry_env.yaml
-name: "poetry-py310"
+name: "poetry-py312"
 channels:
   - "conda-forge"
 dependencies:
-  - "python=3.10"
-  - "poetry=1.3.1"
+  - "python=3.12"
+  - "poetry=1.7.1"
 ...
