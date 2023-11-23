@@ -86,11 +86,11 @@ As always you need to navigate to the root folder of this repository first. Make
 1. Build Windows executable
 
     ```cmd
-    poetry run pyinstaller --clean --onefile --add-data config;config --name eth-duties .\duties\main.py
+    poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config;config --name eth-duties .\duties\main.py
     ```
 
 1. Build Linux or MacOS binary
 
     ```bash
-    poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties ./duties/main.py
+    poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties ./duties/main.py
     ```
