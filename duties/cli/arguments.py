@@ -4,6 +4,7 @@ Module for parsing CLI arguments
 
 from argparse import ArgumentError, ArgumentParser, FileType, Namespace
 from itertools import chain
+from multiprocessing import freeze_support
 from typing import List
 
 from cli import parse
@@ -300,6 +301,7 @@ def __set_arguments() -> Namespace:
     Returns:
         Namespace: Parsed arguments
     """
+    freeze_support()
     arguments = __get_raw_arguments()
     __validate_fetching_interval(arguments.interval)
     __validate_provided_validator_flag(arguments.validators, arguments.validators_file)
