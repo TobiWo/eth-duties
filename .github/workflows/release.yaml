@@ -35,46 +35,46 @@ jobs:
       matrix:
         include:
           - OS: "ubuntu-22.04"
-            PYTHON_VERSION: "3.10.9"
+            PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2204-amd64;
               mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
           - OS: "ubuntu-20.04"
-            PYTHON_VERSION: "3.10.9"
+            PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2004-amd64;
               mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
           - OS: "macos-latest"
-            PYTHON_VERSION: "3.10.9"
+            PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-darwin-amd64;
               mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               shasum -a 256 ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256
           - OS: "windows-latest"
-            PYTHON_VERSION: "3.10.9"
+            PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               source $VENV
               export PYTHONHASHSEED=42
               export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-windows-amd64;
               mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
