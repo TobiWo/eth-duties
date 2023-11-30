@@ -10,6 +10,7 @@ from cli.arguments import ARGUMENTS
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
+from helper.help import get_duties_proportion_above_time_threshold
 from protocol import ethereum
 from sty import bg, rs  # type: ignore[import]
 
@@ -31,6 +32,7 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
         for duty in validator_duties:
             logging_message = __create_logging_message(duty)
             __LOGGER.info(logging_message)
+        __log_duty_proportion_above_time_threshold(validator_duties)
     else:
         __LOGGER.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
 
@@ -41,6 +43,25 @@ def __set_global_validator_identifiers_with_alias() -> None:
     global __validator_identifiers_with_alias
     __validator_identifiers_with_alias = read_validator_identifiers_from_shared_memory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME
+    )
+
+
+def __log_duty_proportion_above_time_threshold(
+    validator_duties: List[ValidatorDuty],
+) -> None:
+    """Log the proportion of validator duties above a defined time threshold
+
+    Args:
+        validator_duties (List[ValidatorDuty]): List of validator duties
+    """
+    relevant_duty_proportion = get_duties_proportion_above_time_threshold(
+        validator_duties, ARGUMENTS.log_time_warning
+    )
+    __LOGGER.info(
+        logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
+        round(relevant_duty_proportion * 100, 2),
+        "all",
+        ARGUMENTS.log_time_warning,
     )
 
 
