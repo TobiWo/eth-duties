@@ -1,6 +1,7 @@
 """Helper module
 """
 
+from asyncio import Task, TaskGroup
 from multiprocessing.shared_memory import SharedMemory
 from typing import Callable, List
 
@@ -123,18 +124,12 @@ async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
     Returns:
         List[ValidatorDuty]: Sorted list with all upcoming validator duties
     """
-    upcoming_attestation_duties = await fetch_upcoming_attestation_duties()
-    upcoming_sync_committee_duties = await fetch_upcoming_sync_committee_duties()
-    upcoming_proposing_duties = await fetch_upcoming_proposing_duties()
-    duties = [
-        duty
-        for duties in [
-            upcoming_attestation_duties,
-            upcoming_proposing_duties,
-            upcoming_sync_committee_duties,
-        ]
-        for duty in duties.values()
-    ]
+    async with TaskGroup() as taskgroup:
+        tasks: List[Task[dict[str, ValidatorDuty]]] = []
+        tasks.append(taskgroup.create_task(fetch_upcoming_attestation_duties()))
+        tasks.append(taskgroup.create_task(fetch_upcoming_sync_committee_duties()))
+        tasks.append(taskgroup.create_task(fetch_upcoming_proposing_duties()))
+    duties = [duty for task in tasks for duty in task.result().values()]
     duties.sort(key=__sort_duties)
     return duties
 
