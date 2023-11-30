@@ -11,7 +11,7 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
-from helper.help import clean_shared_memory
+from helper.help import clean_shared_memory, get_duties_proportion_above_time_threshold
 
 
 class GracefulTerminator:
@@ -103,32 +103,13 @@ class GracefulTerminator:
         Returns:
             bool: Whether or not there are any relevant upcoming attestation duties
         """
-        attestion_duties_above_threshold = (
-            self.__get_attestation_duties_above_time_threshold(attestation_duties)
-        )
-        relevant_duty_proportion = len(attestion_duties_above_threshold) / len(
-            attestation_duties
+        relevant_duty_proportion = get_duties_proportion_above_time_threshold(
+            attestation_duties, ARGUMENTS.mode_cicd_attestation_time
         )
         self.logger.info(
-            logging.PROPORTION_OF_ATTESTION_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
-            relevant_duty_proportion * 100,
+            logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
+            round(relevant_duty_proportion * 100, 2),
+            "attestation",
             ARGUMENTS.mode_cicd_attestation_time,
         )
         return relevant_duty_proportion >= ARGUMENTS.mode_cicd_attestation_proportion
-
-    def __get_attestation_duties_above_time_threshold(
-        self, attestation_duties: List[ValidatorDuty]
-    ) -> List[ValidatorDuty]:
-        """Gets attestation duties above user defined time threshold
-
-        Args:
-            attestation_duties (List[ValidatorDuty]): List of fetched attestation duties
-
-        Returns:
-            List[ValidatorDuty]: Attestation duties above user defined time threshold
-        """
-        return [
-            duty
-            for duty in attestation_duties
-            if duty.time_to_duty >= ARGUMENTS.mode_cicd_attestation_time
-        ]
