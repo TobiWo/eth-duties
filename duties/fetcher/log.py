@@ -77,7 +77,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
     """
     if duty.type is DutyType.SYNC_COMMITTEE:
         logging_message = __create_sync_committee_logging_message(duty)
-    elif duty.time_to_duty < 0:
+    elif duty.seconds_to_duty < 0:
         logging_message = (
             f"Upcoming {duty.type.name} duty "
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
@@ -86,10 +86,10 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
     else:
         time_to_next_duty = strftime(
             program.DUTY_LOGGING_TIME_FORMAT,
-            gmtime(duty.time_to_duty),
+            gmtime(duty.seconds_to_duty),
         )
         logging_message = (
-            f"{__get_logging_color(duty.time_to_duty, duty)}"
+            f"{__get_logging_color(duty.seconds_to_duty, duty)}"
             f"Validator {__get_validator_identifier_for_logging(duty)} "
             f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){rs.all}"
@@ -113,7 +113,7 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     time_to_next_sync_committee = __get_time_to_next_sync_committee(
         sync_committee_duty, current_sync_committee_epoch_boundaries
     )
-    if sync_committee_duty.time_to_duty == 0:
+    if sync_committee_duty.seconds_to_duty == 0:
         logging_message = (
             f"{bg.red}Validator {__get_validator_identifier_for_logging(sync_committee_duty)} "
             f"is in current sync committee (next sync committee starts in "
@@ -144,8 +144,8 @@ def __get_time_to_next_sync_committee(
     Returns:
         str: Time to next sync committee start
     """
-    if sync_committee_duty.time_to_duty > 0:
-        return timedelta(seconds=sync_committee_duty.time_to_duty)
+    if sync_committee_duty.seconds_to_duty > 0:
+        return timedelta(seconds=sync_committee_duty.seconds_to_duty)
     current_slot = ethereum.get_current_slot()
     return timedelta(
         seconds=ethereum.get_time_to_next_sync_committee(

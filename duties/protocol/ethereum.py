@@ -77,13 +77,13 @@ def set_time_to_duty(duty: ValidatorDuty) -> None:
                 current_sync_committee_epoch_boundaries[1] + 1,
                 1,
             ):
-                duty.time_to_duty = 0
+                duty.seconds_to_duty = 0
             else:
-                duty.time_to_duty = get_time_to_next_sync_committee(
+                duty.seconds_to_duty = get_time_to_next_sync_committee(
                     current_sync_committee_epoch_boundaries, current_slot
                 )
         case _:
-            duty.time_to_duty = int(duty.slot * SLOT_TIME + GENESIS_TIME - time())
+            duty.seconds_to_duty = int(duty.slot * SLOT_TIME + GENESIS_TIME - time())
 
 
 def get_time_to_next_sync_committee(
