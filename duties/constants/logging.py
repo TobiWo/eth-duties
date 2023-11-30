@@ -32,8 +32,8 @@ DUPLICATE_VALIDATORS_MESSAGE = (
     "Filtered duplicated validators with different identifiers: %s"
 )
 ACTIVATED_MODE_MESSAGE = "Started in mode: %s"
-PROPORTION_OF_ATTESTION_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE = (
-    "%s%% of attestation duties will be executed in %s sec. or later"
+PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE = (
+    "%s%% of %s duties will be executed in %s sec. or later"
 )
 EXIT_CODE_MESSAGE = "Exiting with code: %d"
 EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE = "Reached max. waiting time for mode 'cicd-wait'"
