@@ -151,7 +151,7 @@ def get_duties_proportion_above_time_threshold(
         float: Duties proportion above user defined time threshold
     """
     duties_above_threshold = [
-        duty for duty in duties if duty.time_to_duty >= time_threshold
+        duty for duty in duties if duty.seconds_to_duty >= time_threshold
     ]
     relevant_duty_proportion = len(duties_above_threshold) / len(duties)
     return relevant_duty_proportion
