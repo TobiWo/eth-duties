@@ -139,4 +139,22 @@ async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
     return duties
 
 
+def get_duties_proportion_above_time_threshold(
+    duties: List[ValidatorDuty], time_threshold: int
+) -> float:
+    """Get duties proportion above user defined time threshold
+
+    Args:
+        duties (List[ValidatorDuty]): List of fetched duties
+
+    Returns:
+        float: Duties proportion above user defined time threshold
+    """
+    duties_above_threshold = [
+        duty for duty in duties if duty.time_to_duty >= time_threshold
+    ]
+    relevant_duty_proportion = len(duties_above_threshold) / len(duties)
+    return relevant_duty_proportion
+
+
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
