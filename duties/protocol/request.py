@@ -1,7 +1,7 @@
 """Module for fetching data from a beacon client
 """
 
-from asyncio import sleep
+from asyncio import TaskGroup, sleep
 from enum import Enum
 from itertools import chain
 from logging import getLogger
@@ -56,8 +56,12 @@ async def send_beacon_api_request(
                 program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
             )
         ]
-        for chunk in chunked_validators:
-            responses.append(await __send_request(endpoint, calldata_type, chunk))
+        async with TaskGroup() as taskgroup:
+            tasks = [
+                taskgroup.create_task(__send_request(endpoint, calldata_type, chunk))
+                for chunk in chunked_validators
+            ]
+        responses = [task.result() for task in tasks]
     else:
         responses.append(await __send_request(endpoint, calldata_type, []))
     return __convert_to_raw_data_responses(responses, flatten)
