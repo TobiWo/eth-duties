@@ -2,7 +2,7 @@
 """
 
 from asyncio import CancelledError, run, sleep
-from logging import getLogger
+from logging import Logger, getLogger
 from math import floor
 from platform import system
 from typing import List
@@ -72,7 +72,7 @@ async def __main() -> None:
             await sleep(ARGUMENTS.interval)
 
 
-def __start_processes(rest_server: RestServer) -> None:
+def __start_processes(rest_server: RestServer, logger: Logger) -> None:
     """Starts the relevant processes
 
     Args:
@@ -83,7 +83,7 @@ def __start_processes(rest_server: RestServer) -> None:
         rest_server.server.started = True
         run(__main())
     elif ARGUMENTS.rest and "cicd" in ARGUMENTS.mode.value:
-        main_logger.info(logging.IGNORED_REST_FLAG_MESSAGE)
+        logger.info(logging.IGNORED_REST_FLAG_MESSAGE)
         run(__main())
     else:
         run(__main())
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
     rest_api_server = create_rest_server()
     try:
-        __start_processes(rest_api_server)
+        __start_processes(rest_api_server, main_logger)
     except (CancelledError, KeyboardInterrupt):
         if rest_api_server.server.started:
             rest_api_server.stop()
