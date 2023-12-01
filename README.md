@@ -2,9 +2,9 @@
 
 # eth-duties
 
-![python-badge](https://img.shields.io/badge/python-3.10-brightgreen)
-![poetry-badge](https://img.shields.io/badge/poetry-1.3.1-brightgreen)
-![black-badge](https://img.shields.io/badge/black-23.7.0-black)
+![python-badge](https://img.shields.io/badge/python-3.12-brightgreen)
+![poetry-badge](https://img.shields.io/badge/poetry-1.7.1-brightgreen)
+![black-badge](https://img.shields.io/badge/black-23.11.0-black)
 
 ETH-duties logs upcoming validator duties to the console in order to find the best maintenance period for your validator(s). In general the tool was developed to mainly help home stakers but it still can be used on a larger scale.
 
