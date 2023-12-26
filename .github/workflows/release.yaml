@@ -67,18 +67,18 @@ jobs:
               mkdir /tmp/artifacts;
               cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
               shasum -a 256 ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256
-          - OS: "windows-latest"
-            PYTHON_VERSION: "3.12.0"
-            BUILD_CMD: |
-              source $VENV
-              export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-windows-amd64;
-              mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-              mkdir /tmp/artifacts;
-              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
+          # - OS: "windows-latest"
+          #   PYTHON_VERSION: "3.12.0"
+          #   BUILD_CMD: |
+          #     source $VENV
+          #     export PYTHONHASHSEED=42
+          #     export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-windows-amd64;
+          #     mkdir ${BUILD_FILE_NAME};
+          #     poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+          #     tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+          #     mkdir /tmp/artifacts;
+          #     cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+          #     sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
     defaults:
       run:
         shell: "bash"
@@ -104,13 +104,13 @@ jobs:
         env:
           RELEASE_VERSION: "${{ steps.get_version.outputs.VERSION }}"
         run: "${{ matrix.BUILD_CMD }}"
-      - name: "Upload windows artifacts"
-        if: "matrix.OS == 'windows-latest'"
-        uses: "actions/upload-artifact@v3.1.3"
-        with:
-          name: "${{ matrix.OS }}"
-          path: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\artifacts\\*"
-          if-no-files-found: "error"
+      # - name: "Upload windows artifacts"
+      #   if: "matrix.OS == 'windows-latest'"
+      #   uses: "actions/upload-artifact@v3.1.3"
+      #   with:
+      #     name: "${{ matrix.OS }}"
+      #     path: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\artifacts\\*"
+      #     if-no-files-found: "error"
       - name: "Upload UNIX artifacts"
         if: "matrix.OS != 'windows-latest'"
         uses: "actions/upload-artifact@v3.1.3"
@@ -138,6 +138,8 @@ jobs:
         with:
           generate_release_notes: true
           fail_on_unmatched_files: true
+            # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
+            # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
           files: |
             /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
             /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
@@ -145,6 +147,4 @@ jobs:
             /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.sha256
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
-            /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
-            /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
 ...
