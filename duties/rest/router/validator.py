@@ -4,9 +4,10 @@
 from typing import List
 
 from fastapi import APIRouter, Request, Response, status
-from fetcher.data_types import ValidatorIdentifier
-from rest.core.types import BadValidatorIdentifiers
-from rest.service.validator import update_validator_identifiers
+
+from duties.fetcher.data_types import ValidatorIdentifier
+from duties.rest.core.types import BadValidatorIdentifiers
+from duties.rest.service.validator import update_validator_identifiers
 
 validator_router = APIRouter(prefix="/validator", tags=["validator"])
 

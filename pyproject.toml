@@ -5,7 +5,7 @@ license = "MIT"
 name = "eth-duties"
 readme = "README.md"
 repository = "https://github.com/TobiWo/eth-duties"
-version = "0.5.0"
+version = "0.6.0"
 
 [tool.poetry.dependencies]
 eth-typing = "==3.5.2"
@@ -22,9 +22,15 @@ isort = "==5.12.0"
 mypy = "==1.7.0"
 pyinstaller = "==6.2.0"
 pylint = "==3.0.2"
+pytest = "==7.4.4"
+pytest-cov = "==4.1.0"
+pytest-mock = "==3.12.0"
 rope = "==1.11.0"
 types-PyYAML = "==6.0.12.12"
 types-requests = "==2.31.0.10"
+
+[tool.pytest.ini_options]
+pythonpath = "duties"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

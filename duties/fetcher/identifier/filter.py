@@ -4,9 +4,9 @@
 from logging import getLogger
 from typing import Dict, List
 
-from constants import logging
-from fetcher.data_types import ValidatorIdentifier
-from fetcher.identifier import core
+from duties.constants import logging
+from duties.fetcher.data_types import ValidatorIdentifier
+from duties.fetcher.identifier import core
 
 __LOGGER = getLogger()
 

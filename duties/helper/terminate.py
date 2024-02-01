@@ -7,17 +7,21 @@ from logging import getLogger
 from sys import exit as sys_exit
 from typing import List
 
-from cli.arguments import ARGUMENTS
-from cli.types import Mode
-from constants import logging
-from fetcher.data_types import DutyType, ValidatorDuty
-from helper.help import clean_shared_memory, get_duties_proportion_above_time_threshold
+from duties.cli.arguments import get_arguments
+from duties.cli.types import Mode
+from duties.constants import logging
+from duties.fetcher.data_types import DutyType, ValidatorDuty
+from duties.helper.help import (
+    clean_shared_memory,
+    get_duties_proportion_above_time_threshold,
+)
 
 
 class GracefulTerminator:
     """Helper class for graceful termination"""
 
     def __init__(self, max_number_of_cicd_cycles: int) -> None:
+        self.__arguments = get_arguments()
         self.__cicd_cycle_counter = 0
         self.__max_number_of_cicd_cycles = max_number_of_cicd_cycles
         self.logger = getLogger()
@@ -44,7 +48,7 @@ class GracefulTerminator:
         Args:
             duties (List[ValidatorDuty]): List of fetched validator duties
         """
-        running_mode: Mode = ARGUMENTS.mode
+        running_mode: Mode = self.__arguments.mode
         match running_mode:
             case Mode.CICD_EXIT:
                 if self.__no_relevant_upcoming_duties(duties):
@@ -104,12 +108,15 @@ class GracefulTerminator:
             bool: Whether or not there are any relevant upcoming attestation duties
         """
         relevant_duty_proportion = get_duties_proportion_above_time_threshold(
-            attestation_duties, ARGUMENTS.mode_cicd_attestation_time
+            attestation_duties, self.__arguments.mode_cicd_attestation_time
         )
         self.logger.info(
             logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
             round(relevant_duty_proportion * 100, 2),
             "attestation",
-            ARGUMENTS.mode_cicd_attestation_time,
+            self.__arguments.mode_cicd_attestation_time,
         )
-        return relevant_duty_proportion >= ARGUMENTS.mode_cicd_attestation_proportion
+        return (
+            relevant_duty_proportion
+            >= self.__arguments.mode_cicd_attestation_proportion
+        )

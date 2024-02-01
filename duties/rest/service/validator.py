@@ -4,16 +4,17 @@
 from logging import getLogger
 from typing import Dict, List
 
-from constants import logging
 from fastapi import Response, status
-from fetcher.data_types import ValidatorIdentifier
-from fetcher.fetch import (
+
+from duties.constants import logging
+from duties.fetcher.data_types import ValidatorIdentifier
+from duties.fetcher.fetch import (
     update_validator_identifiers as update_validator_identifiers_for_fetcher,
 )
-from fetcher.identifier import core
-from fetcher.identifier.filter import filter_empty_validator_identifier
-from fetcher.identifier.parser import update_shared_active_validator_identifiers
-from rest.core.types import BadValidatorIdentifiers
+from duties.fetcher.identifier import core
+from duties.fetcher.identifier.filter import filter_empty_validator_identifier
+from duties.fetcher.identifier.parser import update_shared_active_validator_identifiers
+from duties.rest.core.types import BadValidatorIdentifiers
 
 __LOGGER = getLogger()
 

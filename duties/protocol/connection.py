@@ -1,13 +1,14 @@
 """_summary_
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from logging import getLogger
 
-from cli.arguments import ARGUMENTS
-from constants import endpoints, logging, program
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get
+
+from duties.cli.arguments import get_arguments
+from duties.constants import endpoints, logging, program
 
 
 # pylint: disable-next=too-few-public-methods
@@ -15,10 +16,15 @@ class BeaconNode:
     """Check beacon node availability"""
 
     def __init__(self) -> None:
+        self.__arguments = get_arguments()
         self.is_any_node_healthy = True
-        self.__last_beacon_node_call_error = datetime.utcnow() - timedelta(seconds=30)
-        self.__last_used_beacon_node_info = datetime.utcnow() - timedelta(minutes=10)
-        self.__last_used_beacon_node = ARGUMENTS.beacon_nodes[0]
+        self.__last_beacon_node_call_error = datetime.now(timezone.utc) - timedelta(
+            seconds=30
+        )
+        self.__last_used_beacon_node_info = datetime.now(timezone.utc) - timedelta(
+            minutes=10
+        )
+        self.__last_used_beacon_node = self.__arguments.beacon_nodes[0]
         self.__logger = getLogger()
 
     def get_healthy_beacon_node(self, is_used_beacon_node_logged: bool) -> str:
@@ -27,19 +33,22 @@ class BeaconNode:
         Returns:
             str: Connection string of available beacon node
         """
-        current_time = datetime.utcnow()
-        for index, node in enumerate(ARGUMENTS.beacon_nodes):
+        current_time = datetime.now(timezone.utc)
+        for index, node in enumerate(self.__arguments.beacon_nodes):
             if self.__is_node_healthy(node):
                 self.__log_used_beacon_node(
                     current_time, node, is_used_beacon_node_logged
                 )
                 return node
-            if ARGUMENTS.beacon_nodes[index] == ARGUMENTS.beacon_nodes[-1]:
+            if (
+                self.__arguments.beacon_nodes[index]
+                == self.__arguments.beacon_nodes[-1]
+            ):
                 self.is_any_node_healthy = False
                 self.__logger.error(logging.NO_AVAILABLE_BEACON_NODE_MESSAGE)
             self.__log_primary_node_is_down(current_time, node)
             self.__last_beacon_node_call_error = current_time
-        return ARGUMENTS.beacon_nodes[0]
+        return self.__arguments.beacon_nodes[0]
 
     def __is_node_healthy(self, node: str) -> bool:
         """Check if node is healthy
@@ -94,7 +103,8 @@ class BeaconNode:
         if time > self.__last_beacon_node_call_error + timedelta(
             seconds=program.SECONDS_UNTIL_BEACON_NODE_CALL_ERROR_IS_LOGGED_AGAIN
         ):
-            if node == ARGUMENTS.beacon_nodes[0]:
+            if node == self.__arguments.beacon_nodes[0]:
                 self.__logger.warning(logging.PRIMARY_BEACON_NODE_DOWN_MESSAGE, node)
-            if len(ARGUMENTS.beacon_nodes) > 1:
+            if len(self.__arguments.beacon_nodes) > 1:
+                self.__logger.info(logging.TRYING_BACKUP_NODES_MESSAGE)
                 self.__logger.info(logging.TRYING_BACKUP_NODES_MESSAGE)

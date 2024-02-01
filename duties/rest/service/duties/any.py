@@ -4,10 +4,11 @@
 from asyncio import TimeoutError as AsyncioTimeoutError
 from asyncio import wait_for
 
-from constants.program import REST_ANY_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT
 from fastapi import Response, status
-from helper.help import fetch_upcoming_validator_duties
-from rest.core.types import NoBeaconNodeConnection, ValidatorDuties
+
+from duties.constants.program import REST_ANY_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT
+from duties.helper.help import fetch_upcoming_validator_duties
+from duties.rest.core.types import NoBeaconNodeConnection, ValidatorDuties
 
 
 async def any_upcoming_duties_in_queue(
@@ -28,4 +29,5 @@ async def any_upcoming_duties_in_queue(
         return ValidatorDuties(any=False)
     except AsyncioTimeoutError:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return NoBeaconNodeConnection()
         return NoBeaconNodeConnection()

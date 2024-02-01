@@ -5,15 +5,16 @@ from logging import getLogger
 from math import ceil
 from typing import List
 
-from cli.arguments import ARGUMENTS
-from constants import endpoints, logging
-from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.identifier.parser import get_active_validator_indices
-from protocol import ethereum
-from protocol.request import CalldataType, send_beacon_api_request
+from duties.cli.arguments import get_arguments
+from duties.constants import endpoints, logging
+from duties.fetcher.data_types import DutyType, ValidatorDuty
+from duties.fetcher.identifier.parser import get_active_validator_indices
+from duties.protocol import ethereum
+from duties.protocol.request import CalldataType, send_beacon_api_request
 
 __VALIDATORS = get_active_validator_indices()
 __LOGGER = getLogger()
+__ARGUMENTS = get_arguments()
 
 
 def update_validator_identifiers() -> None:
@@ -117,15 +118,15 @@ def __should_fetch_attestation_duties() -> bool:
         bool: Should attestation duties fetched
     """
     if (
-        len(__VALIDATORS) > ARGUMENTS.max_attestation_duty_logs
-        and not ARGUMENTS.omit_attestation_duties
+        len(__VALIDATORS) > __ARGUMENTS.max_attestation_duty_logs
+        and not __ARGUMENTS.omit_attestation_duties
     ):
         __LOGGER.warning(
             logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
-            ARGUMENTS.max_attestation_duty_logs,
+            __ARGUMENTS.max_attestation_duty_logs,
         )
         return False
-    if ARGUMENTS.omit_attestation_duties:
+    if __ARGUMENTS.omit_attestation_duties:
         return False
     return True
 

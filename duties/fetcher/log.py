@@ -6,17 +6,19 @@ from logging import getLogger
 from time import gmtime, strftime
 from typing import List, Tuple
 
-from cli.arguments import ARGUMENTS
-from constants import logging, program
-from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
-from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
-from helper.help import get_duties_proportion_above_time_threshold
-from protocol import ethereum
 from sty import bg, rs  # type: ignore[import]
+
+from duties.cli.arguments import get_arguments
+from duties.constants import logging, program
+from duties.fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
+from duties.fetcher.identifier.core import read_validator_identifiers_from_shared_memory
+from duties.helper.help import get_duties_proportion_above_time_threshold
+from duties.protocol import ethereum
 
 __validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 
 __LOGGER = getLogger()
+__ARGUMENTS = get_arguments()
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -55,13 +57,13 @@ def __log_duty_proportion_above_time_threshold(
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
     relevant_duty_proportion = get_duties_proportion_above_time_threshold(
-        validator_duties, ARGUMENTS.log_time_warning
+        validator_duties, __ARGUMENTS.log_time_warning
     )
     __LOGGER.info(
         logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
         round(relevant_duty_proportion * 100, 2),
         "all",
-        ARGUMENTS.log_time_warning,
+        __ARGUMENTS.log_time_warning,
     )
 
 
@@ -164,9 +166,13 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
     Returns:
         str: ANSI codes for colorful logging
     """
-    if ARGUMENTS.log_time_critical < seconds_to_next_duty <= ARGUMENTS.log_time_warning:
+    if (
+        __ARGUMENTS.log_time_critical
+        < seconds_to_next_duty
+        <= __ARGUMENTS.log_time_warning
+    ):
         return bg.yellow
-    if seconds_to_next_duty <= ARGUMENTS.log_time_critical:
+    if seconds_to_next_duty <= __ARGUMENTS.log_time_critical:
         return bg.red
     if duty.type is DutyType.PROPOSING:
         return bg.green
@@ -185,7 +191,7 @@ def __get_validator_identifier_for_logging(duty: ValidatorDuty) -> str:
     alias = __get_alias(duty)
     if alias:
         return alias
-    if ARGUMENTS.log_pubkeys:
+    if __ARGUMENTS.log_pubkeys:
         return duty.pubkey
     return duty.validator_index
 
@@ -202,4 +208,5 @@ def __get_alias(duty: ValidatorDuty) -> str | None:
     validator_with_alias = __validator_identifiers_with_alias.get(duty.validator_index)
     if validator_with_alias and validator_with_alias.alias:
         return validator_with_alias.alias
+    return None
     return None

@@ -3,7 +3,7 @@
 
 from typing import List
 
-from constants.program import HEX_COLOR_STARTING_POSITIONS, HEX_TO_INT_BASE
+from duties.constants.program import HEX_COLOR_STARTING_POSITIONS, HEX_TO_INT_BASE
 
 
 def set_validator_identifiers(validators: str) -> List[str]:

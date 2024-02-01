@@ -5,15 +5,19 @@ from asyncio import Task, TaskGroup
 from multiprocessing.shared_memory import SharedMemory
 from typing import Callable, List
 
-from constants.program import ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES
-from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.fetch import (
+from duties.constants.program import ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES
+from duties.fetcher.data_types import DutyType, ValidatorDuty
+from duties.fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
     fetch_upcoming_sync_committee_duties,
     update_validator_identifiers,
 )
-from protocol.ethereum import get_current_epoch, get_current_slot, set_time_to_duty
+from duties.protocol.ethereum import (
+    get_current_epoch,
+    get_current_slot,
+    set_time_to_duty,
+)
 
 
 def is_current_data_up_to_date(current_duties: List[ValidatorDuty]) -> bool:

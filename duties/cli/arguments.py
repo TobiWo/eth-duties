@@ -7,8 +7,8 @@ from itertools import chain
 from multiprocessing import freeze_support
 from typing import List
 
-from cli import parse
-from cli.types import Mode
+from duties.cli import parse
+from duties.cli.types import Mode
 
 
 def __get_raw_arguments() -> Namespace:
@@ -295,7 +295,7 @@ def __validate_cicd_attestation_proportion(
         )
 
 
-def __set_arguments() -> Namespace:
+def get_arguments() -> Namespace:
     """Parses cli arguments passed by the user
 
     Returns:
@@ -315,6 +315,3 @@ def __set_arguments() -> Namespace:
     if arguments.validators:
         arguments.validators = list(chain(*list(arguments.validators)))
     return arguments
-
-
-ARGUMENTS = __set_arguments()

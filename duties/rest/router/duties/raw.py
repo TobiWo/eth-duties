@@ -4,9 +4,10 @@
 from typing import List
 
 from fastapi import APIRouter, Response, status
-from fetcher.data_types import ValidatorDuty
-from rest.core.types import NoBeaconNodeConnection
-from rest.service.duties.raw import (
+
+from duties.fetcher.data_types import ValidatorDuty
+from duties.rest.core.types import NoBeaconNodeConnection
+from duties.rest.service.duties.raw import (
     fetch_raw_attestation_duties,
     fetch_raw_proposing_duties,
     fetch_raw_sync_committeen_duties,
@@ -60,4 +61,5 @@ async def get_proposing_duties(
     Returns:
         List[ValidatorDuty]: The upcoming block proposing duties
     """
+    return await fetch_raw_proposing_duties(response)
     return await fetch_raw_proposing_duties(response)

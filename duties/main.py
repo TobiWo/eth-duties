@@ -7,23 +7,25 @@ from math import floor
 from platform import system
 from typing import List
 
-from cli.arguments import ARGUMENTS
-from cli.types import Mode
-from constants import logging
-from fetcher.data_types import ValidatorDuty
-from fetcher.log import log_time_to_next_duties
-from helper.help import (
+from duties.cli.arguments import get_arguments
+from duties.cli.types import Mode
+from duties.constants import logging
+from duties.fetcher.data_types import ValidatorDuty
+from duties.fetcher.log import log_time_to_next_duties
+from duties.helper.help import (
     clean_shared_memory,
     fetch_upcoming_validator_duties,
     is_current_data_up_to_date,
     update_time_to_duty,
 )
-from helper.terminate import GracefulTerminator
-from protocol.connection import BeaconNode
-from rest.app import create_rest_server
-from rest.core.server import RestServer
+from duties.helper.terminate import GracefulTerminator
+from duties.initialize import initialize
+from duties.protocol.connection import BeaconNode
+from duties.rest.app import create_rest_server
+from duties.rest.core.server import RestServer
 
 __LOGGER = getLogger()
+__ARGUMENTS = get_arguments()
 beacon_node = BeaconNode()
 
 
@@ -56,20 +58,20 @@ def __check_beacon_node_connection() -> None:
 async def __main() -> None:
     """eth-duties main function"""
     graceful_terminator = GracefulTerminator(
-        floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)
+        floor(__ARGUMENTS.mode_cicd_waiting_time / __ARGUMENTS.interval)
     )
     if system() != "Windows":
         await graceful_terminator.create_signal_handlers()
     upcoming_duties: List[ValidatorDuty] = []
     while True:
-        if ARGUMENTS.mode != Mode.NO_LOG:
+        if __ARGUMENTS.mode != Mode.NO_LOG:
             upcoming_duties = await __fetch_validator_duties(upcoming_duties)
             update_time_to_duty(upcoming_duties)
             log_time_to_next_duties(upcoming_duties)
             graceful_terminator.terminate_in_cicd_mode(upcoming_duties)
-            await sleep(ARGUMENTS.interval)
+            await sleep(__ARGUMENTS.interval)
         else:
-            await sleep(ARGUMENTS.interval)
+            await sleep(__ARGUMENTS.interval)
 
 
 def __start_processes(rest_server: RestServer, logger: Logger) -> None:
@@ -78,11 +80,11 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
     Args:
         rest_server (RestServer): Rest server object
     """
-    if ARGUMENTS.rest and not "cicd" in ARGUMENTS.mode.value:
+    if __ARGUMENTS.rest and not "cicd" in __ARGUMENTS.mode.value:
         rest_server.start()
         rest_server.server.started = True
         run(__main())
-    elif ARGUMENTS.rest and "cicd" in ARGUMENTS.mode.value:
+    elif __ARGUMENTS.rest and "cicd" in __ARGUMENTS.mode.value:
         logger.info(logging.IGNORED_REST_FLAG_MESSAGE)
         run(__main())
     else:
@@ -90,8 +92,9 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
 
 
 if __name__ == "__main__":
+    initialize()
     main_logger = getLogger()
-    main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
+    main_logger.info(logging.ACTIVATED_MODE_MESSAGE, __ARGUMENTS.mode.value)
     rest_api_server = create_rest_server()
     try:
         __start_processes(rest_api_server, main_logger)
@@ -100,4 +103,5 @@ if __name__ == "__main__":
             rest_api_server.stop()
         clean_shared_memory()
         main_logger.error(logging.SYSTEM_EXIT_MESSAGE)
+    main_logger.info(logging.MAIN_EXIT_MESSAGE)
     main_logger.info(logging.MAIN_EXIT_MESSAGE)

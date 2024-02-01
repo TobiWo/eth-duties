@@ -7,9 +7,10 @@ from pickle import dumps, loads
 from sys import exit as sys_exit
 from typing import List
 
-from constants import logging, program
 from eth_typing import BLSPubkey
-from fetcher.data_types import ValidatorData, ValidatorIdentifier
+
+from duties.constants import logging, program
+from duties.fetcher.data_types import ValidatorData, ValidatorIdentifier
 
 __LOGGER = getLogger()
 
@@ -193,4 +194,5 @@ def __is_valid_pubkey(pubkey: str, is_logged: bool) -> bool:
         if is_logged:
             __LOGGER.error(logging.PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE, pubkey, error)
         return False
+    return True
     return True

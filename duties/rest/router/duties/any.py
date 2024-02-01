@@ -2,8 +2,9 @@
 """
 
 from fastapi import APIRouter, Response, status
-from rest.core.types import NoBeaconNodeConnection, ValidatorDuties
-from rest.service.duties.any import any_upcoming_duties_in_queue
+
+from duties.rest.core.types import NoBeaconNodeConnection, ValidatorDuties
+from duties.rest.service.duties.any import any_upcoming_duties_in_queue
 
 any_duties_router = APIRouter(prefix="/duties/any", tags=["duties"])
 
@@ -21,4 +22,5 @@ async def are_upcoming_duties_in_queue(
     Returns:
         bool: Are there any duties in the queue for the provided validators
     """
+    return await any_upcoming_duties_in_queue(response)
     return await any_upcoming_duties_in_queue(response)

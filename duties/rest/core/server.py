@@ -5,10 +5,11 @@ import socket as sock
 from logging import getLogger
 from multiprocessing import Process
 
-from cli.arguments import ARGUMENTS
-from constants import logging
 from uvicorn import Config as UvicornConfig
 from uvicorn import Server as UvicornServer
+
+from duties.cli.arguments import get_arguments
+from duties.constants import logging
 
 
 class RestServer(Process):
@@ -20,6 +21,7 @@ class RestServer(Process):
 
     def __init__(self, config: UvicornConfig) -> None:
         super().__init__()
+        self.__arguments = get_arguments()
         self.server = UvicornServer(config=config)
         self.config = config
         self.logger = getLogger()
@@ -42,13 +44,14 @@ class RestServer(Process):
             bool: Is defined port already in use
         """
         socket = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
-        destination = ("127.0.0.1", ARGUMENTS.rest_port)
+        destination = ("127.0.0.1", self.__arguments.rest_port)
         connection_result = socket.connect_ex(destination)
         if connection_result == 0:
             self.logger.error(
-                logging.PORT_ALREADY_IN_USAGE_MESSAGE, ARGUMENTS.rest_port
+                logging.PORT_ALREADY_IN_USAGE_MESSAGE, self.__arguments.rest_port
             )
             socket.close()
             return True
         socket.close()
+        return False
         return False

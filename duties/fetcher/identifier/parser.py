@@ -7,19 +7,20 @@ from multiprocessing.shared_memory import SharedMemory
 from sys import exit as sys_exit
 from typing import Any, Dict, List
 
-from cli.arguments import ARGUMENTS
-from constants import endpoints, json, logging, program
-from fetcher.data_types import ValidatorIdentifier
-from fetcher.identifier import core
-from fetcher.identifier.filter import (
+from duties.cli.arguments import get_arguments
+from duties.constants import endpoints, json, logging, program
+from duties.fetcher.data_types import ValidatorIdentifier
+from duties.fetcher.identifier import core
+from duties.fetcher.identifier.filter import (
     filter_empty_validator_identifier,
     log_inactive_and_duplicated_validators,
 )
-from protocol.ethereum import ACTIVE_VALIDATOR_STATUS
-from protocol.request import CalldataType, send_beacon_api_request
-from rest.core.types import HttpMethod
+from duties.protocol.ethereum import ACTIVE_VALIDATOR_STATUS
+from duties.protocol.request import CalldataType, send_beacon_api_request
+from duties.rest.core.types import HttpMethod
 
 __LOGGER = getLogger()
+__ARGUMENTS = get_arguments()
 
 
 def get_active_validator_indices() -> List[str]:
@@ -160,15 +161,15 @@ def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdentifier]
         Dict[str, ValidatorIdentifier]: Validator identifiers
     """
     raw_validator_identifiers = {}
-    if ARGUMENTS.validators:
+    if __ARGUMENTS.validators:
         raw_validator_identifiers = {
             core.get_validator_index_or_pubkey(
                 None, core.create_raw_validator_identifier(str(validator), True)
             ): core.create_raw_validator_identifier(str(validator), False)
-            for validator_list in ARGUMENTS.validators
+            for validator_list in __ARGUMENTS.validators
             for validator in validator_list
         }
-    elif ARGUMENTS.validators_file:
+    elif __ARGUMENTS.validators_file:
         raw_validator_identifiers = {
             core.get_validator_index_or_pubkey(
                 None,
@@ -178,7 +179,7 @@ def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdentifier]
             ): core.create_raw_validator_identifier(
                 str(validator).strip().replace("\n", "").replace("\r\n", ""), False
             )
-            for validator in ARGUMENTS.validators_file
+            for validator in __ARGUMENTS.validators_file
         }
     return filter_empty_validator_identifier(raw_validator_identifiers)
 

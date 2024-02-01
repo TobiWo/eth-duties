@@ -7,9 +7,9 @@ from sys import exit as sys_exit
 from time import time
 from typing import Tuple
 
-from constants import endpoints, json, logging
-from fetcher.data_types import DutyType, ValidatorDuty
-from protocol.request import CalldataType, send_beacon_api_request
+from duties.constants import endpoints, json, logging
+from duties.fetcher.data_types import DutyType, ValidatorDuty
+from duties.protocol.request import CalldataType, send_beacon_api_request
 
 __LOGGER = getLogger()
 

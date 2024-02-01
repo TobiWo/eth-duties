@@ -8,10 +8,11 @@ from logging import getLogger
 from typing import Any, List
 from urllib.parse import urlencode
 
-from constants import json, logging, program
-from protocol.connection import BeaconNode
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
+
+from duties.constants import json, logging, program
+from duties.protocol.connection import BeaconNode
 
 __LOGGER = getLogger()
 beacon_node = BeaconNode()
@@ -207,4 +208,5 @@ def __is_request_successful(response: Response) -> bool:
     if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
         return True
     __LOGGER.error(response.text)
+    raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
     raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
