@@ -19,6 +19,7 @@ from helper.help import (
     update_time_to_duty,
 )
 from helper.terminate import GracefulTerminator
+from initialize import initialize
 from protocol.connection import BeaconNode
 from rest.app import create_rest_server
 from rest.core.server import RestServer
@@ -90,6 +91,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
 
 
 if __name__ == "__main__":
+    initialize()
     main_logger = getLogger()
     main_logger.info(logging.ACTIVATED_MODE_MESSAGE, ARGUMENTS.mode.value)
     rest_api_server = create_rest_server()

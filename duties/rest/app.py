@@ -3,7 +3,7 @@
 
 from cli.arguments import ARGUMENTS
 from fastapi import FastAPI
-from fetcher import get_logging_config
+from initialize import get_logging_config
 from rest.core.server import RestServer
 from rest.router.main import router
 from uvicorn import Config as UvicornConfig
