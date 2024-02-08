@@ -1,7 +1,7 @@
 """_summary_
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from logging import getLogger
 
 from cli.arguments import ARGUMENTS
@@ -16,8 +16,12 @@ class BeaconNode:
 
     def __init__(self) -> None:
         self.is_any_node_healthy = True
-        self.__last_beacon_node_call_error = datetime.utcnow() - timedelta(seconds=30)
-        self.__last_used_beacon_node_info = datetime.utcnow() - timedelta(minutes=10)
+        self.__last_beacon_node_call_error = datetime.now(timezone.utc) - timedelta(
+            seconds=30
+        )
+        self.__last_used_beacon_node_info = datetime.now(timezone.utc) - timedelta(
+            minutes=10
+        )
         self.__last_used_beacon_node = ARGUMENTS.beacon_nodes[0]
         self.__logger = getLogger()
 
@@ -27,7 +31,7 @@ class BeaconNode:
         Returns:
             str: Connection string of available beacon node
         """
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
         for index, node in enumerate(ARGUMENTS.beacon_nodes):
             if self.__is_node_healthy(node):
                 self.__log_used_beacon_node(
