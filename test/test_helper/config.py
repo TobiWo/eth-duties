@@ -17,6 +17,8 @@ class General:
 
     failing_beacon_node_url: str
     working_beacon_node_url: str
+    rest_port: str
+    rest_port_in_usage: str
 
 
 @dataclass
@@ -66,12 +68,11 @@ def validate_config() -> None:
         ValueError: Error when any config option is missing
     """
     error_counter = 0
-    if (
-        not CONFIG.general.failing_beacon_node_url
-        or not CONFIG.general.working_beacon_node_url
-    ):
-        print("Missing general property in test_config.toml")
-        error_counter += 1
+    for field in CONFIG.general.__dataclass_fields__:
+        value = getattr(CONFIG.general, field)
+        if not value:
+            print("Missing general property in test_config.toml")
+            error_counter += 1
     if not CONFIG.validators.inactive:
         print("Missing inactive validator identifiers")
         error_counter += 1

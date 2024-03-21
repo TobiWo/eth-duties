@@ -3,6 +3,8 @@
 
 [general]
 failing-beacon-node-url = "http://foobar:5052"
+rest-port = "5001"
+rest-port-in-usage = "5051"
 working-beacon-node-url = "http://localhost:5051"
 
 [validators]
@@ -32,7 +34,7 @@ general = [
 ]
 in-sync-committee = ["185819", "85565"]
 next-sync-committee = ["229186"]
-proposing-blocks = ["1215031", "75747"]
+proposing-blocks = ["1245122", "794269"]
 with-alias = [
   "0xb99d27eeea8c7f9201926801acae031a9aa558428a47d403cfeda91260087dc77cb7e97f213b552c179d60be5d8dd671;my_pubkey",
   "123;my_index",
