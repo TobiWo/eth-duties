@@ -1,8 +1,6 @@
 """Module to run test suite
 """
 
-from typing import Callable
-
 from cases import (
     test_cicd_mode,
     test_cli_validation,
@@ -30,6 +28,8 @@ test_cases = [
     test_rest_api.test_rest_while_running_in_cicd_mode,
     test_rest_api.test_post_new_validator_identifier_rest_endpoint,
     test_rest_api.test_delete_validator_identifier_rest_endpoint,
+    test_rest_api.test_start_rest_api_on_different_port,
+    test_rest_api.test_start_rest_api_on_port_in_usage,
     # Test logging mode
     test_logging_mode.test_standard_logging_mode_execution,
     test_logging_mode.test_set_colorful_logging_thresholds_execution,
@@ -37,7 +37,6 @@ test_cases = [
     test_logging_mode.test_pubkey_logging_mode,
     test_logging_mode.test_alias_logging_mode,
     test_logging_mode.test_set_logging_colors,
-    test_logging_mode.test_set_colorful_logging_thresholds_execution,
     test_logging_mode.test_logging_duties_for_high_number_of_validators,
     test_logging_mode.test_omit_attestation_duties,
     test_logging_mode.test_increase_of_max_attestation_duty_logs,
@@ -58,7 +57,7 @@ test_cases = [
 
 SUCCESSFUL_TEST_COUNTER = 0
 for test_function in tqdm(test_cases, desc="Running...", ascii=False, ncols=75):
-    SUCCESSFUL_TEST_COUNTER = test_function()
+    SUCCESSFUL_TEST_COUNTER += test_function()
 
 TOTAL_TEST_COUNTER = len(test_cases)
 if SUCCESSFUL_TEST_COUNTER != TOTAL_TEST_COUNTER:
