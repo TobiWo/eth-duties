@@ -33,7 +33,7 @@ class ActiveValidators:
 
 
 @dataclass
-class ValidatorsWithBothIdentifier:
+class ValidatorWithFullIdentifier:
     """Validator with both identifiers config section"""
 
     index: str
@@ -46,7 +46,7 @@ class Validators:
 
     inactive: List[str]
     active: ActiveValidators
-    both_identifiers: ValidatorsWithBothIdentifier
+    full_identifier: ValidatorWithFullIdentifier
 
 
 @dataclass
@@ -81,8 +81,8 @@ def validate_config() -> None:
         if not value:
             print("Missing some active validator identifiers")
             error_counter += 1
-    for field in CONFIG.validators.both_identifiers.__dataclass_fields__:
-        value = getattr(CONFIG.validators.both_identifiers, field)
+    for field in CONFIG.validators.full_identifier.__dataclass_fields__:
+        value = getattr(CONFIG.validators.full_identifier, field)
         if not value:
             print("Missing index or pubkey for validator with both identifiers")
             error_counter += 1

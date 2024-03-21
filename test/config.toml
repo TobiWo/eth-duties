@@ -32,14 +32,14 @@ general = [
   "19",
   "20",
 ]
-in-sync-committee = ["185819", "85565"]
-next-sync-committee = ["229186"]
-proposing-blocks = ["1245122", "794269"]
+in-sync-committee = [] # List of strings
+next-sync-committee = [] # List of strings
+proposing-blocks = [] # List of strings
 with-alias = [
   "0xb99d27eeea8c7f9201926801acae031a9aa558428a47d403cfeda91260087dc77cb7e97f213b552c179d60be5d8dd671;my_pubkey",
   "123;my_index",
 ]
 
-[validators.both-identifiers]
+[validators.full-identifier]
 index = "3"
 pubkey = "0xb99d27eeea8c7f9201926801acae031a9aa558428a47d403cfeda91260087dc77cb7e97f213b552c179d60be5d8dd671"
