@@ -55,7 +55,7 @@ def test_standard_logging_for_supplied_pubkey() -> int:
     """
     expected_logs = ["Validator 3 has next ATTESTATION"]
     command = get_general_eth_duties_start_command(
-        [CONFIG.validators.both_identifiers.pubkey],
+        [CONFIG.validators.full_identifier.pubkey],
         CONFIG.general.working_beacon_node_url,
     )
     return run_generic_test(
@@ -80,7 +80,7 @@ def test_pubkey_logging_mode() -> int:
         "0xb99d27eeea8c7f9201926801acae031a9aa558428a47d403cfeda91260087dc77cb7e97f213b552c179d60be5d8dd671"
     ]
     command = get_general_eth_duties_start_command(
-        [CONFIG.validators.both_identifiers.index],
+        [CONFIG.validators.full_identifier.index],
         CONFIG.general.working_beacon_node_url,
     ) + ["--log-pubkeys"]
     return run_generic_test(
