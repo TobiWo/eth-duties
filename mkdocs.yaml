@@ -77,5 +77,6 @@ nav:
     - Mode: "./configuration/mode.md"
     - RESTful API: "./configuration/restful-api.md"
     - Validator identifiers: "./configuration/validator-identifiers.md"
+  - Testing: "./test.md"
   - Contribute: "./contribute.md"
 ...
