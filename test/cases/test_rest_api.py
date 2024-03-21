@@ -11,6 +11,18 @@ from test_helper.functions import run_generic_test
 from test_helper.general import get_general_eth_duties_start_command
 
 
+def get_attestation_duties_rest_call() -> Any:
+    """Get attestation duties rest call
+
+    Returns:
+        Any: Rest call response
+    """
+    return get(
+        f"http://localhost:{CONFIG.general.rest_port}/duties/raw/attestation",
+        timeout=REQUEST_TIMEOUT,
+    )
+
+
 def test_rest_while_running_in_cicd_mode() -> int:
     """Test rest in cicd mode
 
@@ -40,16 +52,6 @@ def test_get_attestation_duties_from_rest_endpoint() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
 
-    def get_attestation_duties_rest_call() -> Any:
-        """Get attestation duties rest call
-
-        Returns:
-            Any: Rest call response
-        """
-        return get(
-            "http://localhost:5000/duties/raw/attestation", timeout=REQUEST_TIMEOUT
-        )
-
     expected_logs = [
         "Validator 1 has next ATTESTATION duty",
         "Validator 2 has next ATTESTATION duty",
@@ -57,7 +59,7 @@ def test_get_attestation_duties_from_rest_endpoint() -> int:
     ]
     command = command = get_general_eth_duties_start_command(
         CONFIG.validators.active.general[0:3], CONFIG.general.working_beacon_node_url
-    ) + ["--rest"]
+    ) + ["--rest", "--rest-port", CONFIG.general.rest_port]
     return run_generic_test(
         expected_logs,
         command,
@@ -224,4 +226,52 @@ def test_delete_validator_identifier_rest_endpoint() -> int:
         rest_call=delete_validator_identifier_rest_call,
         rest_call_trigger_log="Logging next duties interval",
         test_rest_response_length=False,
+    )
+
+
+def test_start_rest_api_on_different_port() -> int:
+    """Test starting rest api on different port
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+
+    expected_logs = [
+        f"Started rest api server on localhost:{CONFIG.general.rest_port}",
+        "Validator 1 has next ATTESTATION duty",
+        "Validator 2 has next ATTESTATION duty",
+        "Validator 3 has next ATTESTATION duty",
+    ]
+    command = command = get_general_eth_duties_start_command(
+        CONFIG.validators.active.general[0:3], CONFIG.general.working_beacon_node_url
+    ) + ["--rest", "--rest-port", CONFIG.general.rest_port]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "start rest api on different port",
+        "GET /duties/raw/attestation",
+        rest_call=get_attestation_duties_rest_call,
+        rest_call_trigger_log="all duties will be executed in",
+        test_rest_response_length=False,
+    )
+
+
+def test_start_rest_api_on_port_in_usage() -> int:
+    """Test starting rest api on a port which is already in usage/blocked
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+
+    expected_logs = [
+        f"Port {CONFIG.general.rest_port_in_usage} is already in use. Starting eth-duties without rest server."
+    ]
+    command = command = get_general_eth_duties_start_command(
+        CONFIG.validators.active.general[0:3], CONFIG.general.working_beacon_node_url
+    ) + ["--rest", "--rest-port", CONFIG.general.rest_port_in_usage]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "start rest api on a port in usage",
+        "Starting eth-duties without rest server",
     )
