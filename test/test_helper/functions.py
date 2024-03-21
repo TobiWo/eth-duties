@@ -41,7 +41,7 @@ def test_standard_logging_mode(
     logs = run_eth_duties(command, process_termination_log, None, None)
     number_of_matched_logs = compare_logs(logs[0], expected_logs, False)
     assert number_of_matched_logs == expected_log_counter
-    print(fg.green + "\rTest succeeded" + fg.rs)
+    print(fg.green + "\rTest succeeded\n" + fg.rs)
 
 
 # # Specific test function 2
@@ -79,7 +79,7 @@ def test_set_colorful_logging_thresholds(
                 warning_match_counter += 1
     assert critical_counter == critical_match_counter
     assert warning_counter == warning_match_counter
-    print(fg.green + "\rTest succeeded" + fg.rs)
+    print(fg.green + "\rTest succeeded\n" + fg.rs)
 
 
 def generic_test(

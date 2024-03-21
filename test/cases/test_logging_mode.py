@@ -42,7 +42,7 @@ def test_standard_logging_mode_execution() -> int:
         print(fg.red + "Test Failed" + fg.rs)
         print(
             fg.red + "It is possible that the data "
-            "couldn't be fetched correctly from the beacon client" + fg.rs
+            "couldn't be fetched correctly from the beacon client\n" + fg.rs
         )
         return 0
 
@@ -155,7 +155,7 @@ def test_set_colorful_logging_thresholds_execution() -> int:
         test_set_colorful_logging_thresholds(command, "duties will be executed")
         return 1
     except AssertionError:
-        print("Test Failed")
+        print("Test Failed\n")
         return 0
 
 
