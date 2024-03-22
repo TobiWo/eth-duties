@@ -53,7 +53,7 @@ def test_standard_logging_for_supplied_pubkey() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = ["Validator 3 has next ATTESTATION"]
+    expected_logs = [f"Validator {CONFIG.validators.full_identifier.index} has next ATTESTATION"]
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.full_identifier.pubkey],
         CONFIG.general.working_beacon_node_url,
@@ -76,8 +76,7 @@ def test_pubkey_logging_mode() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
     expected_logs = [
-        # pylint: disable-next=line-too-long
-        "0xb99d27eeea8c7f9201926801acae031a9aa558428a47d403cfeda91260087dc77cb7e97f213b552c179d60be5d8dd671"
+        CONFIG.validators.full_identifier.pubkey
     ]
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.full_identifier.index],
