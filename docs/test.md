@@ -28,13 +28,8 @@ Since all tests rely on the connection to a beacon node and therefore a real wor
 There are two ways to check if a test really failed:
 
 1. Repeat the test on it's own by commenting out all other tests in `test/run_tests.py`
-1. Activate debugging (print fetched logs to the console) while setting the following env variable:
-
-    ```bash
-    export ETH_DUTIES_TEST_DEBUG=debug
-    ```
-  
-  - with debugging active you can check the expected logs (see `cases` folder) and compare them with the actual logs
+1. Activate debugging (print fetched logs to the console) while set the debug setting in `config.toml` to true
+    - with debugging active you can check the expected logs (see `cases` folder) and compare them with the actual logs
 
 ## Improvements
 
