@@ -1,13 +1,13 @@
 """Module for general helper functions
 """
 
-from os import getenv
 from signal import SIGINT
 from subprocess import PIPE, Popen
 from typing import IO, Any, Callable, List, Tuple
+from time import time
 
 from requests import Response
-from test_helper.config import ETH_DUTIES_ENTRY_POINT
+from test_helper.config import ETH_DUTIES_ENTRY_POINT, CONFIG
 
 
 def print_test_message(
@@ -130,11 +130,12 @@ def fill_log_collection(
         overhead_log_number (int, optional): Logs which will be collected after process
         termination log was found. Defaults to 1.
     """
+    start = time()
+    end = time()
     overhead_counter = 0
-    debug = getenv("ETH_DUTIES_TEST_DEBUG")
     for line in process_logs:
-        if debug == "debug":
-            print(line)
+        if CONFIG.test.debug:
+            print(line, end="")
         collected_logs.append(line)
         positive_match = [
             log for log in collected_logs if process_termination_log in log
@@ -143,6 +144,11 @@ def fill_log_collection(
             overhead_counter += 1
         if overhead_counter == overhead_log_number:
             break
+        end = time()
+        if end-start >= CONFIG.test.timeout:
+            print("Test took too long. Will be skipped!")
+            break
+
 
 
 def compare_logs(
