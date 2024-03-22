@@ -189,5 +189,5 @@ def run_generic_test(
             print(fg.red + "Test Failed\n" + fg.rs)
         if additional_failure_message:
             print(fg.red + "Test Failed" + fg.rs)
-            print(fg.red + additional_failure_message + fg.rs)
+            print(fg.red + additional_failure_message + "\n" + fg.rs)
         return 0
