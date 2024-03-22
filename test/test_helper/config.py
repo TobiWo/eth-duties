@@ -10,6 +10,12 @@ from dataclass_binder import Binder
 
 path.append(str(Path.cwd() / "duties"))
 
+@dataclass
+class Test:
+    """Test config section"""
+    timeout: int
+    debug: bool
+
 
 @dataclass
 class General:
@@ -55,6 +61,7 @@ class Config:
 
     general: General
     validators: Validators
+    test: Test
 
 
 CONFIG = Binder(Config).parse_toml(Path.cwd() / "test/config.toml")
