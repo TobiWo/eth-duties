@@ -210,6 +210,7 @@ def test_omit_attestation_duties() -> int:
             "It could be that the provided validator is inactive, "
             "in sync committee or about to propose a block!"
         ),
+        drop_expected_logs=True
     )
 
 
