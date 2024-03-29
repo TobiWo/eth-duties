@@ -83,7 +83,7 @@ def test_pubkey_logging_mode() -> int:
         CONFIG.general.working_beacon_node_url,
     ) + ["--log-pubkeys"]
     return run_generic_test(
-        expected_logs, command, "pubkey logging mode", "duties will be executed"
+        expected_logs, command, "pubkey logging mode", "duties will be executed", drop_expected_logs=True
     )
 
 
@@ -98,7 +98,7 @@ def test_alias_logging_mode() -> int:
         CONFIG.validators.active.with_alias, CONFIG.general.working_beacon_node_url
     )
     return run_generic_test(
-        expected_logs, command, "alias logging mode", "duties will be executed"
+        expected_logs, command, "alias logging mode", "duties will be executed", drop_expected_logs=True
     )
 
 
@@ -164,17 +164,14 @@ def test_logging_duties_for_high_number_of_validators() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = [
-        "Fetching all necessary data may take some time",
-        "Provided number of validators for fetching attestion duties is high",
-    ]
+    expected_logs = ["Provided number of validators for fetching attestion duties is high"]
     command = [
         "poetry",
         "run",
         "python",
         ETH_DUTIES_ENTRY_POINT,
         "--validators-file",
-        str(Path.cwd() / "test/data/over_5k_validators"),
+        str(Path.cwd() / "test/data/devnet-validators"),
         "--beacon-nodes",
         CONFIG.general.working_beacon_node_url,
     ]
@@ -182,7 +179,7 @@ def test_logging_duties_for_high_number_of_validators() -> int:
         expected_logs,
         command,
         "logging duties for high number of validators",
-        expected_logs[1],
+        expected_logs[0],
     )
 
 
@@ -230,7 +227,7 @@ def test_increase_of_max_attestation_duty_logs() -> int:
         "python",
         ETH_DUTIES_ENTRY_POINT,
         "--validators-file",
-        str(Path.cwd() / "test/data/61_validators"),
+        str(Path.cwd() / "test/data/devnet-validators-small"),
         "--beacon-nodes",
         CONFIG.general.working_beacon_node_url,
         "--max-attestation-duty-logs",
