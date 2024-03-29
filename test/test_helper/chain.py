@@ -105,7 +105,16 @@ def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> 
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
-    return len(response.json()["data"])
+    filtered_response = []
+    for item in response.json()["data"]:
+        if len(filtered_response) == 0:
+            filtered_response.append(item)
+        for index, filtered_item in enumerate(filtered_response):
+            if item["pubkey"] == filtered_item["pubkey"]:
+                break
+            if index + 1 == len(filtered_response):
+                filtered_response.append(item)
+    return len(filtered_response)
 
 
 def get_number_of_validators_which_will_propose_block(validators: List[str]) -> int:
