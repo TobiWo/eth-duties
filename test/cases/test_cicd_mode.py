@@ -6,7 +6,7 @@ from test_helper.functions import run_generic_test
 from test_helper.general import get_general_eth_duties_start_command
 
 
-def test_cicd_exit_mode_while_proportion_of_duties_is_not_above_threshold() -> int:
+def test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold() -> int:
     """Test cicd exit mode while proportion of duties is not above threshold
 
     Returns:
@@ -14,26 +14,43 @@ def test_cicd_exit_mode_while_proportion_of_duties_is_not_above_threshold() -> i
     """
     expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 1"]
     command = get_general_eth_duties_start_command(
-        CONFIG.validators.active.general[0:10], CONFIG.general.working_beacon_node_url
+        CONFIG.validators.active.general[0:10] + CONFIG.validators.active.in_sync_committee , CONFIG.general.working_beacon_node_url
     ) + ["--mode", "cicd-exit"]
     return run_generic_test(
         expected_logs,
         command,
-        "cicd exit mode while proportion of duties IS NOT above threshold",
+        "cicd exit mode with sync committee duties while proportion of duties IS NOT above threshold",
         "Exiting with code",
         drop_expected_logs=True,
     )
 
+def test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold() -> int:
+    """Test cicd exit mode while proportion of duties is not above threshold
 
-def test_cicd_exit_mode_while_proportion_of_duties_is_above_threshold() -> int:
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 1"]
+    command = get_general_eth_duties_start_command(
+        CONFIG.validators.active.not_in_sync_committee, CONFIG.general.working_beacon_node_url
+    ) + ["--mode", "cicd-exit"]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "cicd exit mode without sync committee duties while proportion of duties IS NOT above threshold",
+        "Exiting with code",
+        drop_expected_logs=True,
+    )
+
+def test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold() -> int:
     """Test cicd exit mode while proportion of duties is above threshold
 
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 0"]
+    expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 1"]
     command = get_general_eth_duties_start_command(
-        CONFIG.validators.active.general[0:10], CONFIG.general.working_beacon_node_url
+        CONFIG.validators.active.general[0:10] + CONFIG.validators.active.in_sync_committee, CONFIG.general.working_beacon_node_url
     ) + [
         "--mode",
         "cicd-exit",
@@ -43,11 +60,33 @@ def test_cicd_exit_mode_while_proportion_of_duties_is_above_threshold() -> int:
     return run_generic_test(
         expected_logs,
         command,
-        "cicd exit mode while proportion of duties IS above threshold",
+        "cicd exit mode with sync committee duties while proportion of duties IS above threshold",
         "Exiting with code",
         drop_expected_logs=True,
     )
 
+def test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold() -> int:
+    """Test cicd exit mode while proportion of duties is above threshold
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 0"]
+    command = get_general_eth_duties_start_command(
+        CONFIG.validators.active.not_in_sync_committee, CONFIG.general.working_beacon_node_url
+    ) + [
+        "--mode",
+        "cicd-exit",
+        "--mode-cicd-attestation-proportion",
+        "0.01",
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "cicd exit mode without sync committee duties while proportion of duties IS above threshold",
+        "Exiting with code",
+        drop_expected_logs=True,
+    )
 
 def test_cicd_force_graceful_exit_mode() -> int:
     """Test cicd force graceful exit mode
@@ -73,8 +112,7 @@ def test_cicd_force_graceful_exit_mode() -> int:
         drop_expected_logs=True,
     )
 
-
-def test_cicd_wait_mode_while_proportion_of_duties_is_above_threshold_within_waiting_time() -> (
+def test_cicd_wait_mode_without_sync_committee_duties_while_proportion_of_duties_is_above_threshold_within_waiting_time() -> (
     int
 ):
     """Test cicd wait mode while proportion of duties is above threshold
@@ -87,7 +125,7 @@ def test_cicd_wait_mode_while_proportion_of_duties_is_above_threshold_within_wai
         "Exiting with code: 0",
     ]
     command = get_general_eth_duties_start_command(
-        CONFIG.validators.active.general[0:10], CONFIG.general.working_beacon_node_url
+        CONFIG.validators.active.not_in_sync_committee, CONFIG.general.working_beacon_node_url
     ) + [
         "--mode",
         "cicd-wait",
@@ -97,11 +135,10 @@ def test_cicd_wait_mode_while_proportion_of_duties_is_above_threshold_within_wai
     return run_generic_test(
         expected_logs,
         command,
-        "cicd wait mode while proportion of duties IS above threshold within waiting time",
+        "cicd wait mode without sync committee duties while proportion of duties IS above threshold within waiting time",
         "Exiting with code",
         drop_expected_logs=True,
     )
-
 
 def test_cicd_wait_mode_while_waiting_time_exceeds() -> int:
     """Test cicd wait mode while waiting time exceeds
@@ -115,7 +152,7 @@ def test_cicd_wait_mode_while_waiting_time_exceeds() -> int:
         "Exiting with code: 1",
     ]
     command = get_general_eth_duties_start_command(
-        CONFIG.validators.active.general[0:10], CONFIG.general.working_beacon_node_url
+        CONFIG.validators.active.general[0:10] + CONFIG.validators.active.in_sync_committee, CONFIG.general.working_beacon_node_url
     ) + [
         "--mode",
         "cicd-wait",
