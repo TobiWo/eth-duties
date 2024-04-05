@@ -48,10 +48,12 @@ test_cases = [
     test_cli_validation.test_cicd_attestation_proportion_flag_validation,
     test_cli_validation.test_cicd_waiting_time_flag_validation,
     # Test cicd mode
-    test_cicd_mode.test_cicd_exit_mode_while_proportion_of_duties_is_above_threshold,
-    test_cicd_mode.test_cicd_exit_mode_while_proportion_of_duties_is_not_above_threshold,
+    test_cicd_mode.test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold,
+    test_cicd_mode.test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold,
+    test_cicd_mode.test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold,
+    test_cicd_mode.test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold,
     test_cicd_mode.test_cicd_force_graceful_exit_mode,
-    test_cicd_mode.test_cicd_wait_mode_while_proportion_of_duties_is_above_threshold_within_waiting_time,
+    test_cicd_mode.test_cicd_wait_mode_without_sync_committee_duties_while_proportion_of_duties_is_above_threshold_within_waiting_time,
     test_cicd_mode.test_cicd_wait_mode_while_waiting_time_exceeds,
 ]
 
