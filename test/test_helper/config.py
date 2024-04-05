@@ -15,6 +15,7 @@ class Test:
     """Test config section"""
     timeout: int
     debug: bool
+    skip_next_sync_committee_test: bool
 
 
 @dataclass
@@ -32,6 +33,7 @@ class ActiveValidators:
     """Active validator config section"""
 
     general: List[str]
+    not_in_sync_committee: List[str]
     in_sync_committee: List[str]
     next_sync_committee: List[str]
     proposing_blocks: List[str]

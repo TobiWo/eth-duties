@@ -1,8 +1,9 @@
-# The provided validator indidces and pubkeys provided in this config will work with a local devnet setup based on the ethereum-package for kurtosis-cli
+# The validator indidces and pubkeys provided in this config will work with a local devnet setup based on the ethereum-package for kurtosis-cli
 # The config can be also adapted to work with any public testnet or even the mainnet
 [test]
 timeout = 120
 debug = false
+skip-next-sync-committee-test = false
 
 [general]
 failing-beacon-node-url = "http://foobar:5052"
@@ -35,6 +36,7 @@ general = [
   "19",
   "20",
 ]
+not-in-sync-committee = [] # List of strings
 in-sync-committee = [] # List of strings
 next-sync-committee = [] # List of strings
 proposing-blocks = [] # List of strings
