@@ -40,7 +40,7 @@ def test_both_validators_flag_validation() -> int:
         "--validators",
         "1",
         "--validators-file",
-        str(Path.cwd() / "test/data/over_5k_validators"),
+        str(Path.cwd() / "test/data/devnet-validators"),
     ]
     return run_generic_test(
         expected_logs,
