@@ -3,11 +3,12 @@
 
 from math import trunc
 from time import sleep, time
-from typing import List
+from typing import Any, List
 
 # pylint: disable-next=import-error
 from constants.program import REQUEST_TIMEOUT
-from requests import Response, get, post
+from requests import ConnectionError as RequestsConnectionError
+from requests import ReadTimeout, Response, get, post
 from test_helper.config import CONFIG
 
 SLOT_TIME = 12
@@ -50,7 +51,10 @@ def get_number_of_active_validators(validators: List[str]) -> int:
         int: Number of provided active validators
     """
     validator_request = ",".join(validators)
-    request_string = f"{CONFIG.general.working_beacon_node_url}/eth/v1/beacon/states/head/validators?id={validator_request}"
+    request_string = (
+        f"{CONFIG.general.working_beacon_node_url}"
+        f"/eth/v1/beacon/states/head/validators?id={validator_request}"
+    )
     number_of_active_validators = 0
     try_counter = 0
     response = Response()
@@ -63,7 +67,7 @@ def get_number_of_active_validators(validators: List[str]) -> int:
                     number_of_active_validators += 1
             if response.status_code == 200:
                 break
-        except:
+        except (RequestsConnectionError, ReadTimeout):
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
@@ -84,7 +88,10 @@ def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> 
     """
     validator_request_data = ",".join(f'"{validator}"' for validator in validators)
     validator_request_data = f"[{validator_request_data}]"
-    request_string = f"{CONFIG.general.working_beacon_node_url}/eth/v1/validator/duties/sync/{get_current_epoch()}"
+    request_string = (
+        f"{CONFIG.general.working_beacon_node_url}"
+        f"/eth/v1/validator/duties/sync/{get_current_epoch()}"
+    )
     try_counter = 0
     response = Response()
     while try_counter < 10:
@@ -101,11 +108,11 @@ def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> 
             )
             if response.status_code == 200:
                 break
-        except:
+        except (RequestsConnectionError, ReadTimeout):
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
-    filtered_response = []
+    filtered_response: List[Any] = []
     for item in response.json()["data"]:
         if len(filtered_response) == 0:
             filtered_response.append(item)
@@ -130,7 +137,10 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
         int: Number of provided validators which will propose a block
     """
     request_strings = [
-        f"{CONFIG.general.working_beacon_node_url}/eth/v1/validator/duties/proposer/{get_current_epoch() + i}"
+        (
+            f"{CONFIG.general.working_beacon_node_url}"
+            f"/eth/v1/validator/duties/proposer/{get_current_epoch() + i}"
+        )
         for i in range(0, 2, 1)
     ]
     number_of_validators_which_will_propose_a_block = 0
@@ -149,7 +159,7 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
                         number_of_validators_which_will_propose_a_block += 1
                 if response.status_code == 200:
                     break
-            except:
+            except (RequestsConnectionError, ReadTimeout):
                 sleep(0.1)
         if try_counter == 10:
             raise ValueError("Couldn't fetch data from provided beacon client")

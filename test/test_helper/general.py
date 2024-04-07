@@ -3,11 +3,11 @@
 
 from signal import SIGINT
 from subprocess import PIPE, Popen
-from typing import IO, Any, Callable, List, Tuple
 from time import time
+from typing import IO, Any, Callable, List, Tuple
 
 from requests import Response
-from test_helper.config import ETH_DUTIES_ENTRY_POINT, CONFIG
+from test_helper.config import CONFIG, ETH_DUTIES_ENTRY_POINT
 
 
 def print_test_message(
@@ -145,10 +145,9 @@ def fill_log_collection(
         if overhead_counter == overhead_log_number:
             break
         end = time()
-        if end-start >= CONFIG.test.timeout:
+        if end - start >= CONFIG.test.timeout:
             print("Test took too long. Will be skipped!")
             break
-
 
 
 def compare_logs(

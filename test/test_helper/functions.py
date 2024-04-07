@@ -46,10 +46,7 @@ def test_standard_logging_mode(
 
 # # Specific test function 2
 def test_set_colorful_logging_thresholds(
-    command: List[str],
-    process_termination_log: str,
-    expected_logs: List[str] | None = None,
-    validators_to_test: List[str] | None = None,
+    command: List[str], process_termination_log: str
 ) -> None:
     """Test whether colors are logged correctly using default logging colors
 
@@ -60,7 +57,7 @@ def test_set_colorful_logging_thresholds(
         is running. Defaults to None.
         validators_to_test (List[str] | None, optional): Tested validators. Defaults to None.
     """
-    print_test_message(test_set_colorful_logging_thresholds)
+    print_test_message(test_message="set colorful logging thresholds")
     logs = run_eth_duties(command, process_termination_log, None, None)
     critical_counter = 0
     critical_match_counter = 0
