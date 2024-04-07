@@ -1,6 +1,8 @@
 """Module to run test suite
 """
 
+# pylint: disable=line-too-long
+
 from cases import (
     test_cicd_mode,
     test_cli_validation,
@@ -23,7 +25,7 @@ test_cases = [
     test_startup.test_no_beacon_connection_at_startup,
     # Test rest api
     test_rest_api.test_get_block_proposing_duties_from_rest_endpoint,
-    test_rest_api.test_get_sync_committee_duties_from_rest_endpoint,
+    test_rest_api.test_get_sync_committee_duties_from_rest_endpoint,  # test will currently fail on kurtosis devnet (see here: https://github.com/TobiWo/eth-duties/issues/78)
     test_rest_api.test_get_attestation_duties_from_rest_endpoint,
     test_rest_api.test_rest_while_running_in_cicd_mode,
     test_rest_api.test_post_new_validator_identifier_rest_endpoint,
