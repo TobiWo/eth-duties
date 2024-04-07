@@ -90,12 +90,10 @@ def test_get_sync_committee_duties_from_rest_endpoint() -> int:
     expected_logs = [
         f"Validator {validator} is in current sync committee"
         for validator in CONFIG.validators.active.in_sync_committee
+    ] + [
+        f"Validator {validator} will be in next sync committee"
+        for validator in CONFIG.validators.active.next_sync_committee
     ]
-    if not CONFIG.test.skip_next_sync_committee_test:
-        expected_logs = expected_logs + [
-            f"Validator {validator} will be in next sync committee"
-            for validator in CONFIG.validators.active.next_sync_committee
-        ]
     command = command = get_general_eth_duties_start_command(
         CONFIG.validators.active.in_sync_committee
         + CONFIG.validators.active.next_sync_committee,
@@ -266,7 +264,8 @@ def test_start_rest_api_on_port_in_usage() -> int:
     """
 
     expected_logs = [
-        f"Port {CONFIG.general.rest_port_in_usage} is already in use. Starting eth-duties without rest server."
+        f"Port {CONFIG.general.rest_port_in_usage} is already in use. "
+        f"Starting eth-duties without rest server."
     ]
     command = command = get_general_eth_duties_start_command(
         CONFIG.validators.active.general[0:3], CONFIG.general.working_beacon_node_url

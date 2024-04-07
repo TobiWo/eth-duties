@@ -53,7 +53,9 @@ def test_standard_logging_for_supplied_pubkey() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = [f"Validator {CONFIG.validators.full_identifier.index} has next ATTESTATION"]
+    expected_logs = [
+        f"Validator {CONFIG.validators.full_identifier.index} has next ATTESTATION"
+    ]
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.full_identifier.pubkey],
         CONFIG.general.working_beacon_node_url,
@@ -75,15 +77,17 @@ def test_pubkey_logging_mode() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = [
-        CONFIG.validators.full_identifier.pubkey
-    ]
+    expected_logs = [CONFIG.validators.full_identifier.pubkey]
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.full_identifier.index],
         CONFIG.general.working_beacon_node_url,
     ) + ["--log-pubkeys"]
     return run_generic_test(
-        expected_logs, command, "pubkey logging mode", "duties will be executed", drop_expected_logs=True
+        expected_logs,
+        command,
+        "pubkey logging mode",
+        "duties will be executed",
+        drop_expected_logs=True,
     )
 
 
@@ -98,7 +102,11 @@ def test_alias_logging_mode() -> int:
         CONFIG.validators.active.with_alias, CONFIG.general.working_beacon_node_url
     )
     return run_generic_test(
-        expected_logs, command, "alias logging mode", "duties will be executed", drop_expected_logs=True
+        expected_logs,
+        command,
+        "alias logging mode",
+        "duties will be executed",
+        drop_expected_logs=True,
     )
 
 
@@ -141,7 +149,7 @@ def test_set_colorful_logging_thresholds_execution() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    validators_to_test = CONFIG.validators.active.general
+    validators_to_test = CONFIG.validators.active.not_in_sync_committee_not_proposing
     command = command = get_general_eth_duties_start_command(
         validators_to_test, CONFIG.general.working_beacon_node_url
     ) + [
@@ -154,7 +162,7 @@ def test_set_colorful_logging_thresholds_execution() -> int:
         test_set_colorful_logging_thresholds(command, "duties will be executed")
         return 1
     except AssertionError:
-        print("Test Failed\n")
+        print(fg.red + "Test Failed\n" + fg.rs)
         return 0
 
 
@@ -164,7 +172,9 @@ def test_logging_duties_for_high_number_of_validators() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = ["Provided number of validators for fetching attestion duties is high"]
+    expected_logs = [
+        "Provided number of validators for fetching attestion duties is high"
+    ]
     command = [
         "poetry",
         "run",
@@ -194,7 +204,7 @@ def test_omit_attestation_duties() -> int:
         "No upcoming duties detected!",
     ]
     command = get_general_eth_duties_start_command(
-        [CONFIG.validators.active.general[0]],
+        [CONFIG.validators.active.not_in_sync_committee_not_proposing[0]],
         CONFIG.general.working_beacon_node_url,
     ) + ["--omit-attestation-duties"]
     return run_generic_test(
@@ -207,7 +217,7 @@ def test_omit_attestation_duties() -> int:
             "It could be that the provided validator is inactive, "
             "in sync committee or about to propose a block!"
         ),
-        drop_expected_logs=True
+        drop_expected_logs=True,
     )
 
 
