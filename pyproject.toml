@@ -1,6 +1,6 @@
 [tool.poetry]
 authors = ["Tobias Wohland <Tobias.Wohland@gmail.com>"]
-description = "Logs upcoming validator duties to the console."
+description = "Log upcoming validator duties to the console."
 license = "MIT"
 name = "eth-duties"
 readme = "README.md"
@@ -10,7 +10,7 @@ version = "0.6.0"
 [tool.poetry.dependencies]
 eth-typing = "==3.5.2"
 fastapi = "==0.104.1"
-python = "==3.12.0"
+python = "~3.12"
 pyyaml = "==6.0.1"
 requests = "==2.31.0"
 sty = "==1.0.4"
