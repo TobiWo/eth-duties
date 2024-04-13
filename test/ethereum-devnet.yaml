@@ -35,6 +35,20 @@ participants:
     cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
     use_separate_vc: true
     keymanager_enabled: true
+  - el_type: "nethermind"
+    el_image: "nethermind/nethermind:1.25.4"
+    cl_type: "nimbus"
+    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    use_separate_vc: true
+    keymanager_enabled: true
+    validator_count: 6
+  - el_type: "besu"
+    el_image: "hyperledger/besu:24.3.0"
+    cl_type: "nimbus"
+    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    use_separate_vc: true
+    keymanager_enabled: true
+    validator_count: 10
 network_params:
   electra_fork_epoch: 1000
   num_validator_keys_per_node: 128
