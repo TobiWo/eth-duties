@@ -74,6 +74,7 @@ nav:
     - General: "./configuration/general.md"
     - Beacon nodes: "./configuration/beacon-nodes.md"
     - Log colors: "./configuration/log-colors.md"
+    - Log time: "./configuration/log-time.md"
     - Mode: "./configuration/mode.md"
     - RESTful API: "./configuration/restful-api.md"
     - Validator identifiers: "./configuration/validator-identifiers.md"
