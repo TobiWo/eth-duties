@@ -2,6 +2,7 @@
 Module for parsing CLI arguments
 """
 
+import sys
 from argparse import ArgumentError, ArgumentParser, FileType, Namespace
 from itertools import chain
 from multiprocessing import freeze_support
@@ -9,6 +10,8 @@ from typing import List
 
 from cli import parse
 from cli.types import Mode
+
+sys.tracebacklimit = 0
 
 
 def __get_raw_arguments() -> Namespace:
@@ -318,3 +321,4 @@ def __set_arguments() -> Namespace:
 
 
 ARGUMENTS = __set_arguments()
+sys.tracebacklimit = None
