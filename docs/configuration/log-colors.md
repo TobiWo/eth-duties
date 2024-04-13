@@ -20,6 +20,6 @@ You can use hex or rgb color codes for setting a respective color. The format ne
 
 If you use hex format you need to wrap the hex code in `""` or `''` or separate the flag and the value with an `=`. This leads to the following possible formatting styles:
 
-* `--log-time-warning=#FFFFFF`
-* `--log-time-warning "#FFFFFF"`
-* `--log-time-warning '#FFFFFF'`
+* `--log-color-warning=#FFFFFF`
+* `--log-color-warning "#FFFFFF"`
+* `--log-color-warning '#FFFFFF'`
