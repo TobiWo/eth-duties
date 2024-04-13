@@ -4,17 +4,12 @@ If you want to contribute you need to setup the project which is described in th
 
 ## Requirements
 
-* `Python 3.10`
-
-The tool explicitly needs `Python 3.10` as I use a feature which was just introduced with this version.
-
-`Python 3.11` will not work currently as the dependencies weren't updated for that version yet.
-
-In general it is recommended to work with virtual environments instead of a global python installation. This is out of scope of this documentation.
+* `Python 3.12 or higher`
+* in general it is recommended to work with virtual environments instead of a global python installation. This is out of scope of this documentation.
 
 ## Installation
 
-Dependencies are organized and managed using poetry. Poetry itself needs `Python 3.7` or later.
+Dependencies are organized and managed using poetry. Poetry itself needs `Python 3.8` or later.
 
 My personal workflow to manage virtual environments is to use [miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html), therefore the steps described are based on this toolchain.
 
