@@ -10,7 +10,10 @@ from cli.arguments import ARGUMENTS
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
-from helper.help import get_duties_proportion_above_time_threshold
+from helper.help import (
+    format_timedelta_to_hours,
+    get_duties_proportion_above_time_threshold,
+)
 from protocol import ethereum
 from sty import bg, rs  # type: ignore[import]
 
@@ -110,8 +113,10 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     current_sync_committee_epoch_boundaries = (
         ethereum.get_sync_committee_epoch_boundaries(current_epoch)
     )
-    time_to_next_sync_committee = __get_time_to_next_sync_committee(
-        sync_committee_duty, current_sync_committee_epoch_boundaries
+    time_to_next_sync_committee = format_timedelta_to_hours(
+        __get_time_to_next_sync_committee(
+            sync_committee_duty, current_sync_committee_epoch_boundaries
+        )
     )
     if sync_committee_duty.seconds_to_duty == 0:
         logging_message = (
