@@ -16,11 +16,16 @@ You can run the integration test suite against any real world Ethereum network (
 ### Setup
 
 1. [Install kurtosis cli](https://docs.kurtosis.com/install/)
-1. Update client image tags in `./test/ethereum-devnet.yaml` if outdated
-1. Fire up the devnet from the root of the `eth-duties` repository with:
+1. Update client image tags in `./test/ethereum-devnet-tags.env` if outdated
+1. Fire up the devnet from the root of the `eth-duties` repository and cleanup env variables as well as repo from temp config file:
+    - Note: The command may or may not work on gitbash for Windows but it is only tested on Linux (Ubuntu)
 
     ```bash
-    kurtosis run --enclave eth-duties-devnet github.com/kurtosis-tech/ethereum-package --args-file ./test/ethereum-devnet.yaml
+    export $(grep -v '^#' ./test/ethereum-devnet-tags.env | xargs) && \
+    cat ./test/ethereum-devnet.yaml | envsubst > ./test/ethereum-devnet-replace.yaml && \
+    kurtosis run --image-download always --enclave eth-duties-devnet github.com/ethpandaops/ethereum-package --args-file ./test/ethereum-devnet-replace.yaml && \
+    rm ./test/ethereum-devnet-replace.yaml && \
+    unset $(grep -v '^#' ./test/ethereum-devnet-tags.env | sed -E 's/(.*)=.*/\1/' | xargs)
     ```
 
 ## Configure tests
