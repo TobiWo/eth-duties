@@ -1,51 +1,50 @@
 ---
-# kurtosis run --enclave eth-duties-devnet github.com/kurtosis-tech/ethereum-package --args-file ./test/ethereum-devnet.yaml
 participants:
   - el_type: "geth"
-    el_image: "ethereum/client-go:v1.13.14"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "lighthouse"
-    cl_image: "sigp/lighthouse:v5.1.3"
+    cl_image: "sigp/lighthouse:${LIGHTHOUSE_IMAGE_TAG}"
     keymanager_enabled: true
   - el_type: "geth"
-    el_image: "ethereum/client-go:v1.13.14"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "teku"
-    cl_image: "consensys/teku:24.3.1"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
   - el_type: "besu"
-    el_image: "hyperledger/besu:24.3.0"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
   - el_type: "besu"
-    el_image: "hyperledger/besu:24.3.0"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "lodestar"
-    cl_image: "chainsafe/lodestar:v1.17.0"
+    cl_image: "chainsafe/lodestar:${LODESTAR_IMAGE_TAG}"
     keymanager_enabled: true
   - el_type: "nethermind"
-    el_image: "nethermind/nethermind:1.25.4"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "teku"
-    cl_image: "consensys/teku:24.3.1"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
   - el_type: "nethermind"
-    el_image: "nethermind/nethermind:1.25.4"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
   - el_type: "nethermind"
-    el_image: "nethermind/nethermind:1.25.4"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
     validator_count: 6
   - el_type: "besu"
-    el_image: "hyperledger/besu:24.3.0"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
     keymanager_enabled: true
     validator_count: 10
