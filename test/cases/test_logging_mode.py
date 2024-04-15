@@ -9,6 +9,7 @@ from test_helper.functions import (
     run_generic_test,
     test_set_colorful_logging_thresholds,
     test_standard_logging_mode,
+    test_time_to_next_sync_committee_format,
 )
 from test_helper.general import get_general_eth_duties_start_command
 
@@ -249,3 +250,21 @@ def test_increase_of_max_attestation_duty_logs() -> int:
         "increase of max attestation duty logs",
         "all duties will be executed",
     )
+
+
+def test_logged_format_of_time_to_next_sync_committee() -> int:
+    """Test logging format of time to next sync committee
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    command = get_general_eth_duties_start_command(
+        CONFIG.validators.active.in_sync_committee,
+        CONFIG.general.working_beacon_node_url,
+    )
+    try:
+        test_time_to_next_sync_committee_format(command, "duties will be executed")
+        return 1
+    except AssertionError:
+        print(fg.red + "Test Failed" + fg.rs)
+        return 0
