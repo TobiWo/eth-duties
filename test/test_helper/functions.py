@@ -1,7 +1,7 @@
 """Module containig test function implementations
 """
 
-from re import findall
+from re import findall, search
 from typing import Callable, List
 
 from sty import fg  # type: ignore[import]
@@ -10,6 +10,7 @@ from test_helper.chain import (
     get_number_of_validators_in_current_sync_comittee,
     get_number_of_validators_which_will_propose_block,
 )
+from test_helper.config import CONFIG
 from test_helper.general import compare_logs, print_test_message, run_eth_duties
 
 
@@ -77,6 +78,26 @@ def test_set_colorful_logging_thresholds(
     assert critical_counter == critical_match_counter
     assert warning_counter == warning_match_counter
     print(fg.green + "\rTest succeeded\n" + fg.rs)
+
+
+def test_time_to_next_sync_committee_format(
+    command: List[str], process_termination_log: str
+) -> None:
+    """Test logging format of time to next sync committee
+
+    Args:
+        command (List[str]): eth-duties start command
+        process_termination_log (str): Log which is used to terminate the subprocess
+    """
+    print_test_message(test_message="time logging format to next sync committee")
+    logs = run_eth_duties(command, process_termination_log, None, None)
+    match_counter = 0
+    for log in logs[0]:
+        if "next sync committee starts" in log:
+            match = search("[0-9]+:[0-5][0-9]:[0-5][0-9]\\s/\\sepoch:\\s[0-9]*", log)
+            if match:
+                match_counter += 1
+    assert match_counter == len(CONFIG.validators.active.in_sync_committee)
 
 
 def generic_test(
