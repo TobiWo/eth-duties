@@ -192,6 +192,15 @@ def __get_raw_arguments() -> Namespace:
         help="File with validator identifiers where every identifier is on a separate line",
         action="store",
     )
+    parser.add_argument(
+        "--validator-nodes",
+        type=parse.set_validator_nodes,
+        help=(
+            "Path to file with validator urls and respective bearer tokens to access the key manager api. "
+            "Url and bearer are separated by semicolon"
+        ),
+        action="store",
+    )
     return parser.parse_args()
 
 
