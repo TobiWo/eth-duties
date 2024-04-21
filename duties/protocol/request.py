@@ -5,10 +5,12 @@ from asyncio import TaskGroup, sleep
 from enum import Enum
 from itertools import chain
 from logging import getLogger
-from typing import Any, List
+from typing import Any, Dict, List
 from urllib.parse import urlencode
 
-from constants import json, logging, program
+from cli.arguments import ARGUMENTS
+from cli.types import ValidatorConnectionInformation
+from constants import endpoints, json, logging, program
 from protocol.connection import BeaconNode
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
@@ -35,9 +37,9 @@ async def send_beacon_api_request(
     from the responses
 
     Args:
-        endpoint (str): The endpoint which will be called
+        endpoint (str): Endpoint which will be called
         calldata_type (CalldataType): The type of calldata submitted with the request
-        provided_validators (List[str]): The validator indices or pubkey to get information for
+        provided_validators (List[str]): Validator indices or pubkey to get information for
         flatten (bool): If True the returned list will be flattened
 
     Returns:
@@ -58,26 +60,53 @@ async def send_beacon_api_request(
         ]
         async with TaskGroup() as taskgroup:
             tasks = [
-                taskgroup.create_task(__send_request(endpoint, calldata_type, chunk))
+                taskgroup.create_task(
+                    __handle_api_request(endpoint, calldata_type, chunk)
+                )
                 for chunk in chunked_validators
             ]
         responses = [task.result() for task in tasks]
     else:
-        responses.append(await __send_request(endpoint, calldata_type, []))
+        responses.append(await __handle_api_request(endpoint, calldata_type, []))
     return __convert_to_raw_data_responses(responses, flatten)
 
 
-async def __send_request(
+async def send_key_manager_api_keystore_requests() -> List[Any]:
+    """Send api request to the keystore endpoints of the key manager api of an validator node
+
+    Returns:
+        List[Any]: List with validators managed by the node (see https://ethereum.github.io/keymanager-APIs/#/ for reference)
+    """
+    validator_nodes = ARGUMENTS.validator_nodes
+    async with TaskGroup() as taskgroup:
+        tasks = [
+            taskgroup.create_task(
+                __handle_api_request(endpoint, CalldataType.NONE, [""], node)
+            )
+            for node in validator_nodes
+            for endpoint in [
+                endpoints.LOCAL_KEYSTORES_ENDPOINT,
+                endpoints.REMOTE_KEYSTORES_ENDPOINT,
+            ]
+        ]
+    responses = [task.result() for task in tasks]
+    return __convert_to_raw_data_responses(responses, True)
+
+
+async def __handle_api_request(
     endpoint: str,
     calldata_type: CalldataType,
     provided_validators: List[str],
+    validator_node: ValidatorConnectionInformation | None = None,
 ) -> Response:
-    """Sends a single request to the beacon client
+    """Handle a single api request to a beacon or validator node
 
     Args:
-        endpoint (str): The endpoint which will be called
+        endpoint (str): Endpoint which will be called
         calldata_type (CalldataType): The type of calldata submitted with the request
-        provided_validators (List[str]): The validator indices or pubkey to get information for
+        provided_validators (List[str]): Validator indices or pubkey to get information for
+        validator_node (ValidatorNode | None, optional): Validator node object
+        with respective connection information
 
     Raises:
         SystemExit: Program exit if the response is not present at all
@@ -90,50 +119,146 @@ async def __send_request(
     is_request_successful = False
     response = Response()
     calldata = __get_processed_calldata(provided_validators, calldata_type)
-    while not is_request_successful:
-        ready_beacon_node = beacon_node.get_healthy_beacon_node(True)
+    retry_counter = 0
+    retry_limit = __get_request_retry_limit(validator_node)
+    while not is_request_successful or retry_counter == retry_limit:
+        node_url = __get_node_url(validator_node)
         try:
-            response = __call_rest(ready_beacon_node, endpoint, calldata, calldata_type)
+            retry_counter += 1
+            response = __send_api_request(
+                node_url, endpoint, calldata, calldata_type, validator_node
+            )
             response.close()
-            is_request_successful = __is_request_successful(response)
+            is_request_successful = __is_request_successful(response, node_url)
         except RequestsConnectionError:
             __LOGGER.error(logging.CONNECTION_ERROR_MESSAGE)
             await sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
         except (ReadTimeout, KeyError):
             __LOGGER.error(logging.READ_TIMEOUT_ERROR_MESSAGE)
             await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
+        __log_too_many_retries(retry_counter, node_url, validator_node)
     return response
 
 
-def __call_rest(
-    beacon_node_url: str | None,
+def __log_too_many_retries(
+    retry_counter: int,
+    node_url: str,
+    validator_node: ValidatorConnectionInformation | None,
+) -> None:
+    """Log if too many api request retries are performed
+
+    Args:
+        retry_counter (int): Count the number of request retries
+        node_url (str): Url to which the request is send
+        validator_node (ValidatorNode | None): Validator node object
+        with respective connection information
+    """
+    retry_limit = __get_request_retry_limit(validator_node)
+    if retry_counter == retry_limit + 1:
+        __LOGGER.error(logging.NO_RESPONSE_ERROR_MESSAGE, node_url)
+        if validator_node:
+            __LOGGER.warning(logging.NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE, node_url)
+
+
+def __get_node_url(validator_node: ValidatorConnectionInformation | None) -> str:
+    """Get node url in dependence of whether or not to call a validator node
+
+    Args:
+        validator_node (ValidatorNode | None): Validator node object
+        with respective connection information
+
+    Returns:
+        str: Node url
+    """
+    if validator_node:
+        return validator_node.url
+    return beacon_node.get_healthy_beacon_node(True)
+
+
+def __get_request_retry_limit(
+    validator_node: ValidatorConnectionInformation | None,
+) -> int:
+    """Get request retry limit in dependence of whether or not to call a validator node
+
+    Args:
+        validator_node (ValidatorNode | None): Validator node object
+        with respective connection information
+
+    Returns:
+        int: Limit for request retries
+    """
+    if validator_node:
+        return 3
+    return 1000
+
+
+def __send_api_request(
+    node_url: str,
     endpoint: str,
     calldata: str,
     calldata_type: CalldataType,
+    validator_node: ValidatorConnectionInformation | None,
 ) -> Response:
+    """Send consensus layer beacon or validator node api request
+
+    Args:
+        node_url (str): Url to which the request is send
+        endpoint (str): API endpoint
+        calldata (str): Data which is send alongside the request
+        calldata_type (CalldataType): Type of calldata
+        validator_node (ValidatorNode | None): Validator node object
+        with respective connection information
+
+    Returns:
+        Response: Request response
+    """
     response = Response()
+    header = __get_correct_request_header(validator_node)
     match calldata_type:
         case CalldataType.REQUEST_DATA:
             response = post(
-                url=f"{beacon_node_url}{endpoint}",
+                url=f"{node_url}{endpoint}",
                 data=calldata,
                 timeout=program.REQUEST_TIMEOUT,
-                headers=program.REQUEST_HEADER,
+                headers=header,
             )
         case CalldataType.PARAMETERS:
             parameters = urlencode({"id": calldata}, safe=",")
             response = get(
-                url=f"{beacon_node_url}{endpoint}",
+                url=f"{node_url}{endpoint}",
                 params=parameters,
                 timeout=program.REQUEST_TIMEOUT,
+                headers=header,
             )
         case _:
             response = get(
-                url=f"{beacon_node_url}{endpoint}",
+                url=f"{node_url}{endpoint}",
                 timeout=program.REQUEST_TIMEOUT,
+                headers=header,
             )
     response.close()
     return response
+
+
+def __get_correct_request_header(
+    validator_node: ValidatorConnectionInformation | None,
+) -> Dict[str, str]:
+    """Get request header in dependence of whether or not to call a validator node
+
+    Args:
+        validator_node (ValidatorNode | None): Validator node object
+        with respective connection information
+
+    Returns:
+        Dict[str, str]: Request header
+    """
+    if validator_node:
+        header_with_authentication = program.REQUEST_HEADER
+        header_with_authentication.update(
+            {"Authorization": f"Bearer {validator_node.bearer_token}"}
+        )
+        return header_with_authentication
+    return program.REQUEST_HEADER
 
 
 def __convert_to_raw_data_responses(
@@ -188,7 +313,7 @@ def __get_processed_calldata(
     return calldata
 
 
-def __is_request_successful(response: Response) -> bool:
+def __is_request_successful(response: Response, node_url: str) -> bool:
     """Helper to check if a request was successful
 
     Args:
@@ -203,7 +328,7 @@ def __is_request_successful(response: Response) -> bool:
     """
     if not response.text:
         __LOGGER.error(response)
-        raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE)
+        raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE, node_url)
     if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
         return True
     __LOGGER.error(response.text)
