@@ -42,6 +42,7 @@ test_cases = [
     test_logging_mode.test_logging_duties_for_high_number_of_validators,
     test_logging_mode.test_omit_attestation_duties,
     test_logging_mode.test_increase_of_max_attestation_duty_logs,
+    test_logging_mode.test_logged_format_of_time_to_next_sync_committee,
     # Test cli validation
     test_cli_validation.test_any_validators_flag_validation,
     test_cli_validation.test_both_validators_flag_validation,
