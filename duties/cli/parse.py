@@ -1,8 +1,14 @@
 """Module with helper functions to parse specific cli arguments
 """
 
+from pathlib import Path
 from typing import List
 
+from cli.types import ValidatorConnectionInformation
+from constants.logging import (
+    NODE_URL_ERROR_MESSAGE,
+    VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE,
+)
 from constants.program import HEX_COLOR_STARTING_POSITIONS, HEX_TO_INT_BASE
 
 
@@ -39,10 +45,10 @@ def set_beacon_node_urls(beacon_node_urls: str) -> List[str]:
             url for url in splitted_urls if url.startswith(("http://", "https://"))
         ]
         if len(splitted_urls) != len(beacon_node_urls.split(",")):
-            raise ValueError()
+            raise KeyError(NODE_URL_ERROR_MESSAGE, "Beacon")
         return splitted_urls
     if not beacon_node_urls.startswith(("http://", "https://")):
-        raise ValueError()
+        raise KeyError(NODE_URL_ERROR_MESSAGE, "Beacon")
     return [beacon_node_urls]
 
 
@@ -73,3 +79,47 @@ def set_logging_color(logging_color: str) -> List[int]:
     if len(filtered_rgb_color_codes) != 3:
         raise ValueError()
     return filtered_rgb_color_codes
+
+
+def set_validator_nodes(file_path: str) -> List[ValidatorConnectionInformation]:
+    """Parse provided validator node file
+
+    Args:
+        file_path (str): Path to validator node file
+
+    Returns:
+        List[ValidatorNode]: Validator node objects
+        with respective connection information
+    """
+    with open(Path(file_path), "r") as validator_nodes_file:
+        raw_validator_nodes = validator_nodes_file.readlines()
+    validator_nodes = [
+        __parse_validator_node(raw_validator_node)
+        for raw_validator_node in raw_validator_nodes
+    ]
+    return validator_nodes
+
+
+def __parse_validator_node(raw_validator_node: str) -> ValidatorConnectionInformation:
+    """Parse raw validator node properties
+
+    Args:
+        raw_validator_node (str): Line in file with validator node information
+
+    Raises:
+        ValueError: Error if too many node informations provided and
+        the node url does not start with http or https
+
+    Returns:
+        ValidatorNode: Validator node object
+        with respective connection information
+    """
+    raw_validator_node_properties = raw_validator_node.split(";")
+    if not len(raw_validator_node_properties) == 2:
+        raise IndexError(VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE)
+    if not raw_validator_node[0].startswith(("http://", "https://")):
+        raise KeyError(NODE_URL_ERROR_MESSAGE, "Validator")
+    return ValidatorConnectionInformation(
+        raw_validator_node_properties[0],
+        raw_validator_node_properties[1].rstrip("\n"),
+    )
