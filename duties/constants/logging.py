@@ -3,7 +3,10 @@
 
 CONNECTION_ERROR_MESSAGE = "Couldn't connect to beacon client. Retry in 2 second."
 READ_TIMEOUT_ERROR_MESSAGE = "Couldn't read from beacon client. Retry in 5 seconds."
-NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from the beacon client"
+NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from client: %s"
+NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE = (
+    "Validator identifiers were not fetched from client: %s"
+)
 NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE = (
     "Response object does not include a 'data' field"
 )
@@ -57,3 +60,5 @@ PRIMARY_BEACON_NODE_DOWN_MESSAGE = (
     "Primary beacon node %s is not ready to accept requests"
 )
 TRYING_BACKUP_NODES_MESSAGE = "Trying backup nodes"
+NODE_URL_ERROR_MESSAGE = "%s node url should start with http or https"
+VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = "Validator node information should only consist of url and bearer token separated by semicolon"
