@@ -4,49 +4,41 @@ participants:
     el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "lighthouse"
     cl_image: "sigp/lighthouse:${LIGHTHOUSE_IMAGE_TAG}"
-    keymanager_enabled: true
   - el_type: "geth"
     el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "teku"
     cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
   - el_type: "besu"
     el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "nimbus"
     cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
   - el_type: "besu"
     el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "lodestar"
     cl_image: "chainsafe/lodestar:${LODESTAR_IMAGE_TAG}"
-    keymanager_enabled: true
   - el_type: "nethermind"
     el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "teku"
     cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
   - el_type: "nethermind"
     el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "nimbus"
     cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
   - el_type: "nethermind"
     el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "nimbus"
     cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
     validator_count: 6
   - el_type: "besu"
     el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "nimbus"
     cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
-    keymanager_enabled: true
     validator_count: 10
 network_params:
   electra_fork_epoch: 1000
@@ -58,4 +50,7 @@ additional_services:
   - "beacon_metrics_gazer"
   - "dora"
   - "prometheus_grafana"
+keymanager_enabled: true
+port_publisher:
+  public_port_start: 32000
 ...
