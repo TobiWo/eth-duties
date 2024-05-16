@@ -9,7 +9,7 @@ from multiprocessing import freeze_support
 from typing import List
 
 from cli import parse
-from cli.types import Mode
+from cli.types import Mode, NodeConnectionProperties
 
 sys.tracebacklimit = 0
 
@@ -27,7 +27,7 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--beacon-nodes",
-        type=parse.set_beacon_node_urls,
+        type=parse.set_beacon_nodes,
         help=(
             "Comma separated list of URLs to access the beacon node api "
             "(default: http://localhost:5052)"
@@ -196,8 +196,8 @@ def __get_raw_arguments() -> Namespace:
         "--validator-nodes",
         type=parse.set_validator_nodes,
         help=(
-            "Path to file with validator urls and respective bearer tokens to access the key manager api. "
-            "Url and bearer are separated by semicolon"
+            "Path to file with validator urls and respective bearer tokens "
+            "to access the key manager api. Url and bearer are separated by semicolon."
         ),
         action="store",
     )
@@ -220,21 +220,29 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 
 
 def __validate_provided_validator_flag(
-    validators: List[str] | None, validators_file: str | None
+    validators: List[str] | None,
+    validators_file: str | None,
+    validator_nodes: NodeConnectionProperties | None,
 ) -> None:
     """Validates that only one of the validator flags was provided
 
     Args:
         validators (List[str] | None): Provided validators
         validators_file (str | None): Provided validators as file
+        validator_nodes (NodeConnectionProperties | None): Provided validator api
+        connection properties
 
     Raises:
         ArgumentError: Error that only one of the provided flags is allowed
     """
-    if (validators and validators_file) or (not validators and not validators_file):
+    if (validators and validators_file) or (
+        not validators and not validators_file and not validator_nodes
+    ):
         raise ArgumentError(
             None,
-            "ONE of the following flags is required: '--validators', '--validators-file'",
+            "ONE of the following flags is required: '--validators', '--validators-file', "
+            "'--validator-nodes'. '--validator-nodes' can be used together with ONE "
+            "of the other two flags.",
         )
 
 
@@ -316,7 +324,9 @@ def __set_arguments() -> Namespace:
     freeze_support()
     arguments = __get_raw_arguments()
     __validate_fetching_interval(arguments.interval)
-    __validate_provided_validator_flag(arguments.validators, arguments.validators_file)
+    __validate_provided_validator_flag(
+        arguments.validators, arguments.validators_file, arguments.validator_nodes
+    )
     __validate_log_times(arguments.log_time_warning, arguments.log_time_critical)
     __validate_cicd_waiting_time(
         arguments.interval, arguments.mode_cicd_waiting_time, arguments.mode
