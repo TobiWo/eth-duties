@@ -16,14 +16,9 @@ class Mode(Enum):
 
 
 @dataclass
-class NodeConnectionInformation:
-    """Information to connect to an Ethereum node"""
+class NodeConnectionProperties:
+    """Necessary properties to connect to an Ethereum Consensus Layer node
+    (beacon node or validator)"""
 
     url: str
-
-
-@dataclass
-class ValidatorConnectionInformation(NodeConnectionInformation):
-    """Bearer token to authenticate at the validator (key manager) api"""
-
-    bearer_token: str
+    bearer_token: str | None = None
