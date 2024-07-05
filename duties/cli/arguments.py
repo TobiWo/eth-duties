@@ -201,6 +201,16 @@ def __get_raw_arguments() -> Namespace:
         ),
         action="store",
     )
+    parser.add_argument(
+        "--validator-update-interval",
+        type=int,
+        help=(
+            "Interval (in minutes) on which validator identifier status and identifiers provided via "
+            "'--validator-nodes' are updated (default 1440 minutes -> 1 day)"
+        ),
+        action="store",
+        default=1440,
+    )
     return parser.parse_args()
 
 
