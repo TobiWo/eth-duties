@@ -4,7 +4,7 @@
 from pathlib import Path
 from typing import List
 
-from cli.types import NodeConnectionProperties
+from cli.types import NodeConnectionProperties, NodeType
 from constants.logging import (
     NODE_URL_ERROR_MESSAGE,
     VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE,
@@ -49,14 +49,14 @@ def set_beacon_nodes(beacon_node_urls: str) -> List[NodeConnectionProperties]:
             url for url in splitted_urls if url.startswith(MANDATORY_NODE_URL_PREFIXES)
         ]
         if len(splitted_urls) != len(beacon_node_urls.split(",")):
-            raise KeyError(NODE_URL_ERROR_MESSAGE.format("Beacon"))
+            raise KeyError(NODE_URL_ERROR_MESSAGE.format(NodeType.BEACON.value))
         return [
-            NodeConnectionProperties(beacon_node_url)
+            NodeConnectionProperties(beacon_node_url, NodeType.BEACON)
             for beacon_node_url in splitted_urls
         ]
     if not beacon_node_urls.startswith(MANDATORY_NODE_URL_PREFIXES):
-        raise KeyError(NODE_URL_ERROR_MESSAGE.format("Beacon"))
-    return [NodeConnectionProperties(beacon_node_urls)]
+        raise KeyError(NODE_URL_ERROR_MESSAGE.format(NodeType.BEACON.value))
+    return [NodeConnectionProperties(beacon_node_urls, NodeType.BEACON)]
 
 
 def set_logging_color(logging_color: str) -> List[int]:
@@ -125,8 +125,9 @@ def __parse_validator_node(raw_validator_node: str) -> NodeConnectionProperties:
     if not len(raw_validator_node_properties) == 2:
         raise IndexError(VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE)
     if not raw_validator_node_properties[0].startswith(MANDATORY_NODE_URL_PREFIXES):
-        raise KeyError(NODE_URL_ERROR_MESSAGE.format("Validator"))
+        raise KeyError(NODE_URL_ERROR_MESSAGE.format(NodeType.VALIDATOR.value))
     return NodeConnectionProperties(
         raw_validator_node_properties[0],
+        NodeType.VALIDATOR,
         raw_validator_node_properties[1].rstrip("\n"),
     )

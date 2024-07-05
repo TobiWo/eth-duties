@@ -15,10 +15,18 @@ class Mode(Enum):
     CICD_FORCE_GRACEFUL_EXIT = "cicd-force-graceful-exit"
 
 
-@dataclass
+class NodeType(Enum):
+    """Defines the type of node"""
+
+    BEACON = "beacon"
+    VALIDATOR = "validator"
+
+
+@dataclass(frozen=True)
 class NodeConnectionProperties:
     """Necessary properties to connect to an Ethereum Consensus Layer node
     (beacon node or validator)"""
 
     url: str
+    node_type: NodeType
     bearer_token: str | None = None
