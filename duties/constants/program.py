@@ -2,9 +2,31 @@
 """
 
 from random import randint
+from sys import exit
+from typing import List
+
+
+def __create_random_numbers() -> List[int]:
+    is_list_filled_with_unique_numbers = False
+    cycle_counter = 0
+    random_numbers = [0, 0, 0]
+    while not is_list_filled_with_unique_numbers and cycle_counter < 1000:
+        for index in range(0, 3, 1):
+            random_numbers[index] = randint(RANDOM_RANGE_START, RANDOM_RANGE_STOP)
+        is_list_filled_with_unique_numbers = len(set(random_numbers)) == len(
+            random_numbers
+        )
+        cycle_counter += 1
+    if cycle_counter == 1000:
+        exit(
+            "Error, could not create unique random numbers for shared memory instances. Please restart eth-duties!"
+        )
+    return random_numbers
+
 
 RANDOM_RANGE_START = 1_000_000
 RANDOM_RANGE_STOP = 100_000_000
+RANDOM_NUMBERS = __create_random_numbers()
 
 REQUEST_TIMEOUT = (3, 5)
 REQUEST_CONNECTION_ERROR_WAITING_TIME = 2
@@ -18,16 +40,15 @@ ALIAS_SEPARATOR = ";"
 PUBKEY_PREFIX = "0x"
 PUBKEY_LENGTH = 48
 SIZE_OF_SHARED_MEMORY = 10_000_000
-UPDATED_SHARED_MEMORY_NAME = "updated"
 
-RANDOM_NUMBER_1 = randint(RANDOM_RANGE_START, RANDOM_RANGE_STOP)
-RANDOM_NUMBER_2 = randint(RANDOM_RANGE_START, RANDOM_RANGE_STOP)
+
 ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME = (
-    f"shared_active_validator_identifiers_with_alias_{RANDOM_NUMBER_1}"
+    f"shared_active_validator_identifiers_with_alias_{RANDOM_NUMBERS[0]}"
 )
 ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME = (
-    f"shared_active_validator_identifiers_{RANDOM_NUMBER_2}"
+    f"shared_active_validator_identifiers_{RANDOM_NUMBERS[1]}"
 )
+UPDATED_SHARED_MEMORY_NAME = f"updated_{RANDOM_NUMBERS[2]}"
 ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES = [
     ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME,
     ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME,
