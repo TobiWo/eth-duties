@@ -7,6 +7,7 @@ from time import gmtime, strftime
 from typing import List, Tuple
 
 from cli.arguments import ARGUMENTS
+from cli.types import Mode
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
@@ -57,15 +58,16 @@ def __log_duty_proportion_above_time_threshold(
     Args:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
-    relevant_duty_proportion = get_duties_proportion_above_time_threshold(
-        validator_duties, ARGUMENTS.log_time_warning
-    )
-    __LOGGER.info(
-        logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
-        round(relevant_duty_proportion * 100, 2),
-        "all",
-        ARGUMENTS.log_time_warning,
-    )
+    if ARGUMENTS.mode == Mode.LOG:
+        relevant_duty_proportion = get_duties_proportion_above_time_threshold(
+            validator_duties, ARGUMENTS.log_time_warning
+        )
+        __LOGGER.info(
+            logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
+            round(relevant_duty_proportion * 100, 2),
+            "all",
+            ARGUMENTS.log_time_warning,
+        )
 
 
 def __create_logging_message(duty: ValidatorDuty) -> str:
