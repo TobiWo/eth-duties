@@ -98,6 +98,8 @@ def test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_attest
         "cicd-exit",
         "--mode-cicd-attestation-proportion",
         "0.01",
+        "--mode-cicd-attestation-time",
+        "10",
     ]
     return run_generic_test(
         expected_logs,
@@ -116,7 +118,7 @@ def test_cicd_force_graceful_exit_mode() -> int:
     """
     expected_logs = [
         "Started in mode: cicd-force-graceful-exit",
-        "all duties will be executed in",
+        "Exiting with code: 0",
     ]
     command = get_general_eth_duties_start_command(
         CONFIG.validators.active.general[0:10], CONFIG.general.working_beacon_node_url
@@ -128,7 +130,7 @@ def test_cicd_force_graceful_exit_mode() -> int:
         expected_logs,
         command,
         "cicd force graceful exit mode",
-        "all duties will be executed",
+        "Exiting with code: 0",
         drop_expected_logs=True,
     )
 
@@ -153,6 +155,8 @@ def test_cicd_wait_mode_without_sync_committee_duties_while_proportion_of_duties
         "cicd-wait",
         "--mode-cicd-attestation-proportion",
         "0.01",
+        "--mode-cicd-attestation-time",
+        "10",
     ]
     return run_generic_test(
         expected_logs,
