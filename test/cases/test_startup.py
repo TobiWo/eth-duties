@@ -14,7 +14,10 @@ def test_no_beacon_connection_at_startup() -> int:
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
-    expected_logs = [CONNECTION_ERROR_MESSAGE, NO_AVAILABLE_BEACON_NODE_MESSAGE]
+    expected_logs = [
+        CONNECTION_ERROR_MESSAGE % ("beacon", CONFIG.general.failing_beacon_node_url),
+        NO_AVAILABLE_BEACON_NODE_MESSAGE,
+    ]
     command = get_general_eth_duties_start_command(
         CONFIG.validators.active.general, CONFIG.general.failing_beacon_node_url
     )

@@ -1,8 +1,12 @@
 """Defines logging messages
 """
 
-CONNECTION_ERROR_MESSAGE = "Couldn't connect to beacon client. Retry in 2 second."
-READ_TIMEOUT_ERROR_MESSAGE = "Couldn't read from beacon client. Retry in 5 seconds."
+CONNECTION_ERROR_MESSAGE = (
+    "Couldn't connect to %s node with url: %s. Retry in 2 second."
+)
+READ_TIMEOUT_ERROR_MESSAGE = (
+    "Couldn't read from %s node with url: %s. Retry in 5 seconds."
+)
 NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from client: %s"
 NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE = (
     "Validator identifiers could not be fetched from client: %s"
