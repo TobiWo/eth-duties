@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 from urllib.parse import urlencode
 
 from cli.arguments import ARGUMENTS
-from cli.types import NodeConnectionProperties
+from cli.types import NodeConnectionProperties, NodeType
 from constants import endpoints, json, logging, program
 from protocol.connection import BeaconNode
 from requests import ConnectionError as RequestsConnectionError
@@ -62,7 +62,7 @@ async def send_beacon_api_request(
             tasks = [
                 taskgroup.create_task(
                     __handle_api_request(
-                        NodeConnectionProperties(""),
+                        NodeConnectionProperties("", NodeType.BEACON),
                         endpoint,
                         calldata_type,
                         chunk,
@@ -74,7 +74,10 @@ async def send_beacon_api_request(
     else:
         responses.append(
             await __handle_api_request(
-                NodeConnectionProperties(""), endpoint, calldata_type, []
+                NodeConnectionProperties("", NodeType.BEACON),
+                endpoint,
+                calldata_type,
+                [],
             )
         )
     return __convert_to_raw_data_responses(responses, flatten)
@@ -145,10 +148,18 @@ async def __handle_api_request(
                 response, node_connection_properties.url
             )
         except RequestsConnectionError:
-            __LOGGER.error(logging.CONNECTION_ERROR_MESSAGE)
+            __LOGGER.error(
+                logging.CONNECTION_ERROR_MESSAGE,
+                node_connection_properties.node_type.value,
+                node_connection_properties.url,
+            )
             await sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
         except (ReadTimeout, KeyError):
-            __LOGGER.error(logging.READ_TIMEOUT_ERROR_MESSAGE)
+            __LOGGER.error(
+                logging.READ_TIMEOUT_ERROR_MESSAGE,
+                node_connection_properties.node_type.value,
+                node_connection_properties.url,
+            )
             await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
         __log_too_many_retries(retry_counter, node_connection_properties)
     return response
