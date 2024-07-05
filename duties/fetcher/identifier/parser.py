@@ -1,7 +1,7 @@
 """Module for parsing provided validator identifiers
 """
 
-from asyncio import run
+from asyncio import run, sleep
 from logging import getLogger
 from multiprocessing.shared_memory import SharedMemory
 from sys import exit as sys_exit
@@ -10,6 +10,7 @@ from typing import Any, Dict, List
 from cli.arguments import ARGUMENTS
 from constants import endpoints, json, logging, program
 from fetcher.data_types import ValidatorIdentifier
+from fetcher.fetch import update_validator_identifier_cache
 from fetcher.identifier import core
 from fetcher.identifier.filter import (
     filter_empty_validator_identifier,
@@ -26,60 +27,24 @@ from rest.core.types import HttpMethod
 __LOGGER = getLogger()
 
 
-def get_active_validator_indices() -> List[str]:
-    """Create a list of active validator indices based on the provided user input
-
-    Returns:
-        List[str]: List of active validator indices based on the provided user input
-    """
-    complete_active_validator_identifiers = (
-        core.read_validator_identifiers_from_shared_memory(
-            program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
-        )
-    )
-    return list(complete_active_validator_identifiers.keys())
-
-
-async def create_shared_active_validator_identifiers_at_startup() -> None:
+async def create_shared_active_validator_identifiers(
+    active_validator_identifiers: Dict[str, ValidatorIdentifier] | None = None,
+) -> None:
     """Create validator identifiers based on the on-chain status in shared memory"""
     shared_active_validator_identifiers = SharedMemory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME, False
     )
-    active_validator_identifiers = await __fetch_active_validator_identifiers(
-        await __get_raw_validator_identifiers_from_cli()
-    )
+    if not active_validator_identifiers:
+        active_validator_identifiers = await __fetch_active_validator_identifiers(
+            await __get_raw_validator_identifiers_from_cli()
+        )
     core.write_validator_identifiers_to_shared_memory(
         shared_active_validator_identifiers, active_validator_identifiers
     )
     core.create_shared_active_validator_identifiers_with_alias()
 
 
-def get_raw_validator_identifiers_from_fetched_keystores(
-    fetched_keystores: List[Any],
-) -> Dict[str, ValidatorIdentifier]:
-    """Create raw validator identifiers from validators managed by the fetched validator nodes
-    supplied via --validator-nodes cli argument
-
-    Args:
-        fetched_keystores (List[Any]): Validators managed by the fetched validator nodes
-
-    Returns:
-        Dict[str, ValidatorIdentifier]: Raw validator identifiers
-    """
-    return {
-        core.get_validator_index_or_pubkey(
-            None,
-            core.create_raw_validator_identifier(
-                keystore[json.RESPONSE_JSON_VALIDATING_PUBKEY_NAME], True
-            ),
-        ): core.create_raw_validator_identifier(
-            keystore[json.RESPONSE_JSON_VALIDATING_PUBKEY_NAME], False
-        )
-        for keystore in fetched_keystores
-    }
-
-
-async def update_shared_active_validator_identifiers(
+async def update_shared_active_validator_identifiers_from_rest_input(
     provided_raw_validator_identifiers: Dict[str, ValidatorIdentifier],
     http_method: str,
 ) -> None:
@@ -115,6 +80,20 @@ async def update_shared_active_validator_identifiers(
     )
     core.create_shared_active_validator_identifiers_with_alias()
     __set_update_flag_in_shared_memory()
+
+
+async def update_shared_active_validator_identifiers_on_interval() -> None:
+    while True:
+        await sleep(ARGUMENTS.validator_update_interval * 60)
+        __LOGGER.info(
+            "Updating validator identifier status and identifiers fetched from provided validator nodes"
+        )
+        active_validator_identifiers = await __fetch_active_validator_identifiers(
+            await __get_raw_validator_identifiers_from_cli()
+        )
+        await create_shared_active_validator_identifiers(active_validator_identifiers)
+        __set_update_flag_in_shared_memory()
+        # TODO: Whether whether update mechanism of cache works
 
 
 def __set_update_flag_in_shared_memory() -> None:
@@ -249,7 +228,7 @@ async def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdent
     if ARGUMENTS.validator_nodes:
         fetched_keystores = await send_key_manager_api_keystore_requests()
         raw_validator_identifiers_from_fetched_keystores = (
-            get_raw_validator_identifiers_from_fetched_keystores(fetched_keystores)
+            __get_raw_validator_identifiers_from_fetched_keystores(fetched_keystores)
         )
         raw_validator_identifiers.update(
             raw_validator_identifiers_from_fetched_keystores
@@ -295,6 +274,50 @@ def __get_raw_validator_identifiers_from_validators_file_argument() -> (
     }
 
 
+def __get_raw_validator_identifiers_from_fetched_keystores(
+    fetched_keystores: List[Any],
+) -> Dict[str, ValidatorIdentifier]:
+    """Create raw validator identifiers from validators managed by the connected validator nodes
+    supplied via --validator-nodes cli argument
+
+    Args:
+        fetched_keystores (List[Any]): Validators managed by the fetched validator nodes
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Raw validator identifiers
+    """
+    validator_identifiers: Dict[str, ValidatorIdentifier] = {}
+    for keystore in fetched_keystores:
+        validator_identifiers.update(
+            __get_raw_validator_identifier_from_keystore(keystore)
+        )
+    return validator_identifiers
+
+
+def __get_raw_validator_identifier_from_keystore(
+    keystore: Any,
+) -> Dict[str, ValidatorIdentifier]:
+    """Get raw validator identifier from validators managed by the connected validator nodes
+    which are either managed by the validator client locally or externally by a remote signer
+
+    Args:
+        keystore (Any): Validators managed by a connected validator nodes
+
+    Returns:
+        Dict[str, ValidatorIdentifier]: Raw validator identifier
+    """
+    if json.RESPONSE_JSON_VALIDATING_PUBKEY_NAME in keystore:
+        key = json.RESPONSE_JSON_VALIDATING_PUBKEY_NAME
+    else:
+        key = json.RESPONSE_JSON_PUBKEY_FIELD_NAME
+    return {
+        core.get_validator_index_or_pubkey(
+            None,
+            core.create_raw_validator_identifier(keystore[key], True),
+        ): core.create_raw_validator_identifier(keystore[key], False)
+    }
+
+
 try:
     SharedMemory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME,
@@ -306,7 +329,8 @@ try:
         True,
         program.SIZE_OF_SHARED_MEMORY,
     )
-    run(create_shared_active_validator_identifiers_at_startup())
+    run(create_shared_active_validator_identifiers())
+    update_validator_identifier_cache()
 except KeyboardInterrupt:
     __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
     sys_exit(1)
