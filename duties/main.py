@@ -1,7 +1,7 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators
 """
 
-from asyncio import CancelledError, run, sleep
+from asyncio import CancelledError, TaskGroup, run, sleep
 from logging import Logger, getLogger
 from math import floor
 from platform import system
@@ -11,6 +11,9 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import ValidatorDuty
+from fetcher.identifier.parser import (
+    update_shared_active_validator_identifiers_on_interval,
+)
 from fetcher.log import log_time_to_next_duties
 from helper.help import (
     clean_shared_memory,
@@ -54,6 +57,12 @@ def __check_beacon_node_connection() -> None:
 
 
 async def __main() -> None:
+    async with TaskGroup() as taskgroup:
+        taskgroup.create_task(__main_process())
+        taskgroup.create_task(update_shared_active_validator_identifiers_on_interval())
+
+
+async def __main_process() -> None:
     """eth-duties main function"""
     graceful_terminator = GracefulTerminator(
         floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)
