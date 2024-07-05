@@ -6,13 +6,16 @@ from datetime import timedelta
 from multiprocessing.shared_memory import SharedMemory
 from typing import Callable, List
 
-from constants.program import ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES
+from constants.program import (
+    ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES,
+    UPDATED_SHARED_MEMORY_NAME,
+)
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
     fetch_upcoming_sync_committee_duties,
-    update_validator_identifiers,
+    update_validator_identifier_cache,
 )
 from protocol.ethereum import get_current_epoch, get_current_slot, set_time_to_duty
 
@@ -87,8 +90,8 @@ def __has_updated_validator_identifiers() -> bool:
         bool: Whether or not shared memory objects got updated
     """
     try:
-        identifiers_got_updated = SharedMemory("updated", False)
-        update_validator_identifiers()
+        identifiers_got_updated = SharedMemory(UPDATED_SHARED_MEMORY_NAME, False)
+        update_validator_identifier_cache()
         identifiers_got_updated.close()
         identifiers_got_updated.unlink()
         return True
