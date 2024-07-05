@@ -5,20 +5,27 @@ from logging import getLogger
 from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, logging
+from constants import endpoints, logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.identifier.parser import get_active_validator_indices
+from fetcher.identifier import core
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
-__VALIDATORS = get_active_validator_indices()
+__VALIDATOR_IDENTIFIER_CACHE: List[str] = []
 __LOGGER = getLogger()
 
 
-def update_validator_identifiers() -> None:
+def update_validator_identifier_cache() -> None:
     """Updates the validator identifiers for the fetch module"""
-    __VALIDATORS.clear()
-    __VALIDATORS.extend(get_active_validator_indices())
+    complete_active_validator_identifiers = (
+        core.read_validator_identifiers_from_shared_memory(
+            program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
+        )
+    )
+    __VALIDATOR_IDENTIFIER_CACHE.clear()
+    __VALIDATOR_IDENTIFIER_CACHE.extend(
+        list(complete_active_validator_identifiers.keys())
+    )
 
 
 async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
@@ -93,7 +100,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
         response_data = await __fetch_duty_responses(current_epoch, DutyType.PROPOSING)
         for data in response_data:
             if (
-                str(data.validator_index) in __VALIDATORS
+                str(data.validator_index) in __VALIDATOR_IDENTIFIER_CACHE
                 and data.validator_index not in validator_duties
             ):
                 proposing_duty = ValidatorDuty(
@@ -115,7 +122,7 @@ def __should_fetch_attestation_duties() -> bool:
         bool: Should attestation duties fetched
     """
     if (
-        len(__VALIDATORS) > ARGUMENTS.max_attestation_duty_logs
+        len(__VALIDATOR_IDENTIFIER_CACHE) > ARGUMENTS.max_attestation_duty_logs
         and not ARGUMENTS.omit_attestation_duties
     ):
         __LOGGER.warning(
@@ -195,13 +202,13 @@ async def __fetch_duty_responses(
             responses = await send_beacon_api_request(
                 f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}",
                 CalldataType.REQUEST_DATA,
-                __VALIDATORS,
+                __VALIDATOR_IDENTIFIER_CACHE,
             )
         case DutyType.SYNC_COMMITTEE:
             responses = await send_beacon_api_request(
                 f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
                 CalldataType.REQUEST_DATA,
-                __VALIDATORS,
+                __VALIDATOR_IDENTIFIER_CACHE,
             )
         case DutyType.PROPOSING:
             responses = await send_beacon_api_request(
