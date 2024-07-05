@@ -66,6 +66,7 @@ class GracefulTerminator:
                     sys_exit(1)
             case Mode.CICD_FORCE_GRACEFUL_EXIT:
                 clean_shared_memory()
+                self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
                 sys_exit(0)
             case _:
                 pass
