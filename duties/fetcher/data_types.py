@@ -27,6 +27,7 @@ class ValidatorDuty(BaseModel):
     validator_sync_committee_indices: List[int] = Field(default_factory=list)
     type: DutyType = Field(default=DutyType.NONE)
     seconds_to_duty: int = Field(default=0)
+    seconds_left_in_current_sync_committee: int = Field(default=0)
 
 
 @dataclass
