@@ -1,5 +1,6 @@
 """Defines ethereum related constants and functions
 """
+
 from asyncio import run
 from logging import getLogger
 from math import ceil, trunc
@@ -72,16 +73,20 @@ def set_time_to_duty(duty: ValidatorDuty) -> None:
             current_sync_committee_epoch_boundaries = (
                 get_sync_committee_epoch_boundaries(current_epoch)
             )
+            time_to_next_sync_committee = get_time_to_next_sync_committee(
+                current_sync_committee_epoch_boundaries, current_slot
+            )
             if duty.epoch in range(
                 current_sync_committee_epoch_boundaries[0],
                 current_sync_committee_epoch_boundaries[1] + 1,
                 1,
             ):
                 duty.seconds_to_duty = 0
-            else:
-                duty.seconds_to_duty = get_time_to_next_sync_committee(
-                    current_sync_committee_epoch_boundaries, current_slot
+                duty.seconds_left_in_current_sync_committee = (
+                    time_to_next_sync_committee - 1
                 )
+            else:
+                duty.seconds_to_duty = time_to_next_sync_committee
         case _:
             duty.seconds_to_duty = int(duty.slot * SLOT_TIME + GENESIS_TIME - time())
 
