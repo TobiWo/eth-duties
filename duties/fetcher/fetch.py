@@ -2,7 +2,6 @@
 """
 
 from logging import getLogger
-from math import ceil
 from typing import List
 
 from cli.arguments import ARGUMENTS
@@ -60,12 +59,11 @@ async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
         for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
-    next_sync_committee_starting_epoch = (
-        ceil(current_epoch / ethereum.EPOCHS_PER_SYNC_COMMITTEE)
-        * ethereum.EPOCHS_PER_SYNC_COMMITTEE
+    current_sync_committee_epoch_boundaries = (
+        ethereum.get_sync_committee_epoch_boundaries(current_epoch)
     )
     validator_duties: dict[str, ValidatorDuty] = {}
-    for epoch in [current_epoch, next_sync_committee_starting_epoch]:
+    for epoch in [current_epoch, (current_sync_committee_epoch_boundaries[1] + 1)]:
         response_data = await __fetch_duty_responses(epoch, DutyType.SYNC_COMMITTEE)
         for data in response_data:
             if data.validator_index not in validator_duties:
