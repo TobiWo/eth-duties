@@ -65,7 +65,14 @@ PRIMARY_BEACON_NODE_DOWN_MESSAGE = (
 )
 TRYING_BACKUP_NODES_MESSAGE = "Trying backup nodes"
 NODE_URL_ERROR_MESSAGE = "{0} node url should start with http or https"
-VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE: str = (
+VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = (
     "Validator node information should only consist of url "
     "and bearer token separated by semicolon"
+)
+UPDATE_VALIDATOR_IDENTIFIER_MESSAGE = (
+    "Updating validator identifier status and identifiers fetched from provided "
+    "validator nodes"
+)
+LOADED_VALIDATOR_IDENTIFIER_MESSAGE = (
+    "Loaded %s validator identifiers from provided validator nodes"
 )

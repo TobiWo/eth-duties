@@ -19,7 +19,8 @@ def __create_random_numbers() -> List[int]:
         cycle_counter += 1
     if cycle_counter == 1000:
         exit(
-            "Error, could not create unique random numbers for shared memory instances. Please restart eth-duties!"
+            "Error, could not create unique random numbers for shared memory instances. "
+            "Please restart eth-duties!"
         )
     return random_numbers
 
