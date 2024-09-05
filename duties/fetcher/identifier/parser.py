@@ -30,7 +30,11 @@ __LOGGER = getLogger()
 async def create_shared_active_validator_identifiers(
     active_validator_identifiers: Dict[str, ValidatorIdentifier] | None = None,
 ) -> None:
-    """Create validator identifiers based on the on-chain status in shared memory"""
+    """Create validator identifiers based on the on-chain status in shared memory
+
+    Args:
+        active_validator_identifiers (Dict[str, ValidatorIdentifier] | None, optional): Active validator identifiers stored in shared memory. Defaults to None. # pylint: disable=line-too-long
+    """
     shared_active_validator_identifiers = SharedMemory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME, False
     )
@@ -51,8 +55,7 @@ async def update_shared_active_validator_identifiers_from_rest_input(
     """Update the active validator identifiers in shared memory
 
     Args:
-        provided_raw_validator_identifiers (Dict[str, ValidatorIdentifier]): Provided validator
-        identifiers by the user
+        provided_raw_validator_identifiers (Dict[str, ValidatorIdentifier]): Provided validator identifiers by the user # pylint: disable=line-too-long
         http_method (str): REST method
     """
     provided_active_validator_identifiers = await __fetch_active_validator_identifiers(
@@ -83,17 +86,18 @@ async def update_shared_active_validator_identifiers_from_rest_input(
 
 
 async def update_shared_active_validator_identifiers_on_interval() -> None:
-    while True:
-        await sleep(ARGUMENTS.validator_update_interval * 60)
-        __LOGGER.info(
-            "Updating validator identifier status and identifiers fetched from provided validator nodes"
-        )
-        active_validator_identifiers = await __fetch_active_validator_identifiers(
-            await __get_raw_validator_identifiers_from_cli()
-        )
-        await create_shared_active_validator_identifiers(active_validator_identifiers)
-        __set_update_flag_in_shared_memory()
-        # TODO: Whether whether update mechanism of cache works
+    """Update stored validator identifiers on specified interval via keymanager api"""
+    if ARGUMENTS.validator_nodes:
+        while True:
+            await sleep(ARGUMENTS.validator_update_interval * 60)
+            __LOGGER.info(logging.UPDATE_VALIDATOR_IDENTIFIER_MESSAGE)
+            active_validator_identifiers = await __fetch_active_validator_identifiers(
+                await __get_raw_validator_identifiers_from_cli()
+            )
+            await create_shared_active_validator_identifiers(
+                active_validator_identifiers
+            )
+            __set_update_flag_in_shared_memory()
 
 
 def __set_update_flag_in_shared_memory() -> None:
@@ -112,8 +116,8 @@ async def __fetch_active_validator_identifiers(
     """Fetch active validators based on on-chain status
 
     Args:
-        provided_raw_validator_identifiers (dict[str, ValidatorIdentifier]): Provided validator
-        identifiers by the user
+        provided_raw_validator_identifiers (dict[str, ValidatorIdentifier]): Provided validator identifiers by the user # pylint: disable=line-too-long
+
     Returns:
         dict[str, ValidatorIdentifier]: Active validator identifiers
     """
@@ -153,6 +157,7 @@ def __create_complete_active_validator_identifiers(
     Args:
         fetched_validator_infos (List[Any]): Fetched validator infos from the beacon chain
         provided_validators (List[str]): Provided validators by the user
+        raw_validator_identifiers (dict[str, ValidatorIdentifier]): Validator identifiers provided by the user or fetched via keymanager api # pylint: disable=line-too-long
 
     Returns:
         Dict[str, ValidatorIdentifier]: Complete validator identifiers
@@ -188,6 +193,7 @@ def __get_raw_validator_identifier(
 
     Args:
         validator_info (Any): Validator infos from the beacon chain
+        raw_validator_identifiers (dict[str, ValidatorIdentifier]): Validator identifiers provided by the user or fetched via keymanager api # pylint: disable=line-too-long
 
     Returns:
         ValidatorIdentifier | None: Raw validator identifier
@@ -291,6 +297,10 @@ def __get_raw_validator_identifiers_from_fetched_keystores(
         validator_identifiers.update(
             __get_raw_validator_identifier_from_keystore(keystore)
         )
+    __LOGGER.info(
+        logging.LOADED_VALIDATOR_IDENTIFIER_MESSAGE,
+        len(validator_identifiers.keys()),
+    )
     return validator_identifiers
 
 
@@ -301,7 +311,7 @@ def __get_raw_validator_identifier_from_keystore(
     which are either managed by the validator client locally or externally by a remote signer
 
     Args:
-        keystore (Any): Validators managed by a connected validator nodes
+        keystore (Any): Validators managed by connected validator nodes
 
     Returns:
         Dict[str, ValidatorIdentifier]: Raw validator identifier
