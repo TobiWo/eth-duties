@@ -49,3 +49,14 @@ My personal workflow to manage virtual environments is to use [miniconda/Anacond
     # Installs only dependencies for running the application
     poetry install --only main
     ```
+
+## Code quality
+
+Please run the following formatter and linter and fix respective issues in order to keep code quality high. You can also install IDE integrations if available.
+
+```bash
+# From the root of the repository
+poetry run black duties/
+poetry run pylint duties/
+poetry run pydoclint --style=google duties/
+```
