@@ -17,8 +17,7 @@ def print_test_message(
     """Print message to stdout
 
     Args:
-        function (Callable[[List[str], str, List[str], List[str]], None] | None, optional):
-        Test function which is used to determine printed message. Defaults to None.
+        function (Callable[[List[str], str, List[str], List[str]], None] | None, optional): Test function which is used to determine printed message. Defaults to None. # pylint: disable=line-too-long
         test_message (str | None, optional): Test message. Defaults to None.
     """
     if not test_message and function:
@@ -52,8 +51,7 @@ def run_eth_duties(
         rest_call (Callable[[], Any] | None): Function which sends a rest call
         rest_call_trigger_log (str | None): Log which will trigger the rest call
         parse_stderr (bool, optional): Parse stderr or stdout from subprocess. Defaults to False.
-        overhead_log_number (int, optional): Logs which will be collected after process
-        termination log was found. Defaults to 1.
+        overhead_log_number (int, optional): Logs which will be collected after process termination log was found. Defaults to 1. # pylint: disable=line-too-long
 
     Returns:
         Tuple[List[str], Response]: Collected logs and rest response
@@ -127,8 +125,7 @@ def fill_log_collection(
         collected_logs (List[str]): Empty or partially filled collected eth-duties logs list
         process_logs (IO[str]): Raw subprocess logs
         process_termination_log (str): Log which is used to terminate the subprocess
-        overhead_log_number (int, optional): Logs which will be collected after process
-        termination log was found. Defaults to 1.
+        overhead_log_number (int, optional): Logs which will be collected after process termination log was found. Defaults to 1. # pylint: disable=line-too-long
     """
     start = time()
     end = time()
@@ -160,8 +157,7 @@ def compare_logs(
     Args:
         collected_logs (List[str]): Collected eth-duties logs
         expected_logs (List[str]): Expected logs while eth-duties subprocess is running
-        drop_expected_logs (bool): Whether logs will be dropped from provided expected logs
-        list during search process
+        drop_expected_logs (bool): Whether logs will be dropped from provided expected logs list during search process # pylint: disable=line-too-long
 
     Returns:
         int: Number of found matches of expected logs in collected eth-duties logs

@@ -52,6 +52,9 @@ def __create_raw_validator_identifiers_from_list(
 ) -> Dict[str, ValidatorIdentifier]:
     """Parse validator identifiers provided by the user into a identifier dict
 
+    Args:
+        provided_validator_identifiers (List[str]): Provided validator identifiers
+
     Returns:
         Dict[str, ValidatorIdentifier]: Raw validator identifiers as provided by the user
     """

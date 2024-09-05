@@ -74,7 +74,6 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
     """Creates the logging message for the provided duty
 
     Args:
-        seconds_to_next_duty (float): Time to next duty in seconds
         duty (ValidatorDuty): Specific upcoming validator duty
 
     Returns:
@@ -106,7 +105,7 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     """Create a sync committee duty related logging message
 
     Args:
-        duty (ValidatorDuty): Sync committee duty
+        sync_committee_duty (ValidatorDuty): Sync committee duty
 
     Returns:
         str: sync committee duty related logging message
@@ -145,11 +144,10 @@ def __get_time_to_next_sync_committee(
 
     Args:
         sync_committee_duty (ValidatorDuty): Sync committee duty
-        current_sync_committee_epoch_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries
-        for current sync committee
+        current_sync_committee_epoch_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries for current sync committee # pylint: disable=line-too-long
 
     Returns:
-        str: Time to next sync committee start
+        timedelta: Time to next sync committee start
     """
     if sync_committee_duty.seconds_to_duty > 0:
         return timedelta(seconds=sync_committee_duty.seconds_to_duty)
@@ -165,7 +163,7 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
     """Gets correct logging color in dependence of duty and time to next duty
 
     Args:
-        seconds_to_next_duty (float): Time to next duty in seconds
+        seconds_to_next_duty (float): Time to next duty in seconds duty (ValidatorDuty): Specific upcoming validator duty # pylint: disable=line-too-long
         duty (ValidatorDuty): Specific upcoming validator duty
 
     Returns:

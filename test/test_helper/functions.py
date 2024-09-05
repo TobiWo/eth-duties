@@ -54,9 +54,6 @@ def test_set_colorful_logging_thresholds(
     Args:
         command (List[str]): eth-duties start command
         process_termination_log (str): Log which is used to terminate the subprocess
-        expected_logs (List[str] | None, optional): Expected logs while eth-duties subprocess
-        is running. Defaults to None.
-        validators_to_test (List[str] | None, optional): Tested validators. Defaults to None.
     """
     print_test_message(test_message="set colorful logging thresholds")
     logs = run_eth_duties(command, process_termination_log, None, None)
@@ -112,6 +109,7 @@ def generic_test(
     test_rest_response_length: bool,
     overhead_log_number: int,
 ) -> None:
+    # pylint: disable=line-too-long
     """Generic test function which is used for most tests
 
     Args:
@@ -120,17 +118,13 @@ def generic_test(
         test_message (str): Message printed to the console
         process_termination_log (str): Log which is used to terminate the subprocess
         parse_stderr (bool, optional): Parse stderr or stdout from subprocess. Defaults to False.
-        drop_expected_logs (bool, optional): Whether logs will be dropped from provided expected
-        logs list during search process. Defaults to False.
-        rest_call (Callable[[], None] | None, optional): Function which sends a rest call.
-        Defaults to None.
-        rest_call_trigger_log (str | None, optional): Log which will trigger the rest call.
-        Defaults to None.
-        test_rest_response_length (bool, optional): Whether or not to test the response object
-        from the rest call for it's length. Defaults to True.
-        overhead_log_number (int, optional): Logs which will be collected after process
-        termination log was found. Defaults to 1.
+        drop_expected_logs (bool, optional): Whether logs will be dropped from provided expected logs list during search process. Defaults to False.
+        rest_call (Callable[[], None] | None, optional): Function which sends a rest call. Defaults to None.
+        rest_call_trigger_log (str | None, optional): Log which will trigger the rest call. Defaults to None.
+        test_rest_response_length (bool, optional): Whether or not to test the response object from the rest call for it's length. Defaults to True.
+        overhead_log_number (int, optional): Logs which will be collected after process termination log was found. Defaults to 1.
     """
+    # pylint: enable=line-too-long
     print_test_message(test_message=test_message)
     number_of_expected_logs = len(expected_logs)
     process_output = run_eth_duties(
@@ -164,6 +158,7 @@ def run_generic_test(
     overhead_log_number: int = 1,
     additional_failure_message: str = "",
 ) -> int:
+    # pylint: disable=line-too-long
     """Wrapper to run a generic test
 
     Args:
@@ -172,21 +167,17 @@ def run_generic_test(
         test_message (str): Message printed to the console
         process_termination_log (str): Log which is used to terminate the subprocess
         parse_stderr (bool, optional): Parse stderr or stdout from subprocess. Defaults to False.
-        drop_expected_logs (bool, optional): Whether logs will be dropped from provided expected
-        logs list during search process. Defaults to False.
-        rest_call (Callable[[], None] | None, optional): Function which sends a rest call.
-        Defaults to None.
-        rest_call_trigger_log (str | None, optional): Log which will trigger the rest call.
-        Defaults to None.
-        test_rest_response_length (bool, optional): Whether or not to test the response object
-        from the rest call for it's length. Defaults to True.
-        overhead_log_number (int, optional): Logs which will be collected after process
-        termination log was found. Defaults to 1.
+        drop_expected_logs (bool, optional): Whether logs will be dropped from provided expected logs list during search process. Defaults to False.
+        rest_call (Callable[[], None] | None, optional): Function which sends a rest call. Defaults to None.
+        rest_call_trigger_log (str | None, optional): Log which will trigger the rest call. Defaults to None.
+        test_rest_response_length (bool, optional): Whether or not to test the response object from the rest call for it's length. Defaults to True.
+        overhead_log_number (int, optional): Logs which will be collected after process termination log was found. Defaults to 1.
         additional_failure_message (str, optional): Additional failure message. Defaults to ""
 
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
+    # pylint: enable=line-too-long
     try:
         generic_test(
             expected_logs,

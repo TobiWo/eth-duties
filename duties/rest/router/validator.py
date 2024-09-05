@@ -49,7 +49,7 @@ async def delete_validator_identifier(
         request (Request): Sent request
         response (Response): Sent server response
 
-        Returns:
+    Returns:
         List[ValidatorIdentifier] | BadValidatorIdentifiers: Deleted validator identifiers
     """
     return await update_validator_identifiers(
