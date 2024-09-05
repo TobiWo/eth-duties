@@ -33,8 +33,7 @@ async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
     for all validators which were provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming attestation duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming attestation duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     is_any_duty_outdated: List[bool] = [True]
@@ -62,8 +61,7 @@ async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
     provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming sync committee duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming sync committee duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     current_sync_committee_epoch_boundaries = (
@@ -91,8 +89,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
     provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming block proposing duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming block proposing duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     validator_duties: dict[str, ValidatorDuty] = {}
@@ -142,7 +139,7 @@ def __get_next_attestation_duty(
 
     Args:
         data (ValidatorDuty): Response data from rest api call
-        present_duties (dict[int, ValidatorDuty]): The already fetched and processed duties
+        present_duties (dict[str, ValidatorDuty]): The already fetched and processed duties
 
     Returns:
         ValidatorDuty: Validator duty object for the next attestation duty
@@ -170,11 +167,10 @@ def __filter_proposing_duties(
     """Filters supplied proposing duties dict for already outdated duties
 
     Args:
-        raw_proposing_duties (dict[int, ValidatorDuty]): All fetched proposing duties
-        for the current and upcoming epoch
+        raw_proposing_duties (dict[str, ValidatorDuty]): All fetched proposing duties for the current and upcoming epoch # pylint: disable=line-too-long
 
     Returns:
-        dict[int, ValidatorDuty]: Filtered proposing duties
+        dict[str, ValidatorDuty]: Filtered proposing duties
     """
     current_slot = ethereum.get_current_slot()
     filtered_proposing_duties = {

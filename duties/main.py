@@ -86,6 +86,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
 
     Args:
         rest_server (RestServer): Rest server object
+        logger (Logger): Logger instance
     """
     if ARGUMENTS.rest and not "cicd" in ARGUMENTS.mode.value:
         rest_server.start()

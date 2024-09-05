@@ -97,8 +97,7 @@ def get_time_to_next_sync_committee(
     """Gets the remaining time (in seconds) until next sync committee starts
 
     Args:
-        sync_committee_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries
-        for provided sync committee
+        sync_committee_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries for provided sync committee # pylint: disable=line-too-long
         current_slot (int): The current slot
 
     Returns:

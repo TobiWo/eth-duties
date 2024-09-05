@@ -145,6 +145,7 @@ def get_duties_proportion_above_time_threshold(
 
     Args:
         duties (List[ValidatorDuty]): List of fetched duties
+        time_threshold (int): Time threshold defined by the user
 
     Returns:
         float: Duties proportion above user defined time threshold

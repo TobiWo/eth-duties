@@ -99,7 +99,7 @@ class GracefulTerminator:
         time threshold and thus be defined as non-relevant duties
 
         Args:
-            duties (List[ValidatorDuty]): List of fetched validator duties
+            attestation_duties (List[ValidatorDuty]): List of fetched attestation duties
 
         Returns:
             bool: Whether or not there are any relevant upcoming attestation duties

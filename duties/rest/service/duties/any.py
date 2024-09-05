@@ -15,8 +15,11 @@ async def any_upcoming_duties_in_queue(
 ) -> ValidatorDuties | NoBeaconNodeConnection:
     """Check whether there are upcoming duties for the provided validators
 
+    Args:
+        response (Response): Response object whether any duties are in the queue
+
     Returns:
-        bool: Are there any upcoming duties in the queue for the provided validators
+        ValidatorDuties | NoBeaconNodeConnection: Are there any upcoming duties in the queue for the provided validators # pylint: disable=line-too-long
     """
     try:
         duties = await wait_for(
