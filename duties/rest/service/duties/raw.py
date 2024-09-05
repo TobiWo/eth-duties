@@ -21,8 +21,11 @@ async def fetch_raw_attestation_duties(
 ) -> List[ValidatorDuty] | NoBeaconNodeConnection:
     """Fetch upcoming attestation duties for provided validators
 
+    Args:
+        response (Response): Attestation duty response
+
     Returns:
-        List[ValidatorDuty]: The upcoming attestation duties
+        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming attestation duties
     """
     try:
         upcoming_attestation_duties = await wait_for(
@@ -40,8 +43,11 @@ async def fetch_raw_sync_committeen_duties(
 ) -> List[ValidatorDuty] | NoBeaconNodeConnection:
     """Fetch upcoming sync-committee duties for provided validators
 
+    Args:
+        response (Response): Sync committee duty response
+
     Returns:
-        List[ValidatorDuty]: The upcoming sync-committee duties
+        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming sync-committee duties
     """
     try:
         upcoming_sync_committee_duties = await wait_for(
@@ -59,8 +65,11 @@ async def fetch_raw_proposing_duties(
 ) -> List[ValidatorDuty] | NoBeaconNodeConnection:
     """Fetch upcoming block proposing duties for provided validators
 
+    Args:
+        response (Response): Proposing duty response
+
     Returns:
-        List[ValidatorDuty]: The upcoming block proposing duties
+        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
     """
     try:
         upcoming_proposing_duties = await wait_for(

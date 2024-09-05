@@ -205,8 +205,8 @@ def __get_raw_arguments() -> Namespace:
         "--validator-update-interval",
         type=int,
         help=(
-            "Interval (in minutes) on which validator identifier status and identifiers provided via "
-            "'--validator-nodes' are updated (default 1440 minutes -> 1 day)"
+            "Interval (in minutes) on which validator identifier status and identifiers provided "
+            "via '--validator-nodes' are updated (default 1440 minutes -> 1 day)"
         ),
         action="store",
         default=1440,
@@ -239,8 +239,7 @@ def __validate_provided_validator_flag(
     Args:
         validators (List[str] | None): Provided validators
         validators_file (str | None): Provided validators as file
-        validator_nodes (NodeConnectionProperties | None): Provided validator api
-        connection properties
+        validator_nodes (NodeConnectionProperties | None): Provided validator api connection properties # pylint: disable=line-too-long
 
     Raises:
         ArgumentError: Error that only one of the provided flags is allowed
@@ -311,6 +310,7 @@ def __validate_cicd_attestation_proportion(
 
     Args:
         passed_cicd_attestation_proportion (float): Provided cicd attestation proportion
+        passed_mode (Mode): eth-duties mode
 
     Raises:
         ValueError: Error if cicd attestation proportion value is not between 0 and 1

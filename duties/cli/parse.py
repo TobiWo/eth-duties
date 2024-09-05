@@ -37,10 +37,11 @@ def set_beacon_nodes(beacon_node_urls: str) -> List[NodeConnectionProperties]:
         beacon_node_urls (str): Provided beacon node urls
 
     Raises:
-        ValueError: Error if one or many provided urls do not start with http:// or https://
+        KeyError: Error if one or many provided urls do not start with http:// or https://
+
 
     Returns:
-        List[str]: Parsed beacon node urls
+        List[NodeConnectionProperties]: Objects with respective connection information
     """
     splitted_urls = []
     if "," in beacon_node_urls:
@@ -95,8 +96,7 @@ def set_validator_nodes(file_path: str) -> List[NodeConnectionProperties]:
         file_path (str): Path to validator node file
 
     Returns:
-        List[ValidatorNode]: Validator node objects
-        with respective connection information
+        List[NodeConnectionProperties]: Objects with respective connection information
     """
     with open(Path(file_path), "r", encoding="utf-8") as validator_nodes_file:
         raw_validator_nodes = validator_nodes_file.readlines()
@@ -114,12 +114,11 @@ def __parse_validator_node(raw_validator_node: str) -> NodeConnectionProperties:
         raw_validator_node (str): Line in file with validator node information
 
     Raises:
-        ValueError: Error if too many node informations provided and
-        the node url does not start with http or https
+        IndexError: Error if too many node informations provided
+        KeyError: Error if the node url does not start with http or https
 
     Returns:
-        ValidatorNode: Validator node object
-        with respective connection information
+        NodeConnectionProperties: Object with respective connection information
     """
     raw_validator_node_properties = raw_validator_node.split(";")
     if not len(raw_validator_node_properties) == 2:

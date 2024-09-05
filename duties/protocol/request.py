@@ -39,7 +39,7 @@ async def send_beacon_api_request(
     Args:
         endpoint (str): Endpoint which will be called
         calldata_type (CalldataType): The type of calldata submitted with the request
-        provided_validators (List[str]): Validator indices or pubkey to get information for
+        provided_validators (List[str] | None): Validator indices or pubkey to get information for
         flatten (bool): If True the returned list will be flattened
 
     Returns:
@@ -115,16 +115,10 @@ async def __handle_api_request(
     """Handle a single api request to a beacon or validator node
 
     Args:
-        node_connection_properties (NodeConnectionProperties): Object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
         endpoint (str): Endpoint which will be called
         calldata_type (CalldataType): The type of calldata submitted with the request
         provided_validators (List[str]): Validator indices or pubkey to get information for
-
-    Raises:
-        SystemExit: Program exit if the response is not present at all
-        which will happen if the user interrupts at specific moment during
-        execution
 
     Returns:
         Response: Response object with data provided by the endpoint
@@ -172,9 +166,7 @@ def __log_too_many_retries(
 
     Args:
         retry_counter (int): Count the number of request retries
-        node_url (str): Url to which the request is send
-        validator_node (ValidatorNode | None): Validator node object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
     """
     retry_limit = __get_request_retry_limit(node_connection_properties)
     if retry_counter == retry_limit + 1:
@@ -194,11 +186,10 @@ def __get_correct_node_connection_properties(
     """Get node url in dependence of whether or not to call a validator node
 
     Args:
-        node_connection_properties (NodeConnectionProperties): Object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
 
     Returns:
-        str: Node url
+        NodeConnectionProperties: Object with respective connection information
     """
     if node_connection_properties.bearer_token:
         return node_connection_properties
@@ -211,8 +202,7 @@ def __get_request_retry_limit(
     """Get request retry limit in dependence of whether or not to call a validator node
 
     Args:
-        node_connection_properties (NodeConnectionProperties): Object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
 
     Returns:
         int: Limit for request retries
@@ -231,8 +221,7 @@ def __send_api_request(
     """Send consensus layer beacon or validator node api request
 
     Args:
-        node_connection_properties (NodeConnectionProperties): Object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
         endpoint (str): API endpoint
         calldata (str): Data which is send alongside the request
         calldata_type (CalldataType): Type of calldata
@@ -274,8 +263,7 @@ def __get_correct_request_header(
     """Get request header in dependence of whether or not to call a validator node
 
     Args:
-        node_connection_properties (NodeConnectionProperties): Object
-        with respective connection information
+        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
 
     Returns:
         Dict[str, str]: Request header
@@ -296,8 +284,7 @@ def __convert_to_raw_data_responses(
 
     Args:
         raw_responses (List[Response]): List of fetched responses
-        flatten (bool): Should a possible list of lists be flattend. This assumes
-        some knowledge about the handled data strucutes.
+        flatten (bool): Should a possible list of lists be flattend. This assumes some knowledge about the handled data strucutes. # pylint: disable=line-too-long
 
     Returns:
         List[Any]: List of raw data objects from raw response objects
@@ -346,6 +333,7 @@ def __is_request_successful(response: Response, node_url: str) -> bool:
 
     Args:
         response (Response): Response object from the api call
+        node_url (str): Url to which the request was sent
 
     Raises:
         RuntimeError: Raised when reponse is totally empty

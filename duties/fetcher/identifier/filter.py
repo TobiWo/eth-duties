@@ -37,8 +37,7 @@ def log_inactive_and_duplicated_validators(
 
     Args:
         provided_validators (List[str]): Provided validators by the user
-        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator
-        identifiers filtered for inactive ones and duplicates
+        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator identifiers filtered for inactive ones and duplicates # pylint: disable=line-too-long
     """
     active_validators = [
         core.get_validator_index_or_pubkey(provided_validators, identifier)
@@ -67,8 +66,7 @@ def __get_duplicates_with_different_identifiers(
 
     Args:
         provided_valdiators (List[str]): Provided validators by the user
-        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator
-        identifiers filtered for inactive ones and duplicates
+        complete_validator_identifiers (Dict[str, ValidatorIdentifier]): Complete validator identifiers filtered for inactive ones and duplicates # pylint: disable=line-too-long
 
     Returns:
         List[str]: Duplicated validator indices and pubkeys

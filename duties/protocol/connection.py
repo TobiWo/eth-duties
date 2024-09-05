@@ -32,8 +32,11 @@ class BeaconNode:
     ) -> NodeConnectionProperties:
         """Check provided beacon nodes for availability and logs respective events
 
+        Args:
+            is_used_beacon_node_logged (bool): Should used beacon node be logged
+
         Returns:
-            str: Connection string of available beacon node
+            NodeConnectionProperties: Connection properties for available beacon node
         """
         current_time = datetime.now(timezone.utc)
         for index, node in enumerate(ARGUMENTS.beacon_nodes):
@@ -53,7 +56,7 @@ class BeaconNode:
         """Check if node is healthy
 
         Args:
-            node (str): Node which will be checked
+            node_url (str): Node which will be checked
 
         Returns:
             bool: Is node available
@@ -76,7 +79,8 @@ class BeaconNode:
 
         Args:
             time (datetime): Provided time which will be used to check if logging is needed
-            node (str): Provided node which is available
+            node_url (str): Provided node url which is available
+            is_logged (bool): Should used beacon node be logged
         """
         if (
             time
@@ -97,7 +101,7 @@ class BeaconNode:
 
         Args:
             time (datetime): Provided time which will be used to check if logging is needed
-            node (str): Provided node which is not available
+            node_url (str): Provided node url which is not available
         """
         if time > self.__last_beacon_node_call_error + timedelta(
             seconds=program.SECONDS_UNTIL_BEACON_NODE_CALL_ERROR_IS_LOGGED_AGAIN

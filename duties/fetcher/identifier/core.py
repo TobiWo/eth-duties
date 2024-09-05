@@ -46,10 +46,8 @@ def write_validator_identifiers_to_shared_memory(
     """Write provided validator identifier dict to shared memory
 
     Args:
-        shared_validator_identifiers (SharedMemory): Shared memory instance where provided dict
-        should be stored
-        validator_identifiers (dict[str, ValidatorIdentifier]): Validator identifier dict which
-        will be stored in shared memory
+        shared_validator_identifiers (SharedMemory): Shared memory instance where provided dict should be stored # pylint: disable=line-too-long
+        validator_identifiers (dict[str, ValidatorIdentifier]): Validator identifier dict which will be stored in shared memory # pylint: disable=line-too-long
     """
     try:
         validator_identifiers_bytes = dumps(validator_identifiers)
@@ -93,7 +91,7 @@ def get_validator_index_or_pubkey(
     """Check if index or pubkey is present and returns it accordingly
 
     Args:
-        provided_validators (List[str]): Provided validators by the user
+        provided_validators (List[str] | None): Provided validators by the user
         raw_validator_identifier (ValidatorIdentifier): Validator identifiers
 
     Returns:
@@ -149,7 +147,7 @@ def __parse_validator_identifier_with_alias(
     """Parse the provided identifier and alias
 
     Args:
-        provided_validator_identifier (str): Validator identifier provided by the user
+        provided_validator_identifier_with_alias (str): Validator identifier provided by the user
         is_logged (bool): Will log errors about the provided pubkey
 
     Returns:
