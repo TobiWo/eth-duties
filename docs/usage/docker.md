@@ -7,7 +7,7 @@ The docker image repository can be found [here](https://hub.docker.com/r/tobiwo/
 If you want to build on your own:
 
 ```bash
-docker build -t tobiwo/eth-duties:latest -f docker/dockerfile .
+docker buildx build -t tobiwo/eth-duties:latest -f docker/dockerfile .
 ```
 
 ## Run in Docker
