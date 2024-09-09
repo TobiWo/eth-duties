@@ -4,9 +4,10 @@
 from math import trunc
 from time import sleep, time
 from typing import Any, List
+from urllib.parse import urlencode
 
 # pylint: disable-next=import-error
-from constants.program import REQUEST_TIMEOUT
+from constants.program import REQUEST_HEADER, REQUEST_TIMEOUT
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
 from test_helper.config import CONFIG
@@ -50,18 +51,20 @@ def get_number_of_active_validators(validators: List[str]) -> int:
     Returns:
         int: Number of provided active validators
     """
-    validator_request = ",".join(validators)
-    request_string = (
-        f"{CONFIG.general.working_beacon_node_url}"
-        f"/eth/v1/beacon/states/head/validators?id={validator_request}"
-    )
+    calldata = f"{','.join(validators)}"
+    parameters = urlencode({"id": calldata}, safe=",")
     number_of_active_validators = 0
     try_counter = 0
     response = Response()
     while try_counter < 10:
         try:
             try_counter += 1
-            response = get(request_string, timeout=REQUEST_TIMEOUT)
+            response = get(
+                url=f"{CONFIG.general.working_beacon_node_url}/eth/v1/beacon/states/head/validators",
+                params=parameters,
+                timeout=REQUEST_TIMEOUT,
+                headers=REQUEST_HEADER,
+            )
             for validator in response.json()["data"]:
                 if validator["status"] == "active_ongoing":
                     number_of_active_validators += 1
