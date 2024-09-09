@@ -1,0 +1,41 @@
+---
+
+name: "lighthouse-test-validator"
+
+services:
+
+  lighthouse-validator-eth-duties:
+    image: "sigp/lighthouse:v5.3.0"
+    container_name: "lighthouse-validator-eth-duties"
+    command:
+      - "lighthouse"
+      - "vc"
+      - "--datadir"
+      - "/consensus_data"
+      - "--testnet-dir"
+      - "/consensus_data/network-configs"
+      - "--init-slashing-protection"
+      - "--beacon-nodes"
+      - "http://cl-1-lighthouse-geth--8b429e68454d409ba9a3454ccd1fe45d:4000"
+      - "--http"
+      - "--http-address"
+      - "0.0.0.0"
+      - "--unencrypted-http-transport"
+      - "--http-allow-origin"
+      - "*"
+      - "--metrics"
+      - "--metrics-address"
+      - "0.0.0.0"
+      - "--suggested-fee-recipient"
+      - "0x8943545177806ED17B9F23F0a21ee5948eCaa776"
+    volumes:
+      - "/home/tobias/git/eth-duties-test/lighthouse-test:/consensus_data"
+    restart: "always"
+    networks:
+      - "kt-eth-duties-devnet"
+
+networks:
+  kt-eth-duties-devnet:
+    external: true
+
+...

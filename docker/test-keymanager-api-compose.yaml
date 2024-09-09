@@ -1,0 +1,25 @@
+---
+
+name: "eth-duties"
+
+services:
+  eth-duties:
+    container_name: "eth-duties"
+    image: "tobiwo/eth-duties:val-dev"
+    command:
+    - "--beacon-nodes"
+    - "http://cl-1-lighthouse-geth--8b429e68454d409ba9a3454ccd1fe45d:4000"
+    - "--validator-nodes"
+    - "/valis/validator-node"
+    volumes:
+    - "/home/tobias/git/eth-duties-test/eth-duties-test/valis:/valis"
+    ports:
+      - "5000:5000"
+    networks:
+      - "kt-eth-duties-devnet"
+
+networks:
+  kt-eth-duties-devnet:
+    external: true
+
+...
