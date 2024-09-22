@@ -1,5 +1,16 @@
 ---
 participants:
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "prysm"
+    cl_image: "gcr.io/prysmaticlabs/prysm/beacon-chain:${PRYSM_IMAGE_TAG}"
+    vc_type: "prysm"
+    vc_image: "gcr.io/prysmaticlabs/prysm/validator:${PRYSM_IMAGE_TAG}"
+    validator_count: 13 
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "grandine"
+    cl_image: "sifrai/grandine:${GRANDINE_IMAGE_TAG}"
   - el_type: "geth"
     el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "lighthouse"
