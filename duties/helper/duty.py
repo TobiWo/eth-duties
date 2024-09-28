@@ -1,15 +1,11 @@
-"""Helper module
+"""Duty related helper module
 """
 
 from asyncio import Task, TaskGroup
-from datetime import timedelta
 from multiprocessing.shared_memory import SharedMemory
 from typing import Callable, List
 
-from constants.program import (
-    ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES,
-    UPDATED_SHARED_MEMORY_NAME,
-)
+from constants.program import UPDATED_SHARED_MEMORY_NAME
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
@@ -110,18 +106,6 @@ def update_time_to_duty(duties: List[ValidatorDuty]) -> None:
         set_time_to_duty(duty)
 
 
-def clean_shared_memory() -> None:
-    """Releases shared memory instances"""
-    for (
-        validator_identifier_shared_memory_name
-    ) in ALL_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAMES:
-        shared_memory_validator_identifiers = SharedMemory(
-            validator_identifier_shared_memory_name, False
-        )
-        shared_memory_validator_identifiers.close()
-        shared_memory_validator_identifiers.unlink()
-
-
 async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
     """Fetch upcoming validator duties
 
@@ -155,38 +139,6 @@ def get_duties_proportion_above_time_threshold(
     ]
     relevant_duty_proportion = len(duties_above_threshold) / len(duties)
     return relevant_duty_proportion
-
-
-def format_timedelta_to_hours(time_delta: timedelta) -> str:
-    """Format a timedelta to HH:MM:SS
-
-    Args:
-        time_delta (timedelta): Timedelta which will be formatted
-
-    Returns:
-        str: Timedelta in format HH:MM:SS
-    """
-
-    def __get_two_digit_time_value(time_value: int) -> str:
-        """Format time integer to two digit string
-
-        Args:
-            time_value (int): Hours, minutes or seconds
-
-        Returns:
-            str: Two digit hours, minutes or seconds
-        """
-        if time_value < 10:
-            return "0" + str(time_value)
-        return str(time_value)
-
-    minutes, seconds = divmod(int(time_delta.total_seconds()), 60)
-    hours, minutes = divmod(minutes, 60)
-    time_values = [hours, minutes, seconds]
-    time_string = ":".join(
-        [__get_two_digit_time_value(time_value) for time_value in time_values]
-    )
-    return time_string
 
 
 __sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
