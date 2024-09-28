@@ -6,7 +6,7 @@ from asyncio import wait_for
 
 from constants.program import REST_ANY_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT
 from fastapi import Response, status
-from helper.help import fetch_upcoming_validator_duties
+from helper.duty import fetch_upcoming_validator_duties
 from rest.core.types import NoBeaconNodeConnection, ValidatorDuties
 
 

@@ -11,7 +11,8 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
-from helper.help import clean_shared_memory, get_duties_proportion_above_time_threshold
+from helper.duty import get_duties_proportion_above_time_threshold
+from helper.identifier import clean_shared_memory
 
 
 class GracefulTerminator:
