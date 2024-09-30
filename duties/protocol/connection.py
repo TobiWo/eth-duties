@@ -1,13 +1,15 @@
-"""_summary_
+"""Module for protocol connection healthiness
 """
 
+from asyncio import sleep
 from datetime import datetime, timedelta, timezone
 from logging import getLogger
 from typing import List
 
 from cli.arguments import ARGUMENTS
 from cli.types import NodeConnectionProperties
-from constants import endpoints, logging, program
+from constants import endpoints, json, logging, program
+from helper.general import get_correct_request_header
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get
 
@@ -40,7 +42,7 @@ class BeaconNode:
         """
         current_time = datetime.now(timezone.utc)
         for index, node in enumerate(ARGUMENTS.beacon_nodes):
-            if self.__is_node_healthy(node):
+            if self.__is_node_healthy(node.url):
                 self.__log_used_beacon_node(
                     current_time, node.url, is_used_beacon_node_logged
                 )
@@ -112,3 +114,90 @@ class BeaconNode:
                 )
             if len(ARGUMENTS.beacon_nodes) > 1:
                 self.__logger.info(logging.TRYING_BACKUP_NODES_MESSAGE)
+
+
+class ValidatorNode:
+    """Helper to check validator node healthiness"""
+
+    def __init__(self) -> None:
+        self.healthy_nodes: List[NodeConnectionProperties] = []
+        self.__provided_nodes: List[NodeConnectionProperties] = []
+        self.__set_provided_nodes()
+        self.__logger = getLogger()
+
+    def __set_provided_nodes(self) -> None:
+        if ARGUMENTS.validator_nodes:
+            self.__provided_nodes = list(set(ARGUMENTS.validator_nodes))
+
+    async def update_validator_node_health(self) -> None:
+        """Update validator node healthiness in interval"""
+        while True:
+            self.update_validator_node_health_once()
+            await sleep(program.VALIDATOR_HEALTH_UPDATE_INTERVAL)
+
+    def update_validator_node_health_once(self) -> None:
+        """Update validator node healthiness based on REST responses"""
+        if self.__provided_nodes:
+            for node in self.__provided_nodes:
+                try:
+                    header = get_correct_request_header(node)
+                    response = get(
+                        url=f"{node.url}{endpoints.FEERECIPIENT_ENDPOINT}",
+                        timeout=program.REQUEST_TIMEOUT,
+                        headers=header,
+                    )
+                    if response.status_code == 401 or response.status_code == 403:
+                        self.__logger.error(
+                            logging.VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE,
+                            node.url,
+                        )
+                        self.__update_healthy_nodes("remove", node)
+                    elif (
+                        json.RESPONSE_JSON_DATA_FIELD_NAME in response.json()
+                        or json.RESPONSE_JSON_MESSAGE_NAME in response.json()
+                    ):
+                        self.__update_healthy_nodes("append", node)
+                    else:
+                        self.__update_healthy_nodes("remove", node)
+                except RequestsConnectionError:
+                    self.__update_healthy_nodes("remove", node)
+            self.__log_health_of_nodes()
+
+    def __update_healthy_nodes(
+        self, action: str, node: NodeConnectionProperties
+    ) -> None:
+        """Add or remove validator node to/from healthy nodes list
+
+        Args:
+            action (str): Which action should be performed
+            node (NodeConnectionProperties): Node connection properties
+        """
+        if action == "append":
+            if node not in self.healthy_nodes:
+                self.healthy_nodes.append(node)
+        elif action == "remove":
+            if node in self.healthy_nodes:
+                self.healthy_nodes.remove(node)
+
+    def __log_health_of_nodes(self) -> None:
+        """Log healthiness of nodes"""
+        if len(self.healthy_nodes) == len(self.__provided_nodes):
+            self.__logger.info(logging.ALL_HEALTHY_VALIDATOR_NODES_MESSAGE)
+        if not self.healthy_nodes:
+            self.__logger.error(logging.NO_HEALTHY_VALIDATOR_NODES_MESSAGE)
+            return None
+        if len(self.healthy_nodes) != len(self.__provided_nodes):
+            for node in self.__provided_nodes:
+                if node not in self.healthy_nodes:
+                    self.__log_unhealthy_node(node)
+
+    def __log_unhealthy_node(self, node: NodeConnectionProperties) -> None:
+        """Log unhealthy node
+
+        Args:
+            node (NodeConnectionProperties): Node connection properties
+        """
+        self.__logger.error(
+            logging.ONE_NON_HEALTHY_VALIDATOR_NODE_MESSAGE,
+            node.url,
+        )
