@@ -76,3 +76,15 @@ UPDATE_VALIDATOR_IDENTIFIER_MESSAGE = (
 LOADED_VALIDATOR_IDENTIFIER_MESSAGE = (
     "Loaded %s validator identifiers from provided validator nodes"
 )
+ALL_HEALTHY_VALIDATOR_NODES_MESSAGE = "All validator keymanager endpoints are healthy"
+NO_HEALTHY_VALIDATOR_NODES_MESSAGE = (
+    "None of the provided validator nodes is reachable! List of duties will be empty "
+    "after the next identifier and status update (see --validator-update-interval)"
+)
+ONE_NON_HEALTHY_VALIDATOR_NODE_MESSAGE = (
+    "Validator node %s is not reachable! No duties will be displayed for the related validators "
+    "after the next identifier and status update (see --validator-update-interval)"
+)
+VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE = (
+    "Authentication failed for validator node: %s"
+)
