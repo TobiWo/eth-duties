@@ -11,10 +11,8 @@ from cli.types import Mode
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
-from helper.help import (
-    format_timedelta_to_hours,
-    get_duties_proportion_above_time_threshold,
-)
+from helper.duty import get_duties_proportion_above_time_threshold
+from helper.general import format_timedelta_to_hours
 from protocol import ethereum
 from sty import bg, rs  # type: ignore[import]
 

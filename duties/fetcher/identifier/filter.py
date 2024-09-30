@@ -52,7 +52,7 @@ def log_inactive_and_duplicated_validators(
     inactive_validators = [
         validator
         for validator in potentital_inactive_validators
-        if validator not in duplicates
+        if validator not in duplicates and validator != ""
     ]
     if inactive_validators:
         __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
