@@ -87,9 +87,9 @@ async def update_shared_active_validator_identifiers_from_rest_input(
 
 async def update_shared_active_validator_identifiers_on_interval() -> None:
     """Update stored validator identifiers on specified interval via keymanager api"""
-    if ARGUMENTS.validator_nodes:
-        while True:
-            await sleep(ARGUMENTS.validator_update_interval * 60)
+    while True:
+        await sleep(ARGUMENTS.validator_update_interval * 60)
+        if ARGUMENTS.validator_nodes:
             __LOGGER.info(logging.UPDATE_VALIDATOR_IDENTIFIER_MESSAGE)
             active_validator_identifiers = await __fetch_active_validator_identifiers(
                 await __get_raw_validator_identifiers_from_cli()
@@ -233,12 +233,17 @@ async def __get_raw_validator_identifiers_from_cli() -> Dict[str, ValidatorIdent
         )
     if ARGUMENTS.validator_nodes:
         fetched_keystores = await send_key_manager_api_keystore_requests()
-        raw_validator_identifiers_from_fetched_keystores = (
-            __get_raw_validator_identifiers_from_fetched_keystores(fetched_keystores)
-        )
-        raw_validator_identifiers.update(
-            raw_validator_identifiers_from_fetched_keystores
-        )
+        if fetched_keystores:
+            raw_validator_identifiers_from_fetched_keystores = (
+                __get_raw_validator_identifiers_from_fetched_keystores(
+                    fetched_keystores
+                )
+            )
+            raw_validator_identifiers.update(
+                raw_validator_identifiers_from_fetched_keystores
+            )
+        else:
+            raw_validator_identifiers.update({"NONE": ValidatorIdentifier()})
     return filter_empty_validator_identifier(raw_validator_identifiers)
 
 
