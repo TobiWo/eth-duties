@@ -5,18 +5,20 @@ from asyncio import TaskGroup, sleep
 from enum import Enum
 from itertools import chain
 from logging import getLogger
-from typing import Any, Dict, List
+from typing import Any, List
 from urllib.parse import urlencode
 
-from cli.arguments import ARGUMENTS
 from cli.types import NodeConnectionProperties, NodeType
 from constants import endpoints, json, logging, program
-from protocol.connection import BeaconNode
+from helper.general import get_correct_request_header
+from protocol.connection import BeaconNode, ValidatorNode
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
 
 __LOGGER = getLogger()
 beacon_node = BeaconNode()
+validator_node = ValidatorNode()
+validator_node.update_validator_node_health_once()
 
 
 class CalldataType(Enum):
@@ -90,20 +92,22 @@ async def send_key_manager_api_keystore_requests() -> List[Any]:
         List[Any]: List with validators managed by the node
         (see https://ethereum.github.io/keymanager-APIs/#/ for reference)
     """
-    validator_nodes: List[NodeConnectionProperties] = ARGUMENTS.validator_nodes
-    async with TaskGroup() as taskgroup:
-        tasks = [
-            taskgroup.create_task(
-                __handle_api_request(node, endpoint, CalldataType.NONE, [""])
-            )
-            for node in validator_nodes
-            for endpoint in [
-                endpoints.LOCAL_KEYSTORES_ENDPOINT,
-                endpoints.REMOTE_KEYSTORES_ENDPOINT,
+    healthy_validator_endpoints = validator_node.healthy_nodes
+    if healthy_validator_endpoints:
+        async with TaskGroup() as taskgroup:
+            tasks = [
+                taskgroup.create_task(
+                    __handle_api_request(node, endpoint, CalldataType.NONE, [""])
+                )
+                for node in healthy_validator_endpoints
+                for endpoint in [
+                    endpoints.LOCAL_KEYSTORES_ENDPOINT,
+                    endpoints.REMOTE_KEYSTORES_ENDPOINT,
+                ]
             ]
-        ]
-    responses = [task.result() for task in tasks]
-    return __convert_to_raw_data_responses(responses, True)
+        responses = [task.result() for task in tasks]
+        return __convert_to_raw_data_responses(responses, True)
+    return []
 
 
 async def __handle_api_request(
@@ -128,7 +132,7 @@ async def __handle_api_request(
     calldata = __get_processed_calldata(provided_validators, calldata_type)
     retry_counter = 0
     retry_limit = __get_request_retry_limit(node_connection_properties)
-    while not is_request_successful or retry_counter == retry_limit:
+    while not is_request_successful and retry_counter < retry_limit:
         node_connection_properties = __get_correct_node_connection_properties(
             node_connection_properties
         )
@@ -169,7 +173,7 @@ def __log_too_many_retries(
         node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
     """
     retry_limit = __get_request_retry_limit(node_connection_properties)
-    if retry_counter == retry_limit + 1:
+    if retry_counter == retry_limit:
         __LOGGER.error(
             logging.NO_RESPONSE_ERROR_MESSAGE, node_connection_properties.url
         )
@@ -230,7 +234,7 @@ def __send_api_request(
         Response: Request response
     """
     response = Response()
-    header = __get_correct_request_header(node_connection_properties)
+    header = get_correct_request_header(node_connection_properties)
     match calldata_type:
         case CalldataType.REQUEST_DATA:
             response = post(
@@ -257,26 +261,6 @@ def __send_api_request(
     return response
 
 
-def __get_correct_request_header(
-    node_connection_properties: NodeConnectionProperties,
-) -> Dict[str, str]:
-    """Get request header in dependence of whether or not to call a validator node
-
-    Args:
-        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
-
-    Returns:
-        Dict[str, str]: Request header
-    """
-    if node_connection_properties.bearer_token:
-        header_with_authentication = program.REQUEST_HEADER
-        header_with_authentication.update(
-            {"Authorization": f"Bearer {node_connection_properties.bearer_token}"}
-        )
-        return header_with_authentication
-    return program.REQUEST_HEADER
-
-
 def __convert_to_raw_data_responses(
     raw_responses: List[Response], flatten: bool
 ) -> List[Any]:
@@ -289,19 +273,24 @@ def __convert_to_raw_data_responses(
     Returns:
         List[Any]: List of raw data objects from raw response objects
     """
-    if flatten:
-        return list(
-            chain(
-                *[
-                    raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
-                    for raw_response in raw_responses
-                ]
-            )
-        )
-    return [
-        raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
-        for raw_response in raw_responses
+    responses_with_status_code = [
+        response for response in raw_responses if response.status_code
     ]
+    if responses_with_status_code:
+        if flatten:
+            return list(
+                chain(
+                    *[
+                        raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
+                        for raw_response in responses_with_status_code
+                    ]
+                )
+            )
+        return [
+            raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
+            for raw_response in responses_with_status_code
+        ]
+    return []
 
 
 def __get_processed_calldata(
