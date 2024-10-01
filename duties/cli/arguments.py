@@ -196,8 +196,9 @@ def __get_raw_arguments() -> Namespace:
         "--validator-nodes",
         type=parse.set_validator_nodes,
         help=(
-            "Path to file with validator urls and respective bearer tokens "
-            "to access the key manager api. Url and bearer are separated by semicolon."
+            "Path to a file containing validator URLs and their respective bearer tokens, "
+            "separated by a semicolon. Each <URL;BEARER> pair should be on a separate line. "
+            "This file is used to observe validator identifiers managed by the respective node."
         ),
         action="store",
     )
@@ -251,7 +252,7 @@ def __validate_provided_validator_flag(
             None,
             "ONE of the following flags is required: '--validators', '--validators-file', "
             "'--validator-nodes'. '--validator-nodes' can be used together with ONE "
-            "of the other two flags.",
+            "of the two other flags.",
         )
 
 
