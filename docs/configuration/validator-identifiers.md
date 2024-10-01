@@ -33,3 +33,60 @@ Example:
 234;My_Validator
 0x99f094ff7dc4b521a5075fa03ca1fe468546dfe053124d88187cce6de3332c7d65e4b0738cd85e037d7cbbc48c6645eb
 ```
+
+## Validator nodes
+
+Path to a file containing connection information (`URL;BEARER`) for validator nodes to fetch the validator identifiers (pubkeys) managed by the respective node. The data is retrieved via the [keymanager api](https://ethereum.github.io/keymanager-APIs/) from the respective node. This approach eliminates the need to manually provide validator identifiers using `--validators` or `--validators-file`. Additionally, the managed validator identifiers and their status are updated regularly. By default, updates occur once per day, but this can be adjusted using the `--validator-update-interval` setting. This feature is particularly beneficial for professional node operators managing a large and fluctuating number of validators.
+
+Note, you can supply additional validators via one of the other two cli flags (`--validators`, `--validators-file`).
+
+### Supported clients / remote signer
+
+Not all clients support the keymanager api yet. Furthermore, I did not had the time yet to test all clients/remote signers.
+
+| client | tested | compatible |
+|  --- |  --- | --- |
+| prysm | :white_check_mark: | :exclamation: |
+| lighthouse | :white_check_mark: | :white_check_mark: |
+| teku | :white_check_mark: | :white_check_mark: |
+| nimbus | :white_check_mark: | :white_check_mark: |
+| lodestar | :white_check_mark: | :white_check_mark: |
+| grandine | :white_check_mark: | :x: |
+| vouch | :x: | :question: |
+| web3signer | :x: | :white_check_mark: |
+| dirk | :x: | :question: |
+
+#### Notes
+
+1. There are some issues with prysm currently. More specifically, if you use prysm but validators are managed by a remote signer, eth-duties will not work since the respective endpoint is broken. If validators are managed locally everything works as expected.
+
+### File structure
+
+The validator nodes file needs to be structured like this:
+
+```text
+http://localhost:5062;234ddgret353f23r
+http://192.168.0.1:5062;34547342erg45g57
+https://my-awesome-validator-node;234723022hnfn
+```
+
+### Keymanager API
+
+The keymanager API is not enabled by default, and the quality of documentation varies across different clients. Below is a list of documentation chapters that explain how to enable the API for each client/remote signer:
+
+* [lighthouse](https://lighthouse-book.sigmaprime.io/api-vc.html)
+* [teku](https://docs.teku.consensys.io/how-to/use-external-signer/manage-keys#enable-validator-client-api)
+* [nimbus](https://nimbus.guide/keymanager-api.html)
+* [lodestar](https://chainsafe.github.io/lodestar/contribution/dev-cli#--keymanager)
+* [prysm](https://docs.prylabs.network/docs/how-prysm-works/keymanager-api)
+* [web3signer](https://docs.web3signer.consensys.io/how-to/manage-keys#manage-keys-using-key-manager-api)
+
+Note: **Ensure you fully understand the process before activating the API. Accidentally exposing endpoints to the public can allow external parties to exit or delete your validators. Eth-duties only accesses three getter endpoints of the [keymanager api](https://ethereum.github.io/keymanager-APIs/). To verify that Eth-Duties cannot delete any of your keys or exit your validators, you can search for the corresponding modifier endpoints in the GitHub repository.**
+
+### Caveat
+
+1. If `eth-duties` attempts to update the validator identifiers from the provided list of validator nodes and one or more nodes are not accessible, it will delete all identifiers for those nodes internally until they become reachable again. I have an idea for optimizing this behavior to retain the previous state of validator identifiers when a node is unavailable. However, implementing this improvement will require some code refactoring and, consequently, time.
+1. If all validator nodes are unreachable, eth-duties will enter a dead state and will remain in this state even if the nodes come back online. The aforementioned optimization will address this issue as well. To avoid the dead state currently, you need to provide one or more validators via `--validators`.
+1. Currently, you cannot supply aliases with --validator-nodes. This might change in future updates.
+1. Not tested with remote signers
+1. The keymanager api offers two endpoints for fetching keystores: `/eth/v1/keystores` and `/eth/v1/remotekeys`. I'm not entirely sure how the latter works, but my understanding is that if a validator client manages validator keys via a remote signer, the `remotekeys` endpoint will return the respective keys. Eth-duties always calls both endpoints when fetching validator keys. This may lead to issues with certain client/remote signer combinations that I haven't been able to test. If you encounter any errors, please open an issue on GitHub.
