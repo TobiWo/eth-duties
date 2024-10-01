@@ -33,3 +33,51 @@ Example:
 234;My_Validator
 0x99f094ff7dc4b521a5075fa03ca1fe468546dfe053124d88187cce6de3332c7d65e4b0738cd85e037d7cbbc48c6645eb
 ```
+
+## Validator nodes
+
+Path to a file containing connection information (`URL;BEARER`) for validator nodes to fetch the validator identifiers (pubkeys) managed by the respective node. The data is retrieved via the [keymanager api](https://ethereum.github.io/keymanager-APIs/) from the respective node. This approach eliminates the need to manually provide validator identifiers using `--validators` or `--validators-file`. Additionally, the managed validator identifiers and their status are updated regularly. By default, updates occur once per day, but this can be adjusted using the `--validator-update-interval` setting. This feature is particularly beneficial for professional node operators managing a large and fluctuating number of validators.
+
+Note, you can supply additional validators via one of the other two cli flags (`--validators`, `--validators-file`).
+
+### Supported clients
+
+Not all clients support the keymanager api or there are different issues.
+
+| client | tested | compatible |
+|  --- |  --- | --- |
+| prysm | :white_check_mark: | :x: |
+| lighthouse | :white_check_mark: | :white_check_mark: |
+| teku | :white_check_mark: | :white_check_mark: |
+| nimbus | :white_check_mark: | :white_check_mark: |
+| lodestar | :white_check_mark: | :white_check_mark: |
+| grandine | :white_check_mark: | :x: |
+| vouch | :x: | :question: |
+
+### File structure
+
+The validator nodes file needs to be structured like this:
+
+```text
+http://localhost:5062;234ddgret353f23r
+http://192.168.0.1:5062;34547342erg45g57
+https://my-awesome-validator-node;234723022hnfn
+```
+
+### Keymanager API
+
+The keymanager API is not enabled by default, and the quality of documentation varies across different clients. Below is a list of documentation chapters that explain how to enable the API for each client:
+
+* [lighthouse](https://lighthouse-book.sigmaprime.io/api-vc.html)
+* [teku](https://docs.teku.consensys.io/how-to/use-external-signer/manage-keys#enable-validator-client-api)
+* [nimbus](https://nimbus.guide/keymanager-api.html)
+* [lodestar](https://chainsafe.github.io/lodestar/contribution/dev-cli#--keymanager)
+* [prysm](https://docs.prylabs.network/docs/how-prysm-works/keymanager-api)
+
+Note: **Ensure you fully understand the process before activating the API. Accidentally exposing the endpoint to the public can allow external parties to exit or delete your validators.**  
+
+### Caveat
+
+1. If `eth-duties` attempts to update the validator identifiers from the provided list of validator nodes and one or more nodes are not accessible, it will delete all identifiers for those nodes internally until they become reachable again. I have an idea for optimizing this behavior to retain the previous state of validator identifiers when a node is unavailable. However, implementing this improvement will require some code refactoring and, consequently, time.
+1. If all validator nodes are unreachable, eth-duties will enter a dead state and will remain in this state even if the nodes come back online. The aforementioned optimization will address this issue as well. To avoid the dead state currently, you need to provide one or more validators via --validators.
+1. Currently, you cannot supply aliases with --validator-nodes. This might change in future updates.

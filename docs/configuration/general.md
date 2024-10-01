@@ -29,3 +29,5 @@ For all available cli flags please call `eth-duties --help` or check the table b
 | `--rest-port` | Port where the rest server is exposed (default 5000) | [link](./restful-api.md) |
 | `--validators` | One or many validator identifiers for which next duties will be fetched (argument can be provided multiple times) | [link](./validator-identifiers.md) |
 | `--validators-file` | File with validator identifiers where every identifier is on a separate line | [link](./validator-identifiers.md/#validators-file) |
+| `--validator-nodes` | Path to file with validator node urls and respective bearer tokens to observe validator identifiers which are managed by the respective node. Url and bearer are separated by semicolon. Each `URL;BEARER` pair is on one line | [link](./validator-identifiers.md/#validator-nodes) |
+| `--validator-update-interval` | Interval (in minutes) on which validator identifier status and identifiers provided via '--validator-nodes' are updated (default 1440 minutes -> 1 day) | [link](./validator-identifiers.md/#validator-nodes) |
