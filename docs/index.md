@@ -13,6 +13,7 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 | teku | :white_check_mark: | :white_check_mark: |
 | nimbus | :white_check_mark: | :white_check_mark: |
 | lodestar | :white_check_mark: | :white_check_mark: |
+| grandine | :white_check_mark: | :white_check_mark: |
 
 ## What to expect
 
