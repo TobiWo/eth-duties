@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 
 from cli.types import NodeConnectionProperties, NodeType
 from constants import endpoints, json, logging, program
+from helper.error import PrysmError
 from helper.general import get_correct_request_header
 from protocol.connection import BeaconNode, ValidatorNode
 from requests import ConnectionError as RequestsConnectionError
@@ -159,6 +160,8 @@ async def __handle_api_request(
                 node_connection_properties.url,
             )
             await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
+        except PrysmError:
+            return Response()
         __log_too_many_retries(retry_counter, node_connection_properties)
     return response
 
@@ -327,6 +330,7 @@ def __is_request_successful(response: Response, node_url: str) -> bool:
     Raises:
         RuntimeError: Raised when reponse is totally empty
         KeyError: Raised if no data field is within the response object
+        PrysmError: Specific error for prysm which returns 500 if you send a request to fetch remote keystores but web3signer flags are not set # pylint: disable=line-too-long
 
     Returns:
         bool: True if request was successful
@@ -336,5 +340,7 @@ def __is_request_successful(response: Response, node_url: str) -> bool:
         raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE, node_url)
     if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
         return True
+    if json.RESPONSE_JSON_MESSAGE_NAME in response.json():
+        raise PrysmError()
     __LOGGER.error(response.text)
     raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
