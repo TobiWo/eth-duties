@@ -11,7 +11,10 @@ from test_helper.functions import (
     test_standard_logging_mode,
     test_time_to_next_sync_committee_format,
 )
-from test_helper.general import get_general_eth_duties_start_command
+from test_helper.general import (
+    get_eth_duties_entry_point,
+    get_general_eth_duties_start_command,
+)
 
 
 def test_standard_logging_mode_execution() -> int:
@@ -267,4 +270,36 @@ def test_logged_format_of_time_to_next_sync_committee() -> int:
         return 1
     except AssertionError:
         print(fg.red + "Test Failed" + fg.rs)
+        return 0
+
+
+def test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes() -> int:
+    """Test for active and inactive validators supplied via --validator-nodes
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = [
+        "next ATTESTATION duty",
+        "next PROPOSING duty",
+        "is in current sync committee",
+    ]
+    validators_to_test = CONFIG.validators.active.general[0:12]
+    command = get_eth_duties_entry_point() + [
+        "--beacon-nodes",
+        CONFIG.general.working_beacon_node_url,
+        "--validator-nodes",
+        str(Path.cwd() / "test/data/online-prysm-validator-node"),
+    ]
+    try:
+        test_standard_logging_mode(
+            command, "duties will be executed", expected_logs, validators_to_test
+        )
+        return 1
+    except AssertionError:
+        print(fg.red + "Test Failed" + fg.rs)
+        print(
+            fg.red + "It is possible that the data "
+            "couldn't be fetched correctly from the beacon client\n" + fg.rs
+        )
         return 0

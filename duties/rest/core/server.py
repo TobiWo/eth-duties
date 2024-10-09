@@ -15,7 +15,7 @@ class RestServer(Process):
     """Rest server in separate process
 
     Args:
-        Process (_type_): Inherits from Process to start the sever in a separate process
+        config (UvicornConfig): Uvicorn config
     """
 
     def __init__(self, config: UvicornConfig) -> None:

@@ -9,7 +9,7 @@ from multiprocessing import freeze_support
 from typing import List
 
 from cli import parse
-from cli.types import Mode
+from cli.types import Mode, NodeConnectionProperties
 
 sys.tracebacklimit = 0
 
@@ -27,7 +27,7 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--beacon-nodes",
-        type=parse.set_beacon_node_urls,
+        type=parse.set_beacon_nodes,
         help=(
             "Comma separated list of URLs to access the beacon node api "
             "(default: http://localhost:5052)"
@@ -192,6 +192,26 @@ def __get_raw_arguments() -> Namespace:
         help="File with validator identifiers where every identifier is on a separate line",
         action="store",
     )
+    parser.add_argument(
+        "--validator-nodes",
+        type=parse.set_validator_nodes,
+        help=(
+            "Path to a file containing validator URLs and their respective bearer tokens, "
+            "separated by a semicolon. Each <URL;BEARER> pair should be on a separate line. "
+            "This file is used to observe validator identifiers managed by the respective node."
+        ),
+        action="store",
+    )
+    parser.add_argument(
+        "--validator-update-interval",
+        type=int,
+        help=(
+            "Interval (in minutes) on which validator identifier status and identifiers provided "
+            "via '--validator-nodes' are updated (default 1440 minutes -> 1 day)"
+        ),
+        action="store",
+        default=1440,
+    )
     return parser.parse_args()
 
 
@@ -211,21 +231,28 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 
 
 def __validate_provided_validator_flag(
-    validators: List[str] | None, validators_file: str | None
+    validators: List[str] | None,
+    validators_file: str | None,
+    validator_nodes: NodeConnectionProperties | None,
 ) -> None:
     """Validates that only one of the validator flags was provided
 
     Args:
         validators (List[str] | None): Provided validators
         validators_file (str | None): Provided validators as file
+        validator_nodes (NodeConnectionProperties | None): Provided validator api connection properties # pylint: disable=line-too-long
 
     Raises:
         ArgumentError: Error that only one of the provided flags is allowed
     """
-    if (validators and validators_file) or (not validators and not validators_file):
+    if (validators and validators_file) or (
+        not validators and not validators_file and not validator_nodes
+    ):
         raise ArgumentError(
             None,
-            "ONE of the following flags is required: '--validators', '--validators-file'",
+            "ONE of the following flags is required: '--validators', '--validators-file', "
+            "'--validator-nodes'. '--validator-nodes' can be used together with ONE "
+            "of the two other flags.",
         )
 
 
@@ -284,6 +311,7 @@ def __validate_cicd_attestation_proportion(
 
     Args:
         passed_cicd_attestation_proportion (float): Provided cicd attestation proportion
+        passed_mode (Mode): eth-duties mode
 
     Raises:
         ValueError: Error if cicd attestation proportion value is not between 0 and 1
@@ -307,7 +335,9 @@ def __set_arguments() -> Namespace:
     freeze_support()
     arguments = __get_raw_arguments()
     __validate_fetching_interval(arguments.interval)
-    __validate_provided_validator_flag(arguments.validators, arguments.validators_file)
+    __validate_provided_validator_flag(
+        arguments.validators, arguments.validators_file, arguments.validator_nodes
+    )
     __validate_log_times(arguments.log_time_warning, arguments.log_time_critical)
     __validate_cicd_waiting_time(
         arguments.interval, arguments.mode_cicd_waiting_time, arguments.mode

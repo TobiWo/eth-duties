@@ -7,13 +7,12 @@ from time import gmtime, strftime
 from typing import List, Tuple
 
 from cli.arguments import ARGUMENTS
+from cli.types import Mode
 from constants import logging, program
 from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
-from helper.help import (
-    format_timedelta_to_hours,
-    get_duties_proportion_above_time_threshold,
-)
+from helper.duty import get_duties_proportion_above_time_threshold
+from helper.general import format_timedelta_to_hours
 from protocol import ethereum
 from sty import bg, rs  # type: ignore[import]
 
@@ -57,22 +56,22 @@ def __log_duty_proportion_above_time_threshold(
     Args:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
-    relevant_duty_proportion = get_duties_proportion_above_time_threshold(
-        validator_duties, ARGUMENTS.log_time_warning
-    )
-    __LOGGER.info(
-        logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
-        round(relevant_duty_proportion * 100, 2),
-        "all",
-        ARGUMENTS.log_time_warning,
-    )
+    if ARGUMENTS.mode == Mode.LOG:
+        relevant_duty_proportion = get_duties_proportion_above_time_threshold(
+            validator_duties, ARGUMENTS.log_time_warning
+        )
+        __LOGGER.info(
+            logging.PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE,
+            round(relevant_duty_proportion * 100, 2),
+            "all",
+            ARGUMENTS.log_time_warning,
+        )
 
 
 def __create_logging_message(duty: ValidatorDuty) -> str:
     """Creates the logging message for the provided duty
 
     Args:
-        seconds_to_next_duty (float): Time to next duty in seconds
         duty (ValidatorDuty): Specific upcoming validator duty
 
     Returns:
@@ -104,7 +103,7 @@ def __create_sync_committee_logging_message(sync_committee_duty: ValidatorDuty) 
     """Create a sync committee duty related logging message
 
     Args:
-        duty (ValidatorDuty): Sync committee duty
+        sync_committee_duty (ValidatorDuty): Sync committee duty
 
     Returns:
         str: sync committee duty related logging message
@@ -143,11 +142,10 @@ def __get_time_to_next_sync_committee(
 
     Args:
         sync_committee_duty (ValidatorDuty): Sync committee duty
-        current_sync_committee_epoch_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries
-        for current sync committee
+        current_sync_committee_epoch_boundaries (Tuple[int, int]): Lower and Upper epoch boundaries for current sync committee # pylint: disable=line-too-long
 
     Returns:
-        str: Time to next sync committee start
+        timedelta: Time to next sync committee start
     """
     if sync_committee_duty.seconds_to_duty > 0:
         return timedelta(seconds=sync_committee_duty.seconds_to_duty)
@@ -163,7 +161,7 @@ def __get_logging_color(seconds_to_next_duty: float, duty: ValidatorDuty) -> str
     """Gets correct logging color in dependence of duty and time to next duty
 
     Args:
-        seconds_to_next_duty (float): Time to next duty in seconds
+        seconds_to_next_duty (float): Time to next duty in seconds duty (ValidatorDuty): Specific upcoming validator duty # pylint: disable=line-too-long
         duty (ValidatorDuty): Specific upcoming validator duty
 
     Returns:

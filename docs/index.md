@@ -13,6 +13,15 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 | teku | :white_check_mark: | :white_check_mark: |
 | nimbus | :white_check_mark: | :white_check_mark: |
 | lodestar | :white_check_mark: | :white_check_mark: |
+| grandine | :white_check_mark: | :white_check_mark: |
+
+### Caveat
+
+#### Lodestar
+
+If you're using Lodestar as a beacon client and need to track hundreds of validators, you may encounter an issue when providing validator identifiers as public keys. While I don't have the exact threshold, sending around 200 validator public keys to Lodestar's beacon API endpoints can overwhelm the system. However, using validator indices does not cause this problem.
+
+It's important to note that when you use the `--validator-nodes` option, eth-duties will only utilize public keys internally, which can lead to the issue mentioned above. If you see many public keys in the error log with the message: "The following provided validators are not active and therefore will be skipped for further processing," this could indicate the problem discussed.
 
 ## What to expect
 

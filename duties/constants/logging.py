@@ -1,9 +1,16 @@
 """Defines logging messages
 """
 
-CONNECTION_ERROR_MESSAGE = "Couldn't connect to beacon client. Retry in 2 second."
-READ_TIMEOUT_ERROR_MESSAGE = "Couldn't read from beacon client. Retry in 5 seconds."
-NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from the beacon client"
+CONNECTION_ERROR_MESSAGE = (
+    "Couldn't connect to %s node with url: %s. Retry in 2 second."
+)
+READ_TIMEOUT_ERROR_MESSAGE = (
+    "Couldn't read from %s node with url: %s. Retry in 5 seconds."
+)
+NO_RESPONSE_ERROR_MESSAGE = "Couldn't fetch any data from client: %s"
+NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE = (
+    "Validator identifiers could not be fetched from client: %s"
+)
 NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE = (
     "Response object does not include a 'data' field"
 )
@@ -57,3 +64,27 @@ PRIMARY_BEACON_NODE_DOWN_MESSAGE = (
     "Primary beacon node %s is not ready to accept requests"
 )
 TRYING_BACKUP_NODES_MESSAGE = "Trying backup nodes"
+NODE_URL_ERROR_MESSAGE = "{0} node url should start with http or https"
+VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = (
+    "Validator node information should only consist of url "
+    "and bearer token separated by semicolon"
+)
+UPDATE_VALIDATOR_IDENTIFIER_MESSAGE = (
+    "Updating validator identifier status and identifiers fetched from provided "
+    "validator nodes"
+)
+LOADED_VALIDATOR_IDENTIFIER_MESSAGE = (
+    "Loaded %s validator identifiers from provided validator nodes"
+)
+ALL_HEALTHY_VALIDATOR_NODES_MESSAGE = "All validator keymanager endpoints are healthy"
+NO_HEALTHY_VALIDATOR_NODES_MESSAGE = (
+    "None of the provided validator nodes is reachable! List of duties will be empty "
+    "after the next identifier and status update (see --validator-update-interval)"
+)
+ONE_NON_HEALTHY_VALIDATOR_NODE_MESSAGE = (
+    "Validator node %s is not reachable! No duties will be displayed for the related validators "
+    "after the next identifier and status update (see --validator-update-interval)"
+)
+VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE = (
+    "Authentication failed for validator node: %s"
+)
