@@ -11,7 +11,8 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import DutyType, ValidatorDuty
-from helper.help import clean_shared_memory, get_duties_proportion_above_time_threshold
+from helper.duty import get_duties_proportion_above_time_threshold
+from helper.identifier import clean_shared_memory
 
 
 class GracefulTerminator:
@@ -66,6 +67,7 @@ class GracefulTerminator:
                     sys_exit(1)
             case Mode.CICD_FORCE_GRACEFUL_EXIT:
                 clean_shared_memory()
+                self.logger.info(logging.EXIT_CODE_MESSAGE, 0)
                 sys_exit(0)
             case _:
                 pass
@@ -98,7 +100,7 @@ class GracefulTerminator:
         time threshold and thus be defined as non-relevant duties
 
         Args:
-            duties (List[ValidatorDuty]): List of fetched validator duties
+            attestation_duties (List[ValidatorDuty]): List of fetched attestation duties
 
         Returns:
             bool: Whether or not there are any relevant upcoming attestation duties

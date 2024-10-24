@@ -5,20 +5,27 @@ from logging import getLogger
 from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, logging
+from constants import endpoints, logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
-from fetcher.identifier.parser import get_active_validator_indices
+from fetcher.identifier import core
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
-__VALIDATORS = get_active_validator_indices()
+__VALIDATOR_IDENTIFIER_CACHE: List[str] = []
 __LOGGER = getLogger()
 
 
-def update_validator_identifiers() -> None:
+def update_validator_identifier_cache() -> None:
     """Updates the validator identifiers for the fetch module"""
-    __VALIDATORS.clear()
-    __VALIDATORS.extend(get_active_validator_indices())
+    complete_active_validator_identifiers = (
+        core.read_validator_identifiers_from_shared_memory(
+            program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
+        )
+    )
+    __VALIDATOR_IDENTIFIER_CACHE.clear()
+    __VALIDATOR_IDENTIFIER_CACHE.extend(
+        list(complete_active_validator_identifiers.keys())
+    )
 
 
 async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
@@ -26,8 +33,7 @@ async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
     for all validators which were provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming attestation duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming attestation duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     is_any_duty_outdated: List[bool] = [True]
@@ -55,8 +61,7 @@ async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
     provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming sync committee duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming sync committee duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     current_sync_committee_epoch_boundaries = (
@@ -84,8 +89,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
     provided by the user.
 
     Returns:
-        dict[int, ValidatorDuty]: The upcoming block proposing duties
-        for all provided validators
+        dict[str, ValidatorDuty]: The upcoming block proposing duties for all provided validators
     """
     current_epoch = ethereum.get_current_epoch()
     validator_duties: dict[str, ValidatorDuty] = {}
@@ -93,7 +97,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
         response_data = await __fetch_duty_responses(current_epoch, DutyType.PROPOSING)
         for data in response_data:
             if (
-                str(data.validator_index) in __VALIDATORS
+                str(data.validator_index) in __VALIDATOR_IDENTIFIER_CACHE
                 and data.validator_index not in validator_duties
             ):
                 proposing_duty = ValidatorDuty(
@@ -115,7 +119,7 @@ def __should_fetch_attestation_duties() -> bool:
         bool: Should attestation duties fetched
     """
     if (
-        len(__VALIDATORS) > ARGUMENTS.max_attestation_duty_logs
+        len(__VALIDATOR_IDENTIFIER_CACHE) > ARGUMENTS.max_attestation_duty_logs
         and not ARGUMENTS.omit_attestation_duties
     ):
         __LOGGER.warning(
@@ -135,7 +139,7 @@ def __get_next_attestation_duty(
 
     Args:
         data (ValidatorDuty): Response data from rest api call
-        present_duties (dict[int, ValidatorDuty]): The already fetched and processed duties
+        present_duties (dict[str, ValidatorDuty]): The already fetched and processed duties
 
     Returns:
         ValidatorDuty: Validator duty object for the next attestation duty
@@ -163,11 +167,10 @@ def __filter_proposing_duties(
     """Filters supplied proposing duties dict for already outdated duties
 
     Args:
-        raw_proposing_duties (dict[int, ValidatorDuty]): All fetched proposing duties
-        for the current and upcoming epoch
+        raw_proposing_duties (dict[str, ValidatorDuty]): All fetched proposing duties for the current and upcoming epoch # pylint: disable=line-too-long
 
     Returns:
-        dict[int, ValidatorDuty]: Filtered proposing duties
+        dict[str, ValidatorDuty]: Filtered proposing duties
     """
     current_slot = ethereum.get_current_slot()
     filtered_proposing_duties = {
@@ -195,13 +198,13 @@ async def __fetch_duty_responses(
             responses = await send_beacon_api_request(
                 f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}",
                 CalldataType.REQUEST_DATA,
-                __VALIDATORS,
+                __VALIDATOR_IDENTIFIER_CACHE,
             )
         case DutyType.SYNC_COMMITTEE:
             responses = await send_beacon_api_request(
                 f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
                 CalldataType.REQUEST_DATA,
-                __VALIDATORS,
+                __VALIDATOR_IDENTIFIER_CACHE,
             )
         case DutyType.PROPOSING:
             responses = await send_beacon_api_request(

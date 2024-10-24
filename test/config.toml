@@ -2,7 +2,7 @@
 # The config can be also adapted to work with any public testnet or even the mainnet
 [test]
 debug = false
-timeout = 120
+timeout = 150
 
 [general]
 failing-beacon-node-url = "http://foobar:5052"

@@ -1,36 +1,58 @@
 ---
-# kurtosis run --enclave eth-duties-devnet github.com/kurtosis-tech/ethereum-package --args-file ./test/ethereum-devnet.yaml
 participants:
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "prysm"
+    cl_image: "gcr.io/prysmaticlabs/prysm/beacon-chain:${PRYSM_IMAGE_TAG}"
+    vc_type: "prysm"
+    vc_image: "gcr.io/prysmaticlabs/prysm/validator:${PRYSM_IMAGE_TAG}"
+    validator_count: 13 
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "grandine"
+    cl_image: "sifrai/grandine:${GRANDINE_IMAGE_TAG}"
   - el_type: "geth"
-    el_image: "ethereum/client-go:v1.13.14"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "lighthouse"
-    cl_image: "sigp/lighthouse:v5.1.3"
+    cl_image: "sigp/lighthouse:${LIGHTHOUSE_IMAGE_TAG}"
   - el_type: "geth"
-    el_image: "ethereum/client-go:v1.13.14"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
     cl_type: "teku"
-    cl_image: "consensys/teku:24.3.1"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
   - el_type: "besu"
-    el_image: "hyperledger/besu:24.3.0"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
   - el_type: "besu"
-    el_image: "hyperledger/besu:24.3.0"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
     cl_type: "lodestar"
-    cl_image: "chainsafe/lodestar:v1.17.0"
+    cl_image: "chainsafe/lodestar:${LODESTAR_IMAGE_TAG}"
+    validator_count: 4
   - el_type: "nethermind"
-    el_image: "nethermind/nethermind:1.25.4"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "teku"
-    cl_image: "consensys/teku:24.3.1"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
     use_separate_vc: true
   - el_type: "nethermind"
-    el_image: "nethermind/nethermind:1.25.4"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
     cl_type: "nimbus"
-    cl_image: "statusim/nimbus-eth2:amd64-v24.3.0"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
     use_separate_vc: true
+  - el_type: "nethermind"
+    el_image: "nethermind/nethermind:${NETHERMIND_IMAGE_TAG}"
+    cl_type: "nimbus"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
+    use_separate_vc: true
+    validator_count: 6
+  - el_type: "besu"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
+    cl_type: "nimbus"
+    cl_image: "statusim/nimbus-eth2:${NIMBUS_IMAGE_TAG}"
+    use_separate_vc: true
+    validator_count: 10
 network_params:
-  electra_fork_epoch: 1000
   num_validator_keys_per_node: 128
 additional_services:
   - "tx_spammer"
@@ -39,4 +61,14 @@ additional_services:
   - "beacon_metrics_gazer"
   - "dora"
   - "prometheus_grafana"
+keymanager_enabled: true
+port_publisher:
+  el:
+    enabled: true
+  cl:
+    enabled: true
+  vc:
+    enabled: true
+  additional_services:
+    enabled: true
 ...

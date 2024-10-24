@@ -6,7 +6,7 @@ from asyncio import wait_for
 
 from constants.program import REST_ANY_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT
 from fastapi import Response, status
-from helper.help import fetch_upcoming_validator_duties
+from helper.duty import fetch_upcoming_validator_duties
 from rest.core.types import NoBeaconNodeConnection, ValidatorDuties
 
 
@@ -15,8 +15,11 @@ async def any_upcoming_duties_in_queue(
 ) -> ValidatorDuties | NoBeaconNodeConnection:
     """Check whether there are upcoming duties for the provided validators
 
+    Args:
+        response (Response): Response object whether any duties are in the queue
+
     Returns:
-        bool: Are there any upcoming duties in the queue for the provided validators
+        ValidatorDuties | NoBeaconNodeConnection: Are there any upcoming duties in the queue for the provided validators # pylint: disable=line-too-long
     """
     try:
         duties = await wait_for(

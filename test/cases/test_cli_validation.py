@@ -14,7 +14,9 @@ def test_any_validators_flag_validation() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
     expected_logs = [
-        "ONE of the following flags is required: '--validators', '--validators-file'"
+        "ONE of the following flags is required: '--validators', '--validators-file', "
+        "'--validator-nodes'. '--validator-nodes' can be used together with "
+        "ONE of the two other flags."
     ]
     command = get_eth_duties_entry_point()
     return run_generic_test(
@@ -34,7 +36,9 @@ def test_both_validators_flag_validation() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
     expected_logs = [
-        "ONE of the following flags is required: '--validators', '--validators-file'"
+        "ONE of the following flags is required: '--validators', '--validators-file', "
+        "'--validator-nodes'. '--validator-nodes' can be used together with "
+        "ONE of the two other flags."
     ]
     command = get_eth_duties_entry_point() + [
         "--validators",
@@ -49,6 +53,48 @@ def test_both_validators_flag_validation() -> int:
         "argparse.ArgumentError",
         True,
         True,
+    )
+
+
+def test_validator_nodes_and_validators_flag_validation() -> int:
+    """Test validator-nodes and validators flag validation
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = ["All validator keymanager endpoints are healthy"]
+    command = get_eth_duties_entry_point() + [
+        "--validators",
+        "1",
+        "--validator-nodes",
+        str(Path.cwd() / "test/data/online-validator-nodes"),
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "validators flag validation while providing --validator-nodes and --validators flags",
+        "Non of the provided beacon nodes is ready to accept requests",
+    )
+
+
+def test_validator_nodes_and_validators_file_flag_validation() -> int:
+    """Test validator-nodes and validators-file flag validation
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = ["All validator keymanager endpoints are healthy"]
+    command = get_eth_duties_entry_point() + [
+        "--validators-file",
+        str(Path.cwd() / "test/data/devnet-validators"),
+        "--validator-nodes",
+        str(Path.cwd() / "test/data/online-validator-nodes"),
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "validators flag validation while providing --validator-nodes and --validators-file flags",
+        "Non of the provided beacon nodes is ready to accept requests",
     )
 
 

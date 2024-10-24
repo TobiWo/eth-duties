@@ -1,7 +1,7 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators
 """
 
-from asyncio import CancelledError, run, sleep
+from asyncio import CancelledError, TaskGroup, run, sleep
 from logging import Logger, getLogger
 from math import floor
 from platform import system
@@ -11,15 +11,19 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
 from fetcher.data_types import ValidatorDuty
+from fetcher.identifier.parser import (
+    update_shared_active_validator_identifiers_on_interval,
+)
 from fetcher.log import log_time_to_next_duties
-from helper.help import (
-    clean_shared_memory,
+from helper.duty import (
     fetch_upcoming_validator_duties,
     is_current_data_up_to_date,
     update_time_to_duty,
 )
+from helper.identifier import clean_shared_memory
 from helper.terminate import GracefulTerminator
 from protocol.connection import BeaconNode
+from protocol.request import validator_node
 from rest.app import create_rest_server
 from rest.core.server import RestServer
 
@@ -54,6 +58,13 @@ def __check_beacon_node_connection() -> None:
 
 
 async def __main() -> None:
+    async with TaskGroup() as taskgroup:
+        taskgroup.create_task(__main_process())
+        taskgroup.create_task(update_shared_active_validator_identifiers_on_interval())
+        taskgroup.create_task(validator_node.update_validator_node_health())
+
+
+async def __main_process() -> None:
     """eth-duties main function"""
     graceful_terminator = GracefulTerminator(
         floor(ARGUMENTS.mode_cicd_waiting_time / ARGUMENTS.interval)
@@ -77,6 +88,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
 
     Args:
         rest_server (RestServer): Rest server object
+        logger (Logger): Logger instance
     """
     if ARGUMENTS.rest and not "cicd" in ARGUMENTS.mode.value:
         rest_server.start()

@@ -1,0 +1,60 @@
+---
+participants:
+  - el_type: "geth"
+    el_image: "ethpandaops/geth:${GETH_IMAGE_TAG}"
+    cl_type: "lighthouse"
+    cl_image: "ethpandaops/lighthouse:${LIGHTHOUSE_IMAGE_TAG}"
+  - el_type: "geth"
+    el_image: "ethpandaops/geth:${GETH_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "besu"
+    el_image: "ethpandaops/besu:${BESU_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "besu"
+    el_image: "ethpandaops/besu:${BESU_IMAGE_TAG}"
+    cl_type: "lodestar"
+    cl_image: "ethpandaops/lodestar:${LODESTAR_IMAGE_TAG}"
+    validator_count: 4
+  - el_type: "reth"
+    el_image: "ethpandaops/reth:${RETH_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "nethermind"
+    el_image: "nethermindeth/nethermind:${NETHERMIND_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "nethermind"
+    el_image: "nethermindeth/nethermind:${NETHERMIND_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+    validator_count: 6
+  - el_type: "besu"
+    el_image: "ethpandaops/besu:${BESU_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "ethpandaops/teku:${TEKU_IMAGE_TAG}"
+    validator_count: 10
+network_params:
+  num_validator_keys_per_node: 128
+  electra_fork_epoch: 1
+  min_validator_withdrawability_delay: 1
+additional_services:
+  - "tx_spammer"
+  - "blob_spammer"
+  - "el_forkmon"
+  - "beacon_metrics_gazer"
+  - "dora"
+  - "prometheus_grafana"
+keymanager_enabled: true
+port_publisher:
+  el:
+    enabled: true
+  cl:
+    enabled: true
+  vc:
+    enabled: true
+  additional_services:
+    enabled: true
+...
+

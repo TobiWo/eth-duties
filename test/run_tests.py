@@ -6,9 +6,10 @@
 from cases import (
     test_cicd_mode,
     test_cli_validation,
+    test_general,
     test_logging_mode,
+    test_node_connection,
     test_rest_api,
-    test_startup,
 )
 from sty import fg  # type: ignore[import]
 from tqdm import tqdm
@@ -21,8 +22,10 @@ print(
 )
 
 test_cases = [
-    # Test startup
-    test_startup.test_no_beacon_connection_at_startup,
+    # Test general
+    test_general.test_no_beacon_connection_at_startup,
+    test_general.test_scheduled_validator_identifier_update_from_validator_nodes,
+    test_general.test_number_of_fetched_validator_identifiers_from_validator_nodes,
     # Test rest api
     test_rest_api.test_get_block_proposing_duties_from_rest_endpoint,
     test_rest_api.test_get_sync_committee_duties_from_rest_endpoint,  # test will currently fail on kurtosis devnet (see here: https://github.com/TobiWo/eth-duties/issues/78)
@@ -43,6 +46,7 @@ test_cases = [
     test_logging_mode.test_omit_attestation_duties,
     test_logging_mode.test_increase_of_max_attestation_duty_logs,
     test_logging_mode.test_logged_format_of_time_to_next_sync_committee,
+    test_logging_mode.test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes,
     # Test cli validation
     test_cli_validation.test_any_validators_flag_validation,
     test_cli_validation.test_both_validators_flag_validation,
@@ -50,6 +54,8 @@ test_cases = [
     test_cli_validation.test_log_time_warning_flag_validation,
     test_cli_validation.test_cicd_attestation_proportion_flag_validation,
     test_cli_validation.test_cicd_waiting_time_flag_validation,
+    test_cli_validation.test_validator_nodes_and_validators_flag_validation,
+    test_cli_validation.test_validator_nodes_and_validators_file_flag_validation,
     # Test cicd mode
     test_cicd_mode.test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold,
     test_cicd_mode.test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_attestation_duties_is_above_threshold,
@@ -58,6 +64,12 @@ test_cases = [
     test_cicd_mode.test_cicd_force_graceful_exit_mode,
     test_cicd_mode.test_cicd_wait_mode_without_sync_committee_duties_while_proportion_of_duties_is_above_threshold_within_waiting_time,
     test_cicd_mode.test_cicd_wait_mode_while_waiting_time_exceeds,
+    # Test node connections
+    test_node_connection.test_all_validator_nodes_are_healthy,
+    test_node_connection.test_all_validator_nodes_are_healthy_with_duplicates,
+    test_node_connection.test_some_validator_nodes_are_healthy,
+    test_node_connection.test_all_validator_nodes_are_unhealthy,
+    test_node_connection.test_wrong_bearer_token_for_authentication,
 ]
 
 SUCCESSFUL_TEST_COUNTER = 0
