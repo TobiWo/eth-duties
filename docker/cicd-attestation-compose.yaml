@@ -7,7 +7,6 @@
 # duties are in the queue and when 7 of 10 attestation duties (10 validators are monitored)
 # will be executed in 3 minutes or later.
 
-version: "3.9"
 name: "eth-duties-attestation-template"
 services:
   eth-duties:

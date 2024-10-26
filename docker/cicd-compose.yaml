@@ -6,7 +6,6 @@
 # In this example eth-duties exits gracefully when no sync-committee or block proposal
 # duties are in the queue.
 
-version: "3.9"
 name: "eth-duties-cicd-template"
 services:
   eth-duties:
