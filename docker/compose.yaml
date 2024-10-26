@@ -6,7 +6,6 @@
 # on the command line or a docker run call (see example below)
 # Note: You can use either space and/or comma separation for flag --validators
 
-version: "3.9"
 name: "eth-duties"
 services:
   eth-duties:
