@@ -11,7 +11,7 @@ from uvicorn import Config as UvicornConfig
 app = FastAPI(
     title="eth-duties REST API",
     description="REST endpoints exposed via eth-duties",
-    version="v0.6.0",
+    version="v1",
 )
 app.include_router(router)
 
