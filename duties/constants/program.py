@@ -2,7 +2,7 @@
 """
 
 from random import randint
-from sys import exit
+from sys import exit as sys_exit
 from typing import List
 
 
@@ -18,7 +18,7 @@ def __create_random_numbers() -> List[int]:
         )
         cycle_counter += 1
     if cycle_counter == 1000:
-        exit(
+        sys_exit(
             "Error, could not create unique random numbers for shared memory instances. "
             "Please restart eth-duties!"
         )
