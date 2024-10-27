@@ -34,6 +34,17 @@ jobs:
     strategy:
       matrix:
         include:
+          - OS: "ubuntu-24.04"
+            PYTHON_VERSION: "3.12.0"
+            BUILD_CMD: |
+              export PYTHONHASHSEED=42
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2404-amd64;
+              mkdir ${BUILD_FILE_NAME};
+              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
+              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
+              mkdir /tmp/artifacts;
+              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
+              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
           - OS: "ubuntu-22.04"
             PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
@@ -144,6 +155,8 @@ jobs:
             # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
             # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
           files: |
+            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2404-amd64.tar.gz
+            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2404-amd64.sha256
             /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
             /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
             /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.tar.gz
