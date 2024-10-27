@@ -146,7 +146,7 @@ class ValidatorNode:
                         timeout=program.REQUEST_TIMEOUT,
                         headers=header,
                     )
-                    if response.status_code == 401 or response.status_code == 403:
+                    if response.status_code in (401, 403):
                         self.__logger.error(
                             logging.VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE,
                             node.url,
@@ -185,8 +185,7 @@ class ValidatorNode:
             self.__logger.info(logging.ALL_HEALTHY_VALIDATOR_NODES_MESSAGE)
         if not self.healthy_nodes:
             self.__logger.error(logging.NO_HEALTHY_VALIDATOR_NODES_MESSAGE)
-            return None
-        if len(self.healthy_nodes) != len(self.__provided_nodes):
+        if self.healthy_nodes and len(self.healthy_nodes) != len(self.__provided_nodes):
             for node in self.__provided_nodes:
                 if node not in self.healthy_nodes:
                     self.__log_unhealthy_node(node)
