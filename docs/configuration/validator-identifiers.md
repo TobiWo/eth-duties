@@ -52,13 +52,13 @@ Not all clients support the keymanager api yet. Furthermore, I did not had the t
 | nimbus | :white_check_mark: | :white_check_mark: |
 | lodestar | :white_check_mark: | :white_check_mark: |
 | grandine | :white_check_mark: | :x: |
-| vouch | :x: | :question: |
+| vouch | :x: | :x: |
 | web3signer | :x: | :white_check_mark: |
-| dirk | :x: | :question: |
+| dirk | :x: | :x: |
 
 #### Notes
 
-1. There are some issues with prysm currently. More specifically, if you use prysm but validators are managed by a remote signer, eth-duties will not work since the respective endpoint is broken. If validators are managed locally everything works as expected.
+1. There are some issues with prysm currently. More specifically, if you use prysm but validators are managed by a remote signer, eth-duties will not work since the respective endpoint is broken. If validators are managed locally everything works as expected. **This issue will be fixed in version `v5.1.3`**.
 
 ### File structure
 
@@ -88,5 +88,3 @@ Note: **Ensure you fully understand the process before activating the API. Accid
 1. If `eth-duties` attempts to update the validator identifiers from the provided list of validator nodes and one or more nodes are not accessible, it will delete all identifiers for those nodes internally until they become reachable again. I have an idea for optimizing this behavior to retain the previous state of validator identifiers when a node is unavailable. However, implementing this improvement will require some code refactoring and, consequently, time.
 1. If all validator nodes are unreachable, eth-duties will enter a dead state and will remain in this state even if the nodes come back online. The aforementioned optimization will address this issue as well. To avoid the dead state currently, you need to provide one or more validators via `--validators`.
 1. Currently, you cannot supply aliases with --validator-nodes. This might change in future updates.
-1. Not tested with remote signers
-1. The keymanager api offers two endpoints for fetching keystores: `/eth/v1/keystores` and `/eth/v1/remotekeys`. I'm not entirely sure how the latter works, but my understanding is that if a validator client manages validator keys via a remote signer, the `remotekeys` endpoint will return the respective keys. Eth-duties always calls both endpoints when fetching validator keys. This may lead to issues with certain client/remote signer combinations that I haven't been able to test. If you encounter any errors, please open an issue on GitHub.
