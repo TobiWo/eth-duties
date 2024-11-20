@@ -46,16 +46,17 @@ def log_inactive_and_duplicated_validators(
     potentital_inactive_validators = list(
         set(provided_validators).difference(set(active_validators))
     )
-    duplicates = __get_duplicates_with_different_identifiers(
-        provided_validators, complete_validator_identifiers
-    )
-    inactive_validators = [
-        validator
-        for validator in potentital_inactive_validators
-        if validator not in duplicates and validator != ""
-    ]
-    if inactive_validators:
-        __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
+    if active_validators:
+        duplicates = __get_duplicates_with_different_identifiers(
+            provided_validators, complete_validator_identifiers
+        )
+        inactive_validators = [
+            validator
+            for validator in potentital_inactive_validators
+            if validator not in duplicates and validator != ""
+        ]
+        if inactive_validators:
+            __LOGGER.warning(logging.INACTIVE_VALIDATORS_MESSAGE, inactive_validators)
 
 
 def __get_duplicates_with_different_identifiers(
