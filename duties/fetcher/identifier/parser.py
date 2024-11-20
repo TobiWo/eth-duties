@@ -16,6 +16,7 @@ from fetcher.identifier.filter import (
     filter_empty_validator_identifier,
     log_inactive_and_duplicated_validators,
 )
+from helper.error import NoDataFromEndpointError
 from protocol.ethereum import ACTIVE_VALIDATOR_STATUS
 from protocol.request import (
     CalldataType,
@@ -133,11 +134,14 @@ async def __fetch_active_validator_identifiers(
         core.get_validator_index_or_pubkey(None, validator)
         for validator in provided_raw_validator_identifiers.values()
     ]
-    validator_infos = await send_beacon_api_request(
-        endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
-        calldata_type=CalldataType.PARAMETERS,
-        provided_validators=provided_validators,
-    )
+    try:
+        validator_infos = await send_beacon_api_request(
+            endpoint=endpoints.VALIDATOR_STATUS_ENDPOINT,
+            calldata_type=CalldataType.PARAMETERS,
+            provided_validators=provided_validators,
+        )
+    except NoDataFromEndpointError:
+        validator_infos = []
     provided_active_validator_identifiers = (
         __create_complete_active_validator_identifiers(
             validator_infos, provided_validators, provided_raw_validator_identifiers

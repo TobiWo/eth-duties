@@ -45,7 +45,13 @@ async def __fetch_validator_duties(
     if is_current_data_up_to_date(duties):
         __check_beacon_node_connection()
         return duties
-    return await fetch_upcoming_validator_duties()
+    fetched_upcoming_validator_duties = await fetch_upcoming_validator_duties()
+    if not fetched_upcoming_validator_duties:
+        __LOGGER.error(
+            "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"
+        )
+        return duties
+    return fetched_upcoming_validator_duties
 
 
 def __check_beacon_node_connection() -> None:

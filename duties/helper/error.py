@@ -15,3 +15,12 @@ class PrysmError(Exception):
     ) -> None:
         self.message = message
         super().__init__(self.message)
+
+
+class NoDataFromEndpointError(Exception):
+
+    def __init__(
+        self, message: str = "No data could be fetched from api endpoint"
+    ) -> None:
+        self.message = message
+        super().__init__(self.message)
