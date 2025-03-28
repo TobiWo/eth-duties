@@ -38,7 +38,7 @@ jobs:
             PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2404-amd64;
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu24.04-amd64;
               mkdir ${BUILD_FILE_NAME};
               poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
@@ -49,7 +49,7 @@ jobs:
             PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2204-amd64;
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu22.04-amd64;
               mkdir ${BUILD_FILE_NAME};
               poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
@@ -60,7 +60,7 @@ jobs:
             PYTHON_VERSION: "3.12.0"
             BUILD_CMD: |
               export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu2004-amd64;
+              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu20.04-amd64;
               mkdir ${BUILD_FILE_NAME};
               poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
               tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
