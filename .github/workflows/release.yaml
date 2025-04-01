@@ -11,9 +11,9 @@ jobs:
     runs-on: "ubuntu-22.04"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4.1.7"
+        uses: "actions/checkout@v4"
       - name: "Set up python and pip cache"
-        uses: "actions/setup-python@v5.2.0"
+        uses: "actions/setup-python@v5"
         with:
           python-version: "3.12.5"
           cache: "pip"
@@ -22,7 +22,7 @@ jobs:
       - name: "Generate mkdocs cache id"
         run: "echo \"cache_id=$(date --utc '+%V')\" >> $GITHUB_ENV"
       - name: "Set up mkdocs cache"
-        uses: "actions/cache@v4.0.2"
+        uses: "actions/cache@v4"
         with:
           path: "~/.cache/"
           key: "mkdocs-material-${{ env.cache_id }}"
@@ -96,13 +96,13 @@ jobs:
     runs-on: "${{ matrix.OS }}"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4.1.7"
+        uses: "actions/checkout@v4"
       - name: "Set up python"
-        uses: "actions/setup-python@v5.2.0"
+        uses: "actions/setup-python@v5"
         with:
           python-version: "${{ matrix.PYTHON_VERSION }}"
       - name: "Install Poetry"
-        uses: "snok/install-poetry@v1.4.1"
+        uses: "snok/install-poetry@v1"
         with:
           version: "1.8.3"
           virtualenvs-create: true
@@ -127,7 +127,7 @@ jobs:
       #     if-no-files-found: "error"
       - name: "Upload UNIX artifacts"
         if: "matrix.OS != 'windows-latest'"
-        uses: "actions/upload-artifact@v4.4.0"
+        uses: "actions/upload-artifact@v4"
         with:
           name: "${{ matrix.OS }}"
           path: "/tmp/artifacts/*"
@@ -138,7 +138,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Download all artifacts"
-        uses: "actions/download-artifact@v4.1.8"
+        uses: "actions/download-artifact@v4"
         with:
           path: "/tmp/artifacts"
       - name: "Display structure of downloaded files"
@@ -148,19 +148,19 @@ jobs:
         id: "get_version"
         run: "echo \"VERSION=$(echo $GITHUB_REF | cut -d / -f 3)\" >> $GITHUB_OUTPUT"
       - name: "Release"
-        uses: "softprops/action-gh-release@v2.0.8"
+        uses: "softprops/action-gh-release@v2"
         with:
           generate_release_notes: true
           fail_on_unmatched_files: true
             # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
             # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
           files: |
-            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2404-amd64.tar.gz
-            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2404-amd64.sha256
-            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.tar.gz
-            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2204-amd64.sha256
-            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.tar.gz
-            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu2004-amd64.sha256
+            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu24.04-amd64.tar.gz
+            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu24.04-amd64.sha256
+            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu22.04-amd64.tar.gz
+            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu22.04-amd64.sha256
+            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu20.04-amd64.tar.gz
+            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu20.04-amd64.sha256
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
             /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
 ...
