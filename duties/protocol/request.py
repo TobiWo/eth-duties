@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 
 from cli.types import NodeConnectionProperties, NodeType
 from constants import endpoints, json, logging, program
-from helper.error import PrysmError
+from helper.error import NoDataFromEndpointError, PrysmError
 from helper.general import get_correct_request_header
 from protocol.connection import BeaconNode, ValidatorNode
 from requests import ConnectionError as RequestsConnectionError
@@ -95,19 +95,24 @@ async def send_key_manager_api_keystore_requests() -> List[Any]:
     """
     healthy_validator_endpoints = validator_node.healthy_nodes
     if healthy_validator_endpoints:
-        async with TaskGroup() as taskgroup:
-            tasks = [
-                taskgroup.create_task(
-                    __handle_api_request(node, endpoint, CalldataType.NONE, [""])
-                )
-                for node in healthy_validator_endpoints
-                for endpoint in [
-                    endpoints.LOCAL_KEYSTORES_ENDPOINT,
-                    endpoints.REMOTE_KEYSTORES_ENDPOINT,
+        try:
+            async with TaskGroup() as taskgroup:
+                tasks = [
+                    taskgroup.create_task(
+                        __handle_api_request(node, endpoint, CalldataType.NONE, [""])
+                    )
+                    for node in healthy_validator_endpoints
+                    for endpoint in [
+                        endpoints.LOCAL_KEYSTORES_ENDPOINT,
+                        endpoints.REMOTE_KEYSTORES_ENDPOINT,
+                    ]
                 ]
-            ]
-        responses = [task.result() for task in tasks]
-        return __convert_to_raw_data_responses(responses, True)
+            responses = [task.result() for task in tasks]
+            return __convert_to_raw_data_responses(responses, True)
+        except NoDataFromEndpointError:
+            __LOGGER.error(
+                logging.NO_RESPONSE_ERROR_MESSAGE, healthy_validator_endpoints
+            )
     return []
 
 
@@ -216,7 +221,7 @@ def __get_request_retry_limit(
     """
     if node_connection_properties.bearer_token:
         return 3
-    return 1000
+    return 3
 
 
 def __send_api_request(
@@ -293,7 +298,7 @@ def __convert_to_raw_data_responses(
             raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
             for raw_response in responses_with_status_code
         ]
-    return []
+    raise NoDataFromEndpointError()
 
 
 def __get_processed_calldata(
