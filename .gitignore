@@ -182,4 +182,8 @@ cython_debug/
 .history
 .ionide
 
+# Claude Code
+CLAUDE.md
+claude/**/*
+
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
