@@ -1,0 +1,50 @@
+---
+participants:
+  - el_type: "geth"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
+    cl_type: "lighthouse"
+    cl_image: "sigp/lighthouse:${LIGHTHOUSE_IMAGE_TAG}"
+  - el_type: "geth"
+    el_image: "ethereum/client-go:${GETH_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "besu"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
+  - el_type: "reth"
+    el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
+    validator_count: 6
+  - el_type: "besu"
+    el_image: "hyperledger/besu:${BESU_IMAGE_TAG}"
+    cl_type: "teku"
+    cl_image: "consensys/teku:${TEKU_IMAGE_TAG}"
+    validator_count: 10
+network_params:
+  num_validator_keys_per_node: 128
+  min_validator_withdrawability_delay: 1
+additional_services:
+  - 'tx_fuzz'
+  - 'spamoor'
+  - 'forkmon'
+  - 'dora'
+  - 'prometheus_grafana'
+  - 'blockscout'
+keymanager_enabled: true
+port_publisher:
+  el:
+    enabled: true
+  cl:
+    enabled: true
+  vc:
+    enabled: true
+  additional_services:
+    enabled: true
+...
+
