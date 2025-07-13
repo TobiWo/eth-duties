@@ -54,13 +54,14 @@ participants:
     validator_count: 10
 network_params:
   num_validator_keys_per_node: 128
+  min_validator_withdrawability_delay: 1
 additional_services:
-  - "tx_spammer"
-  - "blob_spammer"
-  - "el_forkmon"
-  - "beacon_metrics_gazer"
-  - "dora"
-  - "prometheus_grafana"
+  - 'tx_fuzz'
+  - 'spamoor'
+  - 'forkmon'
+  - 'dora'
+  - 'prometheus_grafana'
+  - 'blockscout'
 keymanager_enabled: true
 port_publisher:
   el:
