@@ -1,5 +1,4 @@
-"""Defines ethereum related constants and functions
-"""
+"""Defines ethereum related constants and functions"""
 
 from asyncio import run
 from logging import getLogger
@@ -10,6 +9,8 @@ from typing import Tuple
 
 from constants import endpoints, json, logging
 from fetcher.data_types import DutyType, ValidatorDuty
+from helper.error import NoDataFromEndpointError
+
 from protocol.request import CalldataType, send_beacon_api_request
 
 __LOGGER = getLogger()
@@ -21,10 +22,14 @@ async def __fetch_genesis_time() -> int:
     Returns:
         int: Genesis time as unix timestamp in seconds
     """
-    response = await send_beacon_api_request(
-        endpoints.BEACON_GENESIS_ENDPOINT, CalldataType.NONE, flatten=False
-    )
-    return int(response[0][json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME])
+    try:
+        response = await send_beacon_api_request(
+            endpoints.BEACON_GENESIS_ENDPOINT, CalldataType.NONE, flatten=False
+        )
+        return int(response[0][json.RESPONSE_JSON_DATA_GENESIS_TIME_FIELD_NAME])
+    except NoDataFromEndpointError:
+        __LOGGER.error(logging.NO_GENESIS_TIME_ERROR_MESSAGE)
+        sys_exit(1)
 
 
 try:
