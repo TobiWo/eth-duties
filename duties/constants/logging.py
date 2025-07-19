@@ -1,5 +1,4 @@
-"""Defines logging messages
-"""
+"""Defines logging messages"""
 
 CONNECTION_ERROR_MESSAGE = (
     "Couldn't connect to %s node with url: %s. Retry in 2 second."
@@ -44,7 +43,7 @@ PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE = (
 )
 EXIT_CODE_MESSAGE = "Exiting with code: %d"
 EXIT_DUE_TO_MAX_WAITING_TIME_MESSAGE = "Reached max. waiting time for mode 'cicd-wait'"
-MAIN_EXIT_MESSAGE = "Happy staking. See you for next maintenance \U0001F642 !"
+MAIN_EXIT_MESSAGE = "Happy staking. See you for next maintenance \U0001f642 !"
 START_REST_SERVER_MESSAGE = "Started rest api server on localhost:%s"
 NOT_SUPPORTED_HTTP_METHOD_MESSAGE = "HTTP method %s is not supported yet"
 CANNOT_READ_SHARED_MEMORY_MESSAGE = "Could not read from shared memory. Exiting!"
@@ -60,10 +59,8 @@ NO_AVAILABLE_BEACON_NODE_MESSAGE = (
     "Non of the provided beacon nodes is ready to accept requests"
 )
 USED_BEACON_NODE_MESSAGE = "Using beacon node %s"
-PRIMARY_BEACON_NODE_DOWN_MESSAGE = (
-    "Primary beacon node %s is not ready to accept requests"
-)
-TRYING_BACKUP_NODES_MESSAGE = "Trying backup nodes"
+ALL_HEALTHY_BEACON_NODES_MESSAGE = "All beacon node endpoints are healthy"
+ONE_NON_HEALTHY_BEACON_NODE_MESSAGE = "Beacon node %s is not ready to accept requests!"
 NODE_URL_ERROR_MESSAGE = "{0} node url should start with http or https"
 VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = (
     "Validator node information should only consist of url "
@@ -87,4 +84,9 @@ ONE_NON_HEALTHY_VALIDATOR_NODE_MESSAGE = (
 )
 VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE = (
     "Authentication failed for validator node: %s"
+)
+NO_GENESIS_TIME_ERROR_MESSAGE = "Could not fetch genesis time. Exiting eth-duties!"
+NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"
+CACHED_DATA_WARNING_MESSAGE = (
+    "Cached data will only be used until next upcoming duty is due"
 )
