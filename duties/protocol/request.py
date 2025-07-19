@@ -1,5 +1,4 @@
-"""Module for fetching data from a beacon client
-"""
+"""Module for fetching data from a beacon client"""
 
 from asyncio import TaskGroup, sleep
 from enum import Enum
@@ -8,9 +7,9 @@ from logging import getLogger
 from typing import Any, List
 from urllib.parse import urlencode
 
-from cli.types import NodeConnectionProperties, NodeType
+from cli.types import NodeConnectionProperties
 from constants import endpoints, json, logging, program
-from helper.error import PrysmError
+from helper.error import NoDataFromEndpointError, PrysmError
 from helper.general import get_correct_request_header
 from protocol.connection import BeaconNode, ValidatorNode
 from requests import ConnectionError as RequestsConnectionError
@@ -20,6 +19,7 @@ __LOGGER = getLogger()
 beacon_node = BeaconNode()
 validator_node = ValidatorNode()
 validator_node.update_validator_node_health_once()
+beacon_node.update_beacon_node_health_once()
 
 
 class CalldataType(Enum):
@@ -49,40 +49,42 @@ async def send_beacon_api_request(
         List[Any]: List with data objects from responses
     """
 
+    beacon_node_endpoint = beacon_node.get_healthy_beacon_node()
     responses: List[Response] = []
-    if provided_validators:
-        chunked_validators = [
-            provided_validators[
-                index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
-            ]
-            for index in range(
-                0,
-                len(provided_validators),
-                program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
-            )
-        ]
-        async with TaskGroup() as taskgroup:
-            tasks = [
-                taskgroup.create_task(
-                    __handle_api_request(
-                        NodeConnectionProperties("", NodeType.BEACON),
-                        endpoint,
-                        calldata_type,
-                        chunk,
-                    )
+    if beacon_node_endpoint:
+        if provided_validators:
+            chunked_validators = [
+                provided_validators[
+                    index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+                ]
+                for index in range(
+                    0,
+                    len(provided_validators),
+                    program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
                 )
-                for chunk in chunked_validators
             ]
-        responses = [task.result() for task in tasks]
-    else:
-        responses.append(
-            await __handle_api_request(
-                NodeConnectionProperties("", NodeType.BEACON),
-                endpoint,
-                calldata_type,
-                [],
+            async with TaskGroup() as taskgroup:
+                tasks = [
+                    taskgroup.create_task(
+                        __handle_api_request(
+                            beacon_node_endpoint,
+                            endpoint,
+                            calldata_type,
+                            chunk,
+                        )
+                    )
+                    for chunk in chunked_validators
+                ]
+            responses = [task.result() for task in tasks]
+        else:
+            responses.append(
+                await __handle_api_request(
+                    beacon_node_endpoint,
+                    endpoint,
+                    calldata_type,
+                    [],
+                )
             )
-        )
     return __convert_to_raw_data_responses(responses, flatten)
 
 
@@ -95,19 +97,23 @@ async def send_key_manager_api_keystore_requests() -> List[Any]:
     """
     healthy_validator_endpoints = validator_node.healthy_nodes
     if healthy_validator_endpoints:
-        async with TaskGroup() as taskgroup:
-            tasks = [
-                taskgroup.create_task(
-                    __handle_api_request(node, endpoint, CalldataType.NONE, [""])
-                )
-                for node in healthy_validator_endpoints
-                for endpoint in [
-                    endpoints.LOCAL_KEYSTORES_ENDPOINT,
-                    endpoints.REMOTE_KEYSTORES_ENDPOINT,
+        try:
+            async with TaskGroup() as taskgroup:
+                tasks = [
+                    taskgroup.create_task(
+                        __handle_api_request(node, endpoint, CalldataType.NONE, [""])
+                    )
+                    for node in healthy_validator_endpoints
+                    for endpoint in [
+                        endpoints.LOCAL_KEYSTORES_ENDPOINT,
+                        endpoints.REMOTE_KEYSTORES_ENDPOINT,
+                    ]
                 ]
-            ]
-        responses = [task.result() for task in tasks]
-        return __convert_to_raw_data_responses(responses, True)
+            responses = [task.result() for task in tasks]
+            return __convert_to_raw_data_responses(responses, True)
+        except NoDataFromEndpointError:
+            for endpoint in healthy_validator_endpoints:
+                __LOGGER.error(logging.NO_RESPONSE_ERROR_MESSAGE, endpoint.url)
     return []
 
 
@@ -132,11 +138,8 @@ async def __handle_api_request(
     response = Response()
     calldata = __get_processed_calldata(provided_validators, calldata_type)
     retry_counter = 0
-    retry_limit = __get_request_retry_limit(node_connection_properties)
+    retry_limit = 3
     while not is_request_successful and retry_counter < retry_limit:
-        node_connection_properties = __get_correct_node_connection_properties(
-            node_connection_properties
-        )
         try:
             retry_counter += 1
             response = __send_api_request(
@@ -162,12 +165,14 @@ async def __handle_api_request(
             await sleep(program.REQUEST_READ_TIMEOUT_ERROR_WAITING_TIME)
         except PrysmError:
             return Response()
-        __log_too_many_retries(retry_counter, node_connection_properties)
+        __log_too_many_retries(retry_counter, retry_limit, node_connection_properties)
     return response
 
 
 def __log_too_many_retries(
-    retry_counter: int, node_connection_properties: NodeConnectionProperties
+    retry_counter: int,
+    retry_limit: int,
+    node_connection_properties: NodeConnectionProperties,
 ) -> None:
     """Log if too many api request retries are performed
 
@@ -175,7 +180,6 @@ def __log_too_many_retries(
         retry_counter (int): Count the number of request retries
         node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
     """
-    retry_limit = __get_request_retry_limit(node_connection_properties)
     if retry_counter == retry_limit:
         __LOGGER.error(
             logging.NO_RESPONSE_ERROR_MESSAGE, node_connection_properties.url
@@ -185,38 +189,6 @@ def __log_too_many_retries(
                 logging.NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE,
                 node_connection_properties.url,
             )
-
-
-def __get_correct_node_connection_properties(
-    node_connection_properties: NodeConnectionProperties,
-) -> NodeConnectionProperties:
-    """Get node url in dependence of whether or not to call a validator node
-
-    Args:
-        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
-
-    Returns:
-        NodeConnectionProperties: Object with respective connection information
-    """
-    if node_connection_properties.bearer_token:
-        return node_connection_properties
-    return beacon_node.get_healthy_beacon_node(True)
-
-
-def __get_request_retry_limit(
-    node_connection_properties: NodeConnectionProperties,
-) -> int:
-    """Get request retry limit in dependence of whether or not to call a validator node
-
-    Args:
-        node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
-
-    Returns:
-        int: Limit for request retries
-    """
-    if node_connection_properties.bearer_token:
-        return 3
-    return 1000
 
 
 def __send_api_request(
@@ -293,7 +265,7 @@ def __convert_to_raw_data_responses(
             raw_response.json()[json.RESPONSE_JSON_DATA_FIELD_NAME]
             for raw_response in responses_with_status_code
         ]
-    return []
+    raise NoDataFromEndpointError()
 
 
 def __get_processed_calldata(
