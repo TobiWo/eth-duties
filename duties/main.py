@@ -1,5 +1,4 @@
-"""Entrypoint for eth-duties to check for upcoming duties for one or many validators
-"""
+"""Entrypoint for eth-duties to check for upcoming duties for one or many validators"""
 
 from asyncio import CancelledError, TaskGroup, run, sleep
 from logging import Logger, getLogger
@@ -22,13 +21,11 @@ from helper.duty import (
 )
 from helper.identifier import clean_shared_memory
 from helper.terminate import GracefulTerminator
-from protocol.connection import BeaconNode
-from protocol.request import validator_node
+from protocol.request import beacon_node, validator_node
 from rest.app import create_rest_server
 from rest.core.server import RestServer
 
 __LOGGER = getLogger()
-beacon_node = BeaconNode()
 
 
 async def __fetch_validator_duties(
@@ -45,16 +42,18 @@ async def __fetch_validator_duties(
     if is_current_data_up_to_date(duties):
         __check_beacon_node_connection()
         return duties
-    return await fetch_upcoming_validator_duties()
+    fetched_upcoming_validator_duties = await fetch_upcoming_validator_duties()
+    if not fetched_upcoming_validator_duties:
+        __LOGGER.error(logging.NO_DUTY_DATA_ERROR_MESSAGE)
+        return duties
+    return fetched_upcoming_validator_duties
 
 
 def __check_beacon_node_connection() -> None:
     """Check healthiness of beacon node connections while using cached data"""
-    beacon_node.get_healthy_beacon_node(True)
+    beacon_node.get_healthy_beacon_node()
     if not beacon_node.is_any_node_healthy:
-        __LOGGER.warning(
-            "Cached data will only be used until next upcoming duty is due"
-        )
+        __LOGGER.warning(logging.CACHED_DATA_WARNING_MESSAGE)
 
 
 async def __main() -> None:
@@ -62,6 +61,7 @@ async def __main() -> None:
         taskgroup.create_task(__main_process())
         taskgroup.create_task(update_shared_active_validator_identifiers_on_interval())
         taskgroup.create_task(validator_node.update_validator_node_health())
+        taskgroup.create_task(beacon_node.update_beacon_node_health())
 
 
 async def __main_process() -> None:
@@ -90,7 +90,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
         rest_server (RestServer): Rest server object
         logger (Logger): Logger instance
     """
-    if ARGUMENTS.rest and not "cicd" in ARGUMENTS.mode.value:
+    if ARGUMENTS.rest and "cicd" not in ARGUMENTS.mode.value:
         rest_server.start()
         rest_server.server.started = True
         run(__main())
