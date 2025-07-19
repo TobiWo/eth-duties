@@ -8,6 +8,7 @@ from cli.arguments import ARGUMENTS
 from constants import endpoints, logging, program
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.identifier import core
+from helper.error import NoDataFromEndpointError
 from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
@@ -193,24 +194,27 @@ async def __fetch_duty_responses(
     Returns:
         List[ValidatorDuty]: List of fetched validator duties
     """
-    match duty_type:
-        case DutyType.ATTESTATION:
-            responses = await send_beacon_api_request(
-                f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}",
-                CalldataType.REQUEST_DATA,
-                __VALIDATOR_IDENTIFIER_CACHE,
-            )
-        case DutyType.SYNC_COMMITTEE:
-            responses = await send_beacon_api_request(
-                f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
-                CalldataType.REQUEST_DATA,
-                __VALIDATOR_IDENTIFIER_CACHE,
-            )
-        case DutyType.PROPOSING:
-            responses = await send_beacon_api_request(
-                f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}",
-                CalldataType.NONE,
-            )
-        case _:
-            responses = []
-    return [ValidatorDuty.model_validate(data) for data in responses]
+    try:
+        match duty_type:
+            case DutyType.ATTESTATION:
+                responses = await send_beacon_api_request(
+                    f"{endpoints.ATTESTATION_DUTY_ENDPOINT}{target_epoch}",
+                    CalldataType.REQUEST_DATA,
+                    __VALIDATOR_IDENTIFIER_CACHE,
+                )
+            case DutyType.SYNC_COMMITTEE:
+                responses = await send_beacon_api_request(
+                    f"{endpoints.SYNC_COMMITTEE_DUTY_ENDPOINT}{target_epoch}",
+                    CalldataType.REQUEST_DATA,
+                    __VALIDATOR_IDENTIFIER_CACHE,
+                )
+            case DutyType.PROPOSING:
+                responses = await send_beacon_api_request(
+                    f"{endpoints.BLOCK_PROPOSING_DUTY_ENDPOINT}{target_epoch}",
+                    CalldataType.NONE,
+                )
+            case _:
+                responses = []
+        return [ValidatorDuty.model_validate(data) for data in responses]
+    except NoDataFromEndpointError:
+        return []
