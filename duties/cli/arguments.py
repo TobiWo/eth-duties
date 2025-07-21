@@ -4,12 +4,18 @@ Module for parsing CLI arguments
 
 import sys
 from argparse import ArgumentError, ArgumentParser, FileType, Namespace
+from importlib.metadata import PackageNotFoundError, version
 from itertools import chain
 from multiprocessing import freeze_support
 from typing import List
 
 from cli import parse
 from cli.types import Mode, NodeConnectionProperties
+
+try:
+    __version__ = version("eth-duties")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 sys.tracebacklimit = 0
 
@@ -24,6 +30,7 @@ def __get_raw_arguments() -> Namespace:
         prog="eth-duties",
         description="Tool for logging validator duties",
         usage="eth-duties [...options]",
+        epilog=f"version: v{__version__}",
     )
     parser.add_argument(
         "--beacon-nodes",
@@ -211,6 +218,9 @@ def __get_raw_arguments() -> Namespace:
         ),
         action="store",
         default=1440,
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s v{__version__}"
     )
     return parser.parse_args()
 
