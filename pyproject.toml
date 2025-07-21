@@ -5,7 +5,8 @@ license = "MIT"
 name = "eth-duties"
 readme = "README.md"
 repository = "https://github.com/TobiWo/eth-duties"
-version = "0.6.0"
+version = "0.7.2"
+packages = [{include = "duties"}]
 
 [tool.poetry.dependencies]
 eth-typing = "==3.5.2"
