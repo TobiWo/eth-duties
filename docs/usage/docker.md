@@ -1,6 +1,6 @@
 # Docker
 
-The docker image repository can be found [here](https://hub.docker.com/r/tobiwo/eth-duties).
+[The docker image repository can be found here.](https://hub.docker.com/r/tobiwo/eth-duties)
 
 ## Build image
 

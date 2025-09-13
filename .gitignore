@@ -184,6 +184,6 @@ cython_debug/
 
 # Claude Code
 CLAUDE.md
-claude/**/*
+.claude/**/*
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode

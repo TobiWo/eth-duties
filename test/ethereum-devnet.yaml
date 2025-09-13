@@ -6,7 +6,7 @@ participants:
     cl_image: "gcr.io/prysmaticlabs/prysm/beacon-chain:${PRYSM_IMAGE_TAG}"
     vc_type: "prysm"
     vc_image: "gcr.io/prysmaticlabs/prysm/validator:${PRYSM_IMAGE_TAG}"
-    validator_count: 13 
+    validator_count: 13
   - el_type: "reth"
     el_image: "ghcr.io/paradigmxyz/reth:${RETH_IMAGE_TAG}"
     cl_type: "grandine"
@@ -56,12 +56,12 @@ network_params:
   num_validator_keys_per_node: 128
   min_validator_withdrawability_delay: 1
 additional_services:
-  - 'tx_fuzz'
-  - 'spamoor'
-  - 'forkmon'
-  - 'dora'
-  - 'prometheus_grafana'
-  - 'blockscout'
+  - "tx_fuzz"
+  - "spamoor"
+  - "forkmon"
+  - "dora"
+  - "prometheus_grafana"
+  - "blockscout"
 keymanager_enabled: true
 port_publisher:
   el:

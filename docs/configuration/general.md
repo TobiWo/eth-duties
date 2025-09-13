@@ -6,6 +6,7 @@ For all available cli flags please call `eth-duties --help` or check the table b
 
 ## Available CLI flags
 
+<!-- markdownlint-disable MD059 -->
 | flag | description | extended description |
 | --- | --- | --- |
 | `-h` / `--help` | Show all available cli flags | :no_entry: |
@@ -31,3 +32,4 @@ For all available cli flags please call `eth-duties --help` or check the table b
 | `--validators-file` | File with validator identifiers where every identifier is on a separate line | [link](./validator-identifiers.md/#validators-file) |
 | `--validator-nodes` | Path to file with validator node urls and respective bearer tokens to observe validator identifiers which are managed by the respective node. Url and bearer are separated by semicolon. Each `URL;BEARER` pair is on one line | [link](./validator-identifiers.md/#validator-nodes) |
 | `--validator-update-interval` | Interval (in minutes) on which validator identifier status and identifiers provided via '--validator-nodes' are updated (default 1440 minutes -> 1 day) | [link](./validator-identifiers.md/#validator-nodes) |
+<!-- markdownlint-enable MD059 -->

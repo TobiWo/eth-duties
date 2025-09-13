@@ -30,12 +30,12 @@ network_params:
   num_validator_keys_per_node: 128
   min_validator_withdrawability_delay: 1
 additional_services:
-  - 'tx_fuzz'
-  - 'spamoor'
-  - 'forkmon'
-  - 'dora'
-  - 'prometheus_grafana'
-  - 'blockscout'
+  - "tx_fuzz"
+  - "spamoor"
+  - "forkmon"
+  - "dora"
+  - "prometheus_grafana"
+  - "blockscout"
 keymanager_enabled: true
 port_publisher:
   el:
@@ -47,4 +47,3 @@ port_publisher:
   additional_services:
     enabled: true
 ...
-

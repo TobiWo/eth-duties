@@ -1,0 +1,117 @@
+---
+name: "Pre-commit Validation"
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - "develop"
+      - "feature/*"
+      - "hotfix/*"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  validate-pre-commit:
+    name: "Run pre-commit hooks"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
+      - name: "Setup Python"
+        uses: "actions/setup-python@v5"
+        with:
+          python-version: "3.13"
+
+      - name: "Cache pre-commit environments"
+        uses: "actions/cache@v4"
+        with:
+          path: "~/.cache/pre-commit"
+          key: "pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}"
+          restore-keys: |
+            pre-commit-
+
+      - name: "Install pre-commit"
+        run: "pip install pre-commit"
+
+      - name: "Validate pre-commit configuration"
+        run: |
+          echo "🔍 Validating pre-commit configuration..."
+          pre-commit validate-config
+          echo "✅ Pre-commit configuration is valid"
+
+      - name: "Run pre-commit validation"
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "🔍 Validating pushed commits to develop..."
+            if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+              # New branch - validate only the last commit
+              echo "New branch detected, validating latest commit"
+              pre-commit run \
+                --config .pre-commit/.pre-commit-config.yaml \
+                --from-ref HEAD~1 --to-ref HEAD --show-diff-on-failure
+            else
+              # Existing branch - validate pushed commits
+              echo "Validating commits: ${{ github.event.before }}..${{ github.event.after }}"
+              pre-commit run \
+                --config .pre-commit/.pre-commit-config.yaml \
+                --from-ref ${{ github.event.before }} \
+                --to-ref ${{ github.event.after }} \
+                --show-diff-on-failure
+            fi
+          else
+            echo "🔍 Validating PR commits to main..."
+            # PR to main - validate all commits in the PR
+            echo "Validating PR commits: \
+              ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+            pre-commit run \
+              --config .pre-commit/.pre-commit-config.yaml \
+              --from-ref ${{ github.event.pull_request.base.sha }} \
+              --to-ref ${{ github.event.pull_request.head.sha }} \
+              --show-diff-on-failure
+          fi
+
+      - name: "Show validation help on failure"
+        if: "failure()"
+        run: |
+          echo "❌ Pre-commit validation failed!"
+          echo ""
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "🚨 Push to develop failed validation!"
+            echo "This prevents properly formatted commits from being cherry-picked to releases."
+            echo ""
+            echo "🔧 To fix the squashed commit to develop:"
+            echo "  1. Check the validation errors above"
+            echo "  2. Use 'git commit --amend' to fix the commit message"
+            echo "  3. Force push: 'git push --force-with-lease'"
+            echo ""
+            echo "⚠️  Note: Since this is develop, semantic-release won't run"
+            echo "    But these commits will be cherry-picked to release branches!"
+          else
+            echo "🚨 Release PR validation failed!"
+            echo "This blocks semantic-release from running and creating releases."
+            echo ""
+            echo "🔧 To fix the release PR:"
+            echo "  1. Check the validation errors above"
+            echo "  2. Fix commit messages in the release branch"
+            echo "  3. Push updates to the release branch"
+            echo ""
+            echo "⚠️  Semantic-release will NOT run until validation passes!"
+          fi
+          echo ""
+          echo "📝 Required format: <type>(<scope>): <description>"
+          echo "Valid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore"
+          echo ""
+          echo "Examples:"
+          echo "  feat(auth): add user authentication system"
+          echo "  fix(docker): resolve container startup issue"
+          echo "  ci(release): add automated release workflow"
+          echo ""
+          echo "💡 Set up local pre-commit hooks for immediate feedback:"
+          echo "  pip install pre-commit && pre-commit install"
+          exit 1
+...
