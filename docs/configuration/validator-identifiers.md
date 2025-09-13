@@ -13,11 +13,11 @@ The following formats are accepted:
 The following separation rules apply while adding multiple identifiers.
 
 * Validator identifiers can be separated by comma or space e.g.:
-    * `--validators 123 456 --validators 678 999`
-    * `--validators 123,456 --validators 678,999`
+  * `--validators 123 456 --validators 678 999`
+  * `--validators 123,456 --validators 678,999`
 * If you provide a validator identifier with an alias you need to wrap the whole string of one identifier-alias-pair in quotes or double quotes e.g.:
-    * `--validators "123;val1" "456;val2" --validators 678 999` or
-    * `--validators '123;val1','456;val2' --validators 678,999`
+  * `--validators "123;val1" "456;val2" --validators 678 999` or
+  * `--validators '123;val1','456;val2' --validators 678,999`
 
 **Note: Wrapping an identifier-alias-pair in additional quotes or double quotes (beside the necessary double quotes for yaml) is not true for a `docker-compose`. Please check the example compose files provided in the docker folder.**
 

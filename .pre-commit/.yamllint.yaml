@@ -1,0 +1,72 @@
+---
+
+yaml-files:
+  - "*.yaml"
+  - "*.yml"
+  - ".yamllint"
+
+rules:
+  braces:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: -1
+    max-spaces-inside-empty: -1
+  brackets:
+    forbid: false
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+    min-spaces-inside-empty: -1
+    max-spaces-inside-empty: -1
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+  comments:
+    require-starting-space: true
+    ignore-shebangs: true
+    min-spaces-from-content: 2
+  comments-indentation:
+    level: "warning"
+  document-end:
+    present: true
+  document-start:
+    present: true
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 0
+  empty-values:
+    forbid-in-block-mappings: true
+    forbid-in-flow-mappings: true
+  hyphens:
+    max-spaces-after: 1
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+  key-duplicates: "enable"
+  key-ordering: "disable"
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: false
+  new-line-at-end-of-file: "enable"
+  new-lines: "enable"
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+  quoted-strings:
+    quote-type: "double"
+    required: true
+    extra-required: []
+    extra-allowed: []
+  trailing-spaces: "enable"
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: true
+
+...

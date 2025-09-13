@@ -12,7 +12,7 @@ In the following sub chapters I will often refer to relevant duties. This is a s
 * validator is in next sync committee
 * validator will propose a block
 * x of y attestation duties (while y == number of validators monitored) need to be executed in less than a defined time threshold
-    * see [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
+  * see [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
 
 ## Modes
 

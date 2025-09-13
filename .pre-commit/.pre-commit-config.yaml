@@ -1,0 +1,82 @@
+---
+# Pre-commit hooks for code quality and commit message validation
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: "https://github.com/pre-commit/pre-commit-hooks"
+    rev: "v5.0.0"
+    hooks:
+      - id: "check-merge-conflict"
+        description: "Check for files that contain merge conflict markers"
+      - id: "trailing-whitespace"
+        description: "Remove trailing whitespace"
+        args: ["--markdown-linebreak-ext=md"]
+      - id: "end-of-file-fixer"
+        description: "Ensure files end with a newline"
+      - id: "check-yaml"
+        description: "Validate YAML files"
+        exclude: "mkdocs.yaml"
+      - id: "check-json"
+        description: "Validate JSON files"
+      - id: "check-toml"
+        description: "Validate TOML files"
+      - id: "check-added-large-files"
+        description: "Prevent large files from being committed"
+        args: ["--maxkb=1000"]
+      - id: "check-case-conflict"
+        description: "Check for files that would conflict in case-insensitive filesystems"
+      - id: "mixed-line-ending"
+        description: "Replaces or checks mixed line endings"
+      - id: "check-executables-have-shebangs"
+        description: "Ensures that (non-binary) executables have a shebang"
+      - id: "pretty-format-json"
+        description: "Sets a standard for formatting json files"
+        args: ["--autofix", "--indent", "2"]
+      - id: "no-commit-to-branch"
+        description: "Prevent commits to specific branches"
+        args: ["--branch", "main"]
+      - id: "requirements-txt-fixer"
+        description: "Sorts entries in requirements.txt"
+  - repo: "https://github.com/adrienverge/yamllint.git"
+    rev: "v1.37.1"
+    hooks:
+      - id: "yamllint"
+        args:
+          - "--strict"
+          - "--config-file"
+          - ".pre-commit/.yamllint.yaml"
+  - repo: "https://github.com/igorshubovych/markdownlint-cli"
+    rev: "v0.45.0"
+    hooks:
+      - id: "markdownlint"
+        args: ["--config", ".pre-commit/.markdownlint.yaml"]
+  - repo: "https://github.com/shellcheck-py/shellcheck-py"
+    rev: "v0.10.0.1"
+    hooks:
+      - id: "shellcheck"
+  # - repo: "https://github.com/koalaman/shellcheck-precommit"
+  #   rev: "v0.10.0"
+  #   hooks:
+  #     - id: "shellcheck"
+  #       entry: "shellcheck"
+  #       language: "python"
+  #       types: ["shell"]
+  #       require_serial: true
+  - repo: "https://github.com/maxwinterstein/shfmt-py"
+    rev: "v3.12.0.1"
+    hooks:
+      - id: "shfmt"
+  - repo: "https://github.com/rhysd/actionlint"
+    rev: "v1.7.7"
+    hooks:
+      - id: "actionlint"
+  - repo: "https://github.com/alessandrojcm/commitlint-pre-commit-hook"
+    rev: "v9.22.0"
+    hooks:
+      - id: "commitlint"
+        description: "Validate commit message format"
+        stages: ["commit-msg"]
+        additional_dependencies:
+          - "@commitlint/config-conventional@19.8.1"
+        args: ["--config", ".pre-commit/.commitlintrc.json"]
+...

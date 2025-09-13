@@ -1,0 +1,74 @@
+{
+  "branches": [
+    "main"
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {
+              "section": "\ud83d\ude80 Features",
+              "type": "feat"
+            },
+            {
+              "section": "\ud83d\udc1b Bug Fixes",
+              "type": "fix"
+            },
+            {
+              "section": "\ud83d\udcd6 Documentation",
+              "type": "docs"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "refactor"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "style"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "test"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "chore"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "perf"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "ci"
+            },
+            {
+              "section": "\ud83d\udd27 Other",
+              "type": "build"
+            }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "sed -i 's/version = \".*\"/version = \"v${nextRelease.version}\"/' pyproject.toml"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "pyproject.toml"
+        ],
+        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}

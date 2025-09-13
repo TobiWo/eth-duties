@@ -13,6 +13,7 @@ services:
     image: "tobiwo/eth-duties:<IMAGE_TAG>"
     command:
       - "--validators"
+      # yamllint disable-line rule:line-length
       - "123 456 0x8472eb896af6de1e3d614e9b8fead626120291d5067edf15961c3e7385a0299d09f7f94eb6bbf96e904e7caf390ffd2f 789;My_Validator"
       - "--validators"
       - "111,222,333"

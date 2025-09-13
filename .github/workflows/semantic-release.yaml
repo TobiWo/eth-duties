@@ -1,0 +1,60 @@
+---
+name: "Create release tag"
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  semantic-release:
+    name: "Create and push tag"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: "write"
+      issues: "write"
+      pull-requests: "write"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+        with:
+          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          fetch-depth: 0
+
+      - name: "Configure Git"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: "Setup Node.js"
+        uses: "actions/setup-node@v4"
+        with:
+          node-version: "22"
+
+      - name: "Install semantic-release and plugins"
+        run: |
+          yarn add semantic-release \
+            conventional-changelog-conventionalcommits \
+            @semantic-release/exec \
+            @semantic-release/git
+
+      - name: "Verify pyproject.toml exists"
+        run: |
+          if [[ ! -f "pyproject.toml" ]]; then
+            echo "Error: pyproject.toml not found"
+            exit 1
+          fi
+          echo "Current version in pyproject.toml:"
+          grep -E '^version = ' pyproject.toml || echo "Version line not found"
+
+      - name: "Run Semantic Release"
+        env:
+          GITHUB_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+        run: "npx semantic-release"
+
+      - name: "Verify version update"
+        run: |
+          echo "Updated version in pyproject.toml:"
+          grep -E '^version = ' pyproject.toml || echo "Version line not found"
+...

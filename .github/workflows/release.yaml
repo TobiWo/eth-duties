@@ -1,166 +1,204 @@
 ---
 name: "Release"
 
+# yamllint disable-line rule:truthy
 on:
   push:
     tags:
       - "v*.*.*"
 
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
-  mkdocs-deploy-job:
-    runs-on: "ubuntu-22.04"
-    steps:
-      - name: "Checkout repository"
-        uses: "actions/checkout@v4"
-      - name: "Set up python and pip cache"
-        uses: "actions/setup-python@v5"
-        with:
-          python-version: "3.12.5"
-          cache: "pip"
-      - name: "Install dependencies"
-        run: "pip install -r requirements.txt"
-      - name: "Generate mkdocs cache id"
-        run: "echo \"cache_id=$(date --utc '+%V')\" >> $GITHUB_ENV"
-      - name: "Set up mkdocs cache"
-        uses: "actions/cache@v4"
-        with:
-          path: "~/.cache/"
-          key: "mkdocs-material-${{ env.cache_id }}"
-          restore-keys: |
-            mkdocs-material-
-      - name: "Deploy documentation"
-        run: "mkdocs gh-deploy --force"
-  build-artifact-job:
+  # Build cross-platform executables using PyInstaller
+  build-artifacts-job:
+    name: "Build ${{ matrix.platform-name }}"
+    runs-on: "${{ matrix.os }}"
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - OS: "ubuntu-24.04"
-            PYTHON_VERSION: "3.12.0"
-            BUILD_CMD: |
-              export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu24.04-amd64;
-              mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-              mkdir /tmp/artifacts;
-              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
-          - OS: "ubuntu-22.04"
-            PYTHON_VERSION: "3.12.0"
-            BUILD_CMD: |
-              export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu22.04-amd64;
-              mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-              mkdir /tmp/artifacts;
-              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
-          - OS: "ubuntu-20.04"
-            PYTHON_VERSION: "3.12.0"
-            BUILD_CMD: |
-              export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-ubuntu20.04-amd64;
-              mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-              mkdir /tmp/artifacts;
-              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-              sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
-          - OS: "macos-latest"
-            PYTHON_VERSION: "3.12.0"
-            BUILD_CMD: |
-              export PYTHONHASHSEED=42
-              export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-darwin-amd64;
-              mkdir ${BUILD_FILE_NAME};
-              poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data config:config --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-              tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-              mkdir /tmp/artifacts;
-              cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-              shasum -a 256 ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256
-          # - OS: "windows-latest"
-          #   PYTHON_VERSION: "3.12.0"
-          #   BUILD_CMD: |
-          #     source $VENV
-          #     export PYTHONHASHSEED=42
-          #     export BUILD_FILE_NAME=eth-duties-${RELEASE_VERSION}-windows-amd64;
-          #     mkdir ${BUILD_FILE_NAME};
-          #     poetry run pyinstaller --clean --onefile --copy-metadata eth-typing --add-data "config;config" --name eth-duties --distpath ./${BUILD_FILE_NAME} ./duties/main.py;
-          #     tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME};
-          #     mkdir /tmp/artifacts;
-          #     cp ${BUILD_FILE_NAME}.tar.gz /tmp/artifacts;
-          #     sha256sum ${BUILD_FILE_NAME}.tar.gz | head -c 64 > /tmp/artifacts/${BUILD_FILE_NAME}.sha256;
+          - os: "ubuntu-22.04"
+            platform-name: "ubuntu-22.04-amd64"
+            build-suffix: "ubuntu22.04-amd64"
+            shell: "bash"
+          - os: "ubuntu-24.04"
+            platform-name: "ubuntu-24.04-amd64"
+            build-suffix: "ubuntu24.04-amd64"
+            shell: "bash"
+          - os: "ubuntu-22.04-arm"
+            platform-name: "ubuntu-22.04-arm"
+            build-suffix: "ubuntu-22.04-arm"
+            shell: "bash"
+          - os: "ubuntu-24.04-arm"
+            platform-name: "ubuntu-24.04-arm"
+            build-suffix: "ubuntu24.04-arm"
+            shell: "bash"
+          - os: "macos-13"
+            platform-name: "macos-intel-x64"
+            build-suffix: "macos-intel-x64"
+            shell: "bash"
+          - os: "macos-15"
+            platform-name: "macos-arm64"
+            build-suffix: "macos-arm64"
+            shell: "bash"
+
     defaults:
       run:
-        shell: "bash"
-    runs-on: "${{ matrix.OS }}"
+        shell: "${{ matrix.shell }}"
+
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
-      - name: "Set up python"
+        with:
+          fetch-depth: 0
+
+      - name: "Set up Python ${{ env.PYTHON_VERSION }}"
         uses: "actions/setup-python@v5"
         with:
-          python-version: "${{ matrix.PYTHON_VERSION }}"
+          python-version: "${{ env.PYTHON_VERSION }}"
+
       - name: "Install Poetry"
         uses: "snok/install-poetry@v1"
         with:
-          version: "1.8.3"
+          version: "latest"
           virtualenvs-create: true
           virtualenvs-in-project: true
+
+      - name: "Cache Poetry dependencies"
+        uses: "actions/cache@v4"
+        with:
+          path: ".venv"
+          key: "poetry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/poetry.lock') }}"
+          restore-keys: "poetry-${{ runner.os }}-${{ runner.arch }}-"
+
       - name: "Install dependencies"
+        run: "poetry install --with dev"
+
+      - name: "Get release version"
+        id: "version"
         run: |
-          poetry lock --no-update
-          poetry install --no-interaction --no-root
-      - name: "Get new application version"
-        id: "get_version"
-        run: "echo \"VERSION=$(echo $GITHUB_REF | cut -d / -f 3)\" >> $GITHUB_OUTPUT"
-      - name: "Build executable for ${{ matrix.OS }}"
-        env:
-          RELEASE_VERSION: "${{ steps.get_version.outputs.VERSION }}"
-        run: "${{ matrix.BUILD_CMD }}"
-      # - name: "Upload windows artifacts"
-      #   if: "matrix.OS == 'windows-latest'"
-      #   uses: "actions/upload-artifact@v4.4.0"
-      #   with:
-      #     name: "${{ matrix.OS }}"
-      #     path: "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\artifacts\\*"
-      #     if-no-files-found: "error"
-      - name: "Upload UNIX artifacts"
-        if: "matrix.OS != 'windows-latest'"
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_no_v=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: "Build executable for ${{ matrix.platform-name }}"
+        run: |
+          export PYTHONHASHSEED=42
+          export BUILD_FILE_NAME=eth-duties-${{ steps.version.outputs.version }}-${{ matrix.build-suffix }}
+
+          # Create build directory
+          mkdir ${BUILD_FILE_NAME}
+
+          # Build executable using PyInstaller
+          poetry run pyinstaller \
+            --clean \
+            --onefile \
+            --add-data config:config \
+            --name eth-duties \
+            --distpath ./${BUILD_FILE_NAME} \
+            ./duties/main.py
+
+          # Create archive
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            7z a ${BUILD_FILE_NAME}.zip ./${BUILD_FILE_NAME}
+            ARCHIVE_NAME=${BUILD_FILE_NAME}.zip
+          else
+            tar -zcvf ${BUILD_FILE_NAME}.tar.gz ./${BUILD_FILE_NAME}
+            ARCHIVE_NAME=${BUILD_FILE_NAME}.tar.gz
+          fi
+
+          # Generate checksums
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sha256sum ${ARCHIVE_NAME} > ${ARCHIVE_NAME}.sha256
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            shasum -a 256 ${ARCHIVE_NAME} > ${ARCHIVE_NAME}.sha256
+          fi
+
+          # Prepare artifacts
+          mkdir -p /tmp/artifacts
+          cp ${ARCHIVE_NAME} /tmp/artifacts/
+          cp ${ARCHIVE_NAME}.sha256 /tmp/artifacts/
+
+          echo "Archive created: ${ARCHIVE_NAME}"
+          echo "artifact_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: "Upload artifacts"
         uses: "actions/upload-artifact@v4"
         with:
-          name: "${{ matrix.OS }}"
+          name: "${{ matrix.platform-name }}-artifacts"
           path: "/tmp/artifacts/*"
-          if-no-files-found: "error"
+          retention-days: 7
 
+  # Create GitHub Release with all artifacts
   release-job:
-    needs: "build-artifact-job"
+    name: "Create GitHub Release"
     runs-on: "ubuntu-latest"
+    needs: "build-artifacts-job"
+    permissions:
+      contents: "write"
+      discussions: "write"
+
     steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
       - name: "Download all artifacts"
         uses: "actions/download-artifact@v4"
         with:
-          path: "/tmp/artifacts"
+          path: "artifacts"
+
       - name: "Display structure of downloaded files"
-        run: "ls -R"
-        working-directory: "/tmp/artifacts"
-      - name: "Get new application version"
-        id: "get_version"
-        run: "echo \"VERSION=$(echo $GITHUB_REF | cut -d / -f 3)\" >> $GITHUB_OUTPUT"
-      - name: "Release"
+        run: |
+          echo "Downloaded artifacts structure:"
+          find artifacts -type f -name "*" | sort
+
+      - name: "Get release version"
+        id: "version"
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version_no_v=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: "Prepare release assets"
+        run: |
+          # Create release assets directory
+          mkdir -p release-assets
+
+          # Copy all artifacts to release assets
+          find artifacts -name "*.tar.gz" -exec cp {} release-assets/ \;
+          find artifacts -name "*.zip" -exec cp {} release-assets/ \;
+          find artifacts -name "*.sha256" -exec cp {} release-assets/ \;
+
+          echo "Release assets prepared:"
+          ls -la release-assets/
+
+      - name: "Create Release"
         uses: "softprops/action-gh-release@v2"
         with:
+          tag_name: "${{ steps.version.outputs.version }}"
+          name: "Release ${{ steps.version.outputs.version }}"
+          files: "release-assets/*"
+          draft: false
+          prerelease: false
           generate_release_notes: true
-          fail_on_unmatched_files: true
-            # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.tar.gz
-            # /tmp/artifacts/windows-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-windows-amd64.sha256
-          files: |
-            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu24.04-amd64.tar.gz
-            /tmp/artifacts/ubuntu-24.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu24.04-amd64.sha256
-            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu22.04-amd64.tar.gz
-            /tmp/artifacts/ubuntu-22.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu22.04-amd64.sha256
-            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu20.04-amd64.tar.gz
-            /tmp/artifacts/ubuntu-20.04/eth-duties-${{ steps.get_version.outputs.VERSION }}-ubuntu20.04-amd64.sha256
-            /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.tar.gz
-            /tmp/artifacts/macos-latest/eth-duties-${{ steps.get_version.outputs.VERSION }}-darwin-amd64.sha256
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: "Verify release assets"
+        run: |
+          echo "Verifying checksums for release assets..."
+          cd release-assets
+
+          for checksum_file in *.sha256; do
+            if [[ -f "$checksum_file" ]]; then
+              echo "Verifying $checksum_file..."
+              sha256sum -c "$checksum_file"
+            fi
+          done
+
+          echo "All checksums verified successfully!"
 ...

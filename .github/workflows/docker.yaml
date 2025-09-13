@@ -1,10 +1,12 @@
 ---
 name: "Build and Push docker image"
 
+# yamllint disable-line rule:truthy
 on:
   push:
     branches:
       - "main"
+      - "develop"
     tags:
       - "v*.*.*"
 
@@ -25,7 +27,8 @@ jobs:
             type=semver,pattern=v{{version}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
-            type=raw,value=latest
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
       - name: "Set up QEMU"
         uses: "docker/setup-qemu-action@v3"
       - name: "Set up Docker Buildx"
@@ -39,7 +42,11 @@ jobs:
         uses: "docker/build-push-action@v6"
         with:
           file: "./docker/Dockerfile"
+          context: "."
+          platforms: "linux/amd64,linux/arm64"
           push: true
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
+          cache-from: "type=gha"
+          cache-to: "type=gha,mode=max"
 ...
