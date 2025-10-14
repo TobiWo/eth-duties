@@ -43,8 +43,8 @@ The color coding comprises of:
 
 ## Donate
 
-If you like the tool and think this needs to be supported I highly appreciate any donations. Donations can be send in ETH, any ERC-20 or on Layer2 to the following address: `0x89a6EeC1FAbC802741475259cBdeAC7d45FAc14a`.
+If you find the tool useful and believe it's worth supporting, I would greatly appreciate any donations. You can donate via [Giveth](https://giveth.io/project/eth-duties).
 
 ### Full disclosure
 
-This project is funded by the Ethereum Foundation with a small grant from the [ecosystem support program](https://esp.ethereum.foundation/applicants/small-grants=).
+This project was funded by the Ethereum Foundation with a small grant from the [ecosystem support program](https://esp.ethereum.foundation/applicants/small-grants=). All grant milestones were successfully completed and delivered. The project now continues as a community-maintained effort without active funding.
