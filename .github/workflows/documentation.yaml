@@ -1,0 +1,51 @@
+---
+name: "Deploy documentation"
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_run:
+    workflows: ["Create release tag"]
+    types:
+      - "completed"
+    branches:
+      - "main"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "docs/**"
+      - "mkdocs.yaml"
+      - "requirements.txt"
+      - ".github/workflows/documentation.yaml"
+
+jobs:
+  mkdocs-deploy-job:
+    runs-on: "ubuntu-24.04"
+    if: "${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}"
+    permissions:
+      contents: "write"
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v5"
+      - name: "Set up python and pip cache"
+        uses: "actions/setup-python@v6"
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - name: "Install dependencies"
+        run: "pip install -r requirements.txt"
+      - name: "Generate mkdocs cache id"
+        run: "echo \"cache_id=$(date --utc '+%V')\" >> \"$GITHUB_ENV\""
+      - name: "Set up mkdocs cache"
+        uses: "actions/cache@v4"
+        with:
+          path: "~/.cache"
+          key: "mkdocs-material-${{ env.cache_id }}"
+          restore-keys: |
+            mkdocs-material-
+      - name: "Deploy documentation"
+        run: "mkdocs gh-deploy --force"
+...
