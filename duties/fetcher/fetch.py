@@ -1,10 +1,9 @@
 """Module which holds all logic for fetching validator duties"""
 
-from logging import getLogger
 from typing import List
 
 from cli.arguments import ARGUMENTS
-from constants import endpoints, logging, program
+from constants import endpoints, program
 from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.identifier import core
 from helper.error import NoDataFromEndpointError
@@ -12,7 +11,6 @@ from protocol import ethereum
 from protocol.request import CalldataType, send_beacon_api_request
 
 __VALIDATOR_IDENTIFIER_CACHE: List[str] = []
-__LOGGER = getLogger()
 
 
 def update_validator_identifier_cache() -> None:
@@ -26,6 +24,15 @@ def update_validator_identifier_cache() -> None:
     __VALIDATOR_IDENTIFIER_CACHE.extend(
         list(complete_active_validator_identifiers.keys())
     )
+
+
+def get_validator_count() -> int:
+    """Returns the number of validators in the cache.
+
+    Returns:
+        int: Number of cached validator identifiers
+    """
+    return len(__VALIDATOR_IDENTIFIER_CACHE)
 
 
 async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
@@ -124,15 +131,6 @@ def __should_fetch_duties(duty_type: DutyType) -> bool:
     """
     match duty_type:
         case DutyType.ATTESTATION:
-            if (
-                len(__VALIDATOR_IDENTIFIER_CACHE) > ARGUMENTS.max_attestation_duty_logs
-                and not ARGUMENTS.omit_attestation_duties
-            ):
-                __LOGGER.warning(
-                    logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
-                    ARGUMENTS.max_attestation_duty_logs,
-                )
-                return False
             if ARGUMENTS.omit_attestation_duties:
                 return False
             return True
@@ -141,7 +139,7 @@ def __should_fetch_duties(duty_type: DutyType) -> bool:
                 return False
             return True
         case _:
-            return False
+            return True
 
 
 def __get_next_attestation_duty(

@@ -90,4 +90,4 @@ NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon
 CACHED_DATA_WARNING_MESSAGE = (
     "Cached data will only be used until next upcoming duty is due"
 )
-OMMITING_DUTY_LOGS_MESSAGE = "Omitting duty logs detected. No further duties found!"
+OMITTED_DUTY_LOGS_MESSAGE = "Logging %s duties is omitted by the user"

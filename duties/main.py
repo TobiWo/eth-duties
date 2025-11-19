@@ -9,7 +9,7 @@ from typing import List
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
-from fetcher.data_types import ValidatorDuty
+from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.identifier.parser import (
     update_shared_active_validator_identifiers_on_interval,
 )
@@ -46,7 +46,12 @@ async def __fetch_validator_duties(
     if not fetched_upcoming_validator_duties and (
         ARGUMENTS.omit_attestation_duties or ARGUMENTS.omit_sync_committee_duties
     ):
-        __LOGGER.info(logging.OMMITING_DUTY_LOGS_MESSAGE)
+        if ARGUMENTS.omit_attestation_duties:
+            __LOGGER.info(logging.OMITTED_DUTY_LOGS_MESSAGE, DutyType.ATTESTATION.value)
+        if ARGUMENTS.omit_sync_committee_duties:
+            __LOGGER.info(
+                logging.OMITTED_DUTY_LOGS_MESSAGE, DutyType.SYNC_COMMITTEE.value
+            )
         return fetched_upcoming_validator_duties
     if not fetched_upcoming_validator_duties:
         __LOGGER.error(logging.NO_DUTY_DATA_ERROR_MESSAGE)
