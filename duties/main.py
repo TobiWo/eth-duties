@@ -43,6 +43,11 @@ async def __fetch_validator_duties(
         __check_beacon_node_connection()
         return duties
     fetched_upcoming_validator_duties = await fetch_upcoming_validator_duties()
+    if not fetched_upcoming_validator_duties and (
+        ARGUMENTS.omit_attestation_duties or ARGUMENTS.omit_sync_committee_duties
+    ):
+        __LOGGER.info(logging.OMMITING_DUTY_LOGS_MESSAGE)
+        return fetched_upcoming_validator_duties
     if not fetched_upcoming_validator_duties:
         __LOGGER.error(logging.NO_DUTY_DATA_ERROR_MESSAGE)
         return duties

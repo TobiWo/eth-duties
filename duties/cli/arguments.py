@@ -163,6 +163,12 @@ def __get_raw_arguments() -> Namespace:
         default=False,
     )
     parser.add_argument(
+        "--omit-sync-committee-duties",
+        help="If supplied upcoming sync committee duties will not be logged to the console",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
         "--rest",
         help="Starts a rest server on port 5000",
         action="store_true",

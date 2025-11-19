@@ -56,10 +56,6 @@ Not all clients support the keymanager api yet. Furthermore, I did not had the t
 | web3signer | :x: | :white_check_mark: |
 | dirk | :x: | :x: |
 
-#### Notes
-
-1. There are some issues with prysm currently. More specifically, if you use prysm but validators are managed by a remote signer, eth-duties will not work since the respective endpoint is broken. If validators are managed locally everything works as expected. **This issue will be fixed in version `v5.1.3`**.
-
 ### File structure
 
 The validator nodes file needs to be structured like this:

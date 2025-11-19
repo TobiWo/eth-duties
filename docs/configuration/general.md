@@ -25,6 +25,7 @@ For all available cli flags please call `eth-duties --help` or check the table b
 | `--mode-cicd-attestation-time` | If a defined proportion of attestion duties is above the defined time threshold the application exits gracefully in any cicd-mode (default 240 sec.) | [link](./mode.md/#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion) |
 | `--mode-cicd-attestation-proportion` | The proportion of attestation duties which needs to be above a defined time threshold to force the application to exit gracefully (default 1) | [link](./mode.md/#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion) |
 | `--omit-attestation-duties` | If supplied upcoming attestation duties will not be logged to the console | :no_entry: |
+| `--omit-sync-committee-duties` | If supplied upcoming sync committee duties will not be logged to the console | :no_entry: |
 | `--rest` | Starts a rest server on port 5000 | [link](./restful-api.md) |
 | `--rest-host` | Host from which requests will be accepted (default 0.0.0.0) | [link](./restful-api.md) |
 | `--rest-port` | Port where the rest server is exposed (default 5000) | [link](./restful-api.md) |

@@ -65,10 +65,11 @@ Just download the artifact for your OS and start optimizing your validator maint
 
 | OS | Tested | Works |
 | --- | --- | --- |
-| MacOS 11 | :white_check_mark: | :white_check_mark: |
-| MacOS 12 | :white_check_mark: | :white_check_mark: |
-| Ubuntu 20.04 | :white_check_mark: | :white_check_mark: |
+| MacOS 13 | :white_check_mark: | :white_check_mark: |
+| MacOS 14 | :white_check_mark: | :white_check_mark: |
+| MacOS 15 | :white_check_mark: | :white_check_mark: |
 | Ubuntu 22.04 | :white_check_mark: | :white_check_mark: |
+| Ubuntu 24.04 | :white_check_mark: | :white_check_mark: |
 | Windows 7 | :x: | :question: |
 | Windows 10 | :white_check_mark: | :white_check_mark: |
 | Windows 11 | :x: | :question: |

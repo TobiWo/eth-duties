@@ -1,5 +1,4 @@
-"""Module which holds all logic for fetching validator duties
-"""
+"""Module which holds all logic for fetching validator duties"""
 
 from logging import getLogger
 from typing import List
@@ -39,7 +38,7 @@ async def fetch_upcoming_attestation_duties() -> dict[str, ValidatorDuty]:
     current_epoch = ethereum.get_current_epoch()
     is_any_duty_outdated: List[bool] = [True]
     validator_duties: dict[str, ValidatorDuty] = {}
-    if __should_fetch_attestation_duties():
+    if __should_fetch_duties(DutyType.ATTESTATION):
         while is_any_duty_outdated:
             response_data = await __fetch_duty_responses(
                 current_epoch, DutyType.ATTESTATION
@@ -69,19 +68,20 @@ async def fetch_upcoming_sync_committee_duties() -> dict[str, ValidatorDuty]:
         ethereum.get_sync_committee_epoch_boundaries(current_epoch)
     )
     validator_duties: dict[str, ValidatorDuty] = {}
-    for epoch in [current_epoch, (current_sync_committee_epoch_boundaries[1] + 1)]:
-        response_data = await __fetch_duty_responses(epoch, DutyType.SYNC_COMMITTEE)
-        for data in response_data:
-            if data.validator_index not in validator_duties:
-                sync_committee_duty = ValidatorDuty(
-                    pubkey=data.pubkey,
-                    validator_index=data.validator_index,
-                    epoch=epoch,
-                    validator_sync_committee_indices=data.validator_sync_committee_indices,
-                    type=DutyType.SYNC_COMMITTEE,
-                )
-                ethereum.set_time_to_duty(sync_committee_duty)
-                validator_duties[data.validator_index] = sync_committee_duty
+    if __should_fetch_duties(DutyType.SYNC_COMMITTEE):
+        for epoch in [current_epoch, (current_sync_committee_epoch_boundaries[1] + 1)]:
+            response_data = await __fetch_duty_responses(epoch, DutyType.SYNC_COMMITTEE)
+            for data in response_data:
+                if data.validator_index not in validator_duties:
+                    sync_committee_duty = ValidatorDuty(
+                        pubkey=data.pubkey,
+                        validator_index=data.validator_index,
+                        epoch=epoch,
+                        validator_sync_committee_indices=data.validator_sync_committee_indices,
+                        type=DutyType.SYNC_COMMITTEE,
+                    )
+                    ethereum.set_time_to_duty(sync_committee_duty)
+                    validator_duties[data.validator_index] = sync_committee_duty
     return validator_duties
 
 
@@ -113,24 +113,35 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ValidatorDuty]:
     return __filter_proposing_duties(validator_duties)
 
 
-def __should_fetch_attestation_duties() -> bool:
-    """Checks if attestation duties should be fetched
+def __should_fetch_duties(duty_type: DutyType) -> bool:
+    """Checks if duties of a specific type should be fetched
+
+    Args:
+        duty_type (DutyType): Type of the duty to check for
 
     Returns:
-        bool: Should attestation duties fetched
+        bool: Should duties be fetched
     """
-    if (
-        len(__VALIDATOR_IDENTIFIER_CACHE) > ARGUMENTS.max_attestation_duty_logs
-        and not ARGUMENTS.omit_attestation_duties
-    ):
-        __LOGGER.warning(
-            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
-            ARGUMENTS.max_attestation_duty_logs,
-        )
-        return False
-    if ARGUMENTS.omit_attestation_duties:
-        return False
-    return True
+    match duty_type:
+        case DutyType.ATTESTATION:
+            if (
+                len(__VALIDATOR_IDENTIFIER_CACHE) > ARGUMENTS.max_attestation_duty_logs
+                and not ARGUMENTS.omit_attestation_duties
+            ):
+                __LOGGER.warning(
+                    logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
+                    ARGUMENTS.max_attestation_duty_logs,
+                )
+                return False
+            if ARGUMENTS.omit_attestation_duties:
+                return False
+            return True
+        case DutyType.SYNC_COMMITTEE:
+            if ARGUMENTS.omit_sync_committee_duties:
+                return False
+            return True
+        case _:
+            return False
 
 
 def __get_next_attestation_duty(
@@ -163,7 +174,7 @@ def __get_next_attestation_duty(
 
 
 def __filter_proposing_duties(
-    raw_proposing_duties: dict[str, ValidatorDuty]
+    raw_proposing_duties: dict[str, ValidatorDuty],
 ) -> dict[str, ValidatorDuty]:
     """Filters supplied proposing duties dict for already outdated duties
 
