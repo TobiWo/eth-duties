@@ -10,7 +10,7 @@ from typing import List
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
-from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.data_types import AttestationDuty, ValidatorDuty
 from helper.duty import get_duties_proportion_above_time_threshold
 from helper.identifier import clean_shared_memory
 
@@ -85,7 +85,7 @@ class GracefulTerminator:
         if len(duties) == 0:
             return True
         attestation_duties = [
-            duty for duty in duties if duty.type == DutyType.ATTESTATION
+            duty for duty in duties if isinstance(duty, AttestationDuty)
         ]
         if len(attestation_duties) != len(duties):
             return False
@@ -94,13 +94,13 @@ class GracefulTerminator:
         )
 
     def __is_proportion_of_attestation_duties_above_time_threshold(
-        self, attestation_duties: List[ValidatorDuty]
+        self, attestation_duties: List[AttestationDuty]
     ) -> bool:
         """Checks whether upcoming attestation duties will occur after a user definded
         time threshold and thus be defined as non-relevant duties
 
         Args:
-            attestation_duties (List[ValidatorDuty]): List of fetched attestation duties
+            attestation_duties (List[AttestationDuty]): List of fetched attestation duties
 
         Returns:
             bool: Whether or not there are any relevant upcoming attestation duties

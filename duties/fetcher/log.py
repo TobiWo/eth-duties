@@ -8,7 +8,13 @@ from typing import List, Tuple
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging, program
-from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
+from fetcher.data_types import (
+    AttestationDuty,
+    DutyType,
+    ProposingDuty,
+    ValidatorDuty,
+    ValidatorIdentifier,
+)
 from fetcher.fetch import get_validator_count
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from helper.duty import get_duties_proportion_above_time_threshold
@@ -109,7 +115,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
             f"Fetching duties in next interval."
         )
-    else:
+    elif isinstance(duty, (AttestationDuty, ProposingDuty)):
         time_to_next_duty = strftime(
             program.DUTY_LOGGING_TIME_FORMAT,
             gmtime(duty.seconds_to_duty),
@@ -120,6 +126,8 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){rs.all}"
         )
+    else:
+        logging_message = ""
     return logging_message
 
 

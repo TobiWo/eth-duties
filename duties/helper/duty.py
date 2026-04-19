@@ -1,12 +1,17 @@
 """Duty related helper module
 """
 
-from asyncio import Task, TaskGroup
+from asyncio import TaskGroup
 from multiprocessing.shared_memory import SharedMemory
-from typing import Callable, List
+from typing import List, Sequence, Union
 
 from constants.program import UPDATED_SHARED_MEMORY_NAME
-from fetcher.data_types import DutyType, ValidatorDuty
+from fetcher.data_types import (
+    AttestationDuty,
+    ProposingDuty,
+    SyncCommitteeDuty,
+    ValidatorDuty,
+)
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
@@ -47,8 +52,8 @@ def __is_first_non_sync_committee_duty_up_to_date(duties: List[ValidatorDuty]) -
         bool: Data of first non sync-committee is up to date
     """
     current_slot = get_current_slot()
-    first_non_sync_committee_duty = next(
-        filter(lambda duty: duty.type is not DutyType.SYNC_COMMITTEE, duties),
+    first_non_sync_committee_duty: Union[AttestationDuty, ProposingDuty, None] = next(
+        (duty for duty in duties if isinstance(duty, (AttestationDuty, ProposingDuty))),
         None,
     )
     if (
@@ -71,7 +76,7 @@ def __is_first_sync_committee_duty_up_to_date(
         bool: Data of first sync-committee is up to date
     """
     first_duty = duties[0]
-    if first_duty.type == DutyType.SYNC_COMMITTEE:
+    if isinstance(first_duty, SyncCommitteeDuty):
         current_epoch = get_current_epoch()
         if first_duty.epoch >= current_epoch:
             return True
@@ -113,22 +118,27 @@ async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
         List[ValidatorDuty]: Sorted list with all upcoming validator duties
     """
     async with TaskGroup() as taskgroup:
-        tasks: List[Task[dict[str, ValidatorDuty]]] = []
-        tasks.append(taskgroup.create_task(fetch_upcoming_attestation_duties()))
-        tasks.append(taskgroup.create_task(fetch_upcoming_sync_committee_duties()))
-        tasks.append(taskgroup.create_task(fetch_upcoming_proposing_duties()))
-    duties = [duty for task in tasks for duty in task.result().values()]
+        attestation_task = taskgroup.create_task(fetch_upcoming_attestation_duties())
+        sync_committee_task = taskgroup.create_task(
+            fetch_upcoming_sync_committee_duties()
+        )
+        proposing_task = taskgroup.create_task(fetch_upcoming_proposing_duties())
+
+    duties: List[ValidatorDuty] = []
+    duties.extend(attestation_task.result().values())
+    duties.extend(sync_committee_task.result().values())
+    duties.extend(proposing_task.result().values())
     duties.sort(key=__sort_duties)
     return duties
 
 
 def get_duties_proportion_above_time_threshold(
-    duties: List[ValidatorDuty], time_threshold: int
+    duties: Sequence[ValidatorDuty], time_threshold: int
 ) -> float:
     """Get duties proportion above user defined time threshold
 
     Args:
-        duties (List[ValidatorDuty]): List of fetched duties
+        duties (Sequence[ValidatorDuty]): List of fetched duties
         time_threshold (int): Time threshold defined by the user
 
     Returns:
@@ -141,4 +151,15 @@ def get_duties_proportion_above_time_threshold(
     return relevant_duty_proportion
 
 
-__sort_duties: Callable[[ValidatorDuty], int] = lambda duty: duty.slot
+def __sort_duties(duty: ValidatorDuty) -> int:
+    """Sort key for duties - sync committee duties come first, then by slot.
+
+    Args:
+        duty (ValidatorDuty): Validator duty
+
+    Returns:
+        int: Sort key value
+    """
+    if isinstance(duty, (AttestationDuty, ProposingDuty)):
+        return duty.slot
+    return 0

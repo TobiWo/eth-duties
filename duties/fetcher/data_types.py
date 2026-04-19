@@ -18,15 +18,31 @@ class DutyType(Enum):
 
 
 class ValidatorDuty(BaseModel):
-    """Validator duty relevant data points"""
+    """Base class for validator duty data."""
 
     pubkey: str
     validator_index: str
-    epoch: int = Field(default=0)
-    slot: int = Field(default=0)
-    validator_sync_committee_indices: List[int] = Field(default_factory=list)
     type: DutyType = Field(default=DutyType.NONE)
     seconds_to_duty: int = Field(default=0)
+
+
+class AttestationDuty(ValidatorDuty):
+    """Attestation duty data."""
+
+    slot: int = Field(default=0)
+
+
+class ProposingDuty(ValidatorDuty):
+    """Block proposing duty data."""
+
+    slot: int = Field(default=0)
+
+
+class SyncCommitteeDuty(ValidatorDuty):
+    """Sync committee duty data."""
+
+    epoch: int = Field(default=0)
+    validator_sync_committee_indices: List[int] = Field(default_factory=list)
     seconds_left_in_current_sync_committee: int = Field(default=0)
 
 
