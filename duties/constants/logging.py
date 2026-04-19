@@ -86,7 +86,7 @@ VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE = (
     "Authentication failed for validator node: %s"
 )
 NO_GENESIS_TIME_ERROR_MESSAGE = "Could not fetch genesis time. Exiting eth-duties!"
-NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"
+NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"  # pylint: disable=line-too-long
 CACHED_DATA_WARNING_MESSAGE = (
     "Cached data will only be used until next upcoming duty is due"
 )
