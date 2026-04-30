@@ -53,15 +53,10 @@ async def send_beacon_api_request(
     responses: List[Response] = []
     if beacon_node_endpoint:
         if provided_validators:
+            chunk_size = __get_chunk_size(calldata_type, provided_validators)
             chunked_validators = [
-                provided_validators[
-                    index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
-                ]
-                for index in range(
-                    0,
-                    len(provided_validators),
-                    program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
-                )
+                provided_validators[index : index + chunk_size]
+                for index in range(0, len(provided_validators), chunk_size)
             ]
             async with TaskGroup() as taskgroup:
                 tasks = [
@@ -115,6 +110,32 @@ async def send_key_manager_api_keystore_requests() -> List[Any]:
             for endpoint in healthy_validator_endpoints:
                 __LOGGER.error(logging.NO_RESPONSE_ERROR_MESSAGE, endpoint.url)
     return []
+
+
+def __get_chunk_size(
+    calldata_type: CalldataType, provided_validators: List[str]
+) -> int:
+    """Pick a chunk size for fan-out requests based on the calldata type.
+
+    POST bodies have generous server-side size limits, so we use the flat
+    ``NUMBER_OF_VALIDATORS_PER_REST_CALL``. GET requests encode validators as
+    a comma-separated URL parameter and hit a URL length ceiling (8 KB on most
+    HTTP stacks), so the chunk size is derived from the longest identifier in
+    the current batch — keeping chunks as large as possible for short indices
+    and conservatively small for 98-char pubkeys.
+
+    Args:
+        calldata_type (CalldataType): How the validators are encoded upstream
+        provided_validators (List[str]): Validator indices or pubkeys to chunk
+
+    Returns:
+        int: Number of validators to include per upstream request
+    """
+    if calldata_type != CalldataType.PARAMETERS:
+        return program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+    max_identifier_length = max(len(identifier) for identifier in provided_validators)
+    chunk_size = program.MAX_GET_URL_IDS_BYTES // (max_identifier_length + 1)
+    return max(1, min(chunk_size, program.NUMBER_OF_VALIDATORS_PER_REST_CALL))
 
 
 async def __handle_api_request(
