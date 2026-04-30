@@ -111,7 +111,8 @@ def test_wrong_bearer_token_for_authentication() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
     expected_logs = [
-        VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE % ("http://127.0.0.1:34013")
+        VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE
+        % (CONFIG.validator_nodes.online_urls[1])
     ]
     command = get_eth_duties_entry_point() + [
         "--validator-nodes",

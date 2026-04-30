@@ -2,12 +2,16 @@
 """
 
 from signal import SIGINT
+from socket import create_connection
 from subprocess import PIPE, Popen
-from time import time
+from time import sleep, time
 from typing import IO, Any, Callable, List, Tuple
 
 from requests import Response
 from test_helper.config import CONFIG, ETH_DUTIES_ENTRY_POINT
+
+REST_PORT_READINESS_TIMEOUT = 5.0
+REST_PORT_POLL_INTERVAL = 0.1
 
 
 def print_test_message(
@@ -42,6 +46,7 @@ def run_eth_duties(
     rest_call_trigger_log: str | None,
     parse_stderr: bool = False,
     overhead_log_number: int = 1,
+    rest_port: int = 5000,
 ) -> Tuple[List[str], Response]:
     """Start eth-duties subprocess
 
@@ -52,41 +57,46 @@ def run_eth_duties(
         rest_call_trigger_log (str | None): Log which will trigger the rest call
         parse_stderr (bool, optional): Parse stderr or stdout from subprocess. Defaults to False.
         overhead_log_number (int, optional): Logs which will be collected after process termination log was found. Defaults to 1. # pylint: disable=line-too-long
+        rest_port (int, optional): Port the eth-duties rest server is expected to bind to. Defaults to 5000. # pylint: disable=line-too-long
 
     Returns:
         Tuple[List[str], Response]: Collected logs and rest response
     """
     with Popen(command, text=True, stdout=PIPE, stderr=PIPE) as eth_duties_process:
-        eth_duties_logs: List[str] = []
-        rest_response: Response = Response()
-        if parse_stderr and eth_duties_process.stderr:
-            rest_response = get_rest_response(
-                eth_duties_logs,
-                eth_duties_process.stderr,
-                rest_call,
-                rest_call_trigger_log,
-            )
-            fill_log_collection(
-                eth_duties_logs,
-                eth_duties_process.stderr,
-                process_termination_log,
-                overhead_log_number,
-            )
-        if not parse_stderr and eth_duties_process.stdout:
-            rest_response = get_rest_response(
-                eth_duties_logs,
-                eth_duties_process.stdout,
-                rest_call,
-                rest_call_trigger_log,
-            )
-            fill_log_collection(
-                eth_duties_logs,
-                eth_duties_process.stdout,
-                process_termination_log,
-                overhead_log_number,
-            )
-        kill_process(eth_duties_process)
-        return (eth_duties_logs, rest_response)
+        try:
+            eth_duties_logs: List[str] = []
+            rest_response: Response = Response()
+            if parse_stderr and eth_duties_process.stderr:
+                rest_response = get_rest_response(
+                    eth_duties_logs,
+                    eth_duties_process.stderr,
+                    rest_call,
+                    rest_call_trigger_log,
+                    rest_port,
+                )
+                fill_log_collection(
+                    eth_duties_logs,
+                    eth_duties_process.stderr,
+                    process_termination_log,
+                    overhead_log_number,
+                )
+            if not parse_stderr and eth_duties_process.stdout:
+                rest_response = get_rest_response(
+                    eth_duties_logs,
+                    eth_duties_process.stdout,
+                    rest_call,
+                    rest_call_trigger_log,
+                    rest_port,
+                )
+                fill_log_collection(
+                    eth_duties_logs,
+                    eth_duties_process.stdout,
+                    process_termination_log,
+                    overhead_log_number,
+                )
+            return (eth_duties_logs, rest_response)
+        finally:
+            kill_process(eth_duties_process)
 
 
 def get_rest_response(
@@ -94,6 +104,7 @@ def get_rest_response(
     process_logs: IO[str],
     rest_call: Callable[[], Response] | None,
     rest_call_trigger_log: str | None,
+    rest_port: int = 5000,
 ) -> Response:
     """Send rest request
 
@@ -102,6 +113,7 @@ def get_rest_response(
         process_logs (IO[str]): Raw subprocess logs
         rest_call (Callable[[], Response] | None): Function which sends a rest call
         rest_call_trigger_log (str | None): Log which will trigger the rest call
+        rest_port (int, optional): Port the eth-duties rest server is expected to bind to. Defaults to 5000. # pylint: disable=line-too-long
 
     Returns:
         Response: Rest response object
@@ -109,8 +121,34 @@ def get_rest_response(
     rest_response: Response = Response()
     if rest_call and rest_call_trigger_log:
         fill_log_collection(collected_logs, process_logs, rest_call_trigger_log)
+        wait_for_rest_port(rest_port)
         rest_response = rest_call()
     return rest_response
+
+
+def wait_for_rest_port(
+    port: int,
+    timeout: float = REST_PORT_READINESS_TIMEOUT,
+    poll_interval: float = REST_PORT_POLL_INTERVAL,
+) -> None:
+    """Block until the eth-duties REST server accepts TCP connections.
+
+    The rest server runs in a separate process and logs its startup message
+    before uvicorn binds the socket. Tests therefore need to close the race
+    between the trigger log and the first rest call.
+
+    Args:
+        port (int): Port the rest server should be bound to
+        timeout (float, optional): Max seconds to wait for the port to accept. Defaults to REST_PORT_READINESS_TIMEOUT. # pylint: disable=line-too-long
+        poll_interval (float, optional): Sleep between connect attempts. Defaults to REST_PORT_POLL_INTERVAL. # pylint: disable=line-too-long
+    """
+    deadline = time() + timeout
+    while time() < deadline:
+        try:
+            with create_connection(("127.0.0.1", port), timeout=0.5):
+                return
+        except OSError:
+            sleep(poll_interval)
 
 
 def fill_log_collection(

@@ -44,6 +44,7 @@ test_cases = [
     test_logging_mode.test_set_logging_colors,
     test_logging_mode.test_logging_duties_for_high_number_of_validators,
     test_logging_mode.test_omit_attestation_duties,
+    test_logging_mode.test_omit_sync_committee_duties,
     test_logging_mode.test_increase_of_max_attestation_duty_logs,
     test_logging_mode.test_logged_format_of_time_to_next_sync_committee,
     test_logging_mode.test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes,

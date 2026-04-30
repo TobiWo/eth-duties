@@ -1,0 +1,31 @@
+http://127.0.0.1:34001;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34004;lu8V5TfBE3nEewF8IKQJDwMWoBonpoTSx
+http://127.0.0.1:34007;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34010;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34013;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34016;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34019;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34022;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+http://127.0.0.1:34025;0x3ec0ad340bb9ca21e5593045b533d11d1b6784e03468af01db621db1804c2f0f
+
+
+start-stop tested
+prysm works
+lighthouse works
+teku works
+nimbus works
+lodestar works
+
+authentication test
+prysm x
+lighthouse x
+teku x
+nimbus x
+lodestar x
+
+remote signer
+prysm no
+lighthouse not tested
+teku works
+nimbus works
+lodestar works
