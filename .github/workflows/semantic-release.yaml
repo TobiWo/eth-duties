@@ -17,7 +17,7 @@ jobs:
       pull-requests: "write"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
         with:
           token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
           fetch-depth: 0
@@ -28,9 +28,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: "Setup Node.js"
-        uses: "actions/setup-node@v4"
+        uses: "actions/setup-node@v6"
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: "Install semantic-release and plugins"
         run: |
