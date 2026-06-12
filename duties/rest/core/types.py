@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List
 
 # pylint: disable-next=no-name-in-module
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HttpMethod(Enum):
@@ -21,12 +21,18 @@ class ValidatorDuties(BaseModel):
 
     any: bool
 
+    model_config = ConfigDict(json_schema_extra={"example": {"any": True}})
+
 
 class BadValidatorIdentifiers(BaseModel):
     """DTO for rest path /validator/identifier which highlights
     provided validators which are provided in a bad format"""
 
-    identifiers: List[str] = list("")
+    identifiers: List[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"identifiers": ["not-a-pubkey", "0xtoo-short"]}}
+    )
 
 
 class NoBeaconNodeConnection(BaseModel):
@@ -34,3 +40,9 @@ class NoBeaconNodeConnection(BaseModel):
     of the provided beacon nodes is available"""
 
     message: str = "No healthy beacon node connection available"
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"message": "No healthy beacon node connection available"}
+        }
+    )

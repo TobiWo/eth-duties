@@ -153,7 +153,7 @@ class BeaconNode(NodeManager):
         """Get a healthy beacon node from the available nodes
 
         Returns:
-            Optional[NodeConnectionProperties]: Connection properties for available beacon node, or None if no healthy nodes
+            Optional[NodeConnectionProperties]: Connection properties for available beacon node, or None if no healthy nodes # pylint: disable=line-too-long
         """
         current_time = datetime.now(timezone.utc)
         if self.healthy_nodes:
@@ -210,13 +210,12 @@ class ValidatorNode(NodeManager):
                     node.url,
                 )
                 return False
-            elif (
+            if (
                 json.RESPONSE_JSON_DATA_FIELD_NAME in response.json()
                 or json.RESPONSE_JSON_MESSAGE_NAME in response.json()
             ):
                 return True
-            else:
-                return False
+            return False
         except RequestsConnectionError:
             return False
 

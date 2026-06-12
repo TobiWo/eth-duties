@@ -1,5 +1,4 @@
-"""Module for logging validator duties
-"""
+"""Module for logging validator duties"""
 
 from datetime import timedelta
 from logging import getLogger
@@ -9,7 +8,14 @@ from typing import List, Tuple
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging, program
-from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
+from fetcher.data_types import (
+    AttestationDuty,
+    DutyType,
+    ProposingDuty,
+    ValidatorDuty,
+    ValidatorIdentifier,
+)
+from fetcher.fetch import get_validator_count
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from helper.duty import get_duties_proportion_above_time_threshold
 from helper.general import format_timedelta_to_hours
@@ -21,6 +27,23 @@ __validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 __LOGGER = getLogger()
 
 
+def __should_log_attestation_duties() -> bool:
+    """Checks if attestation duties should be logged to console.
+
+    Returns:
+        bool: True if attestation duties should be logged
+    """
+    if ARGUMENTS.omit_attestation_duties:
+        return False
+    if get_validator_count() > ARGUMENTS.max_attestation_duty_logs:
+        __LOGGER.warning(
+            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
+            ARGUMENTS.max_attestation_duty_logs,
+        )
+        return False
+    return True
+
+
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     """Logs the time to next duties for the provided validators to the console
 
@@ -28,13 +51,20 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
     __set_global_validator_identifiers_with_alias()
+
+    duties_to_log = validator_duties
+    if not __should_log_attestation_duties():
+        duties_to_log = [
+            duty for duty in validator_duties if duty.type != DutyType.ATTESTATION
+        ]
+
     print("")
     __LOGGER.info(logging.NEXT_INTERVAL_MESSAGE)
-    if validator_duties:
-        for duty in validator_duties:
+    if duties_to_log:
+        for duty in duties_to_log:
             logging_message = __create_logging_message(duty)
             __LOGGER.info(logging_message)
-        __log_duty_proportion_above_time_threshold(validator_duties)
+        __log_duty_proportion_above_time_threshold(duties_to_log)
     else:
         __LOGGER.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
 
@@ -85,7 +115,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
             f"Fetching duties in next interval."
         )
-    else:
+    elif isinstance(duty, (AttestationDuty, ProposingDuty)):
         time_to_next_duty = strftime(
             program.DUTY_LOGGING_TIME_FORMAT,
             gmtime(duty.seconds_to_duty),
@@ -96,6 +126,8 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){rs.all}"
         )
+    else:
+        logging_message = ""
     return logging_message
 
 

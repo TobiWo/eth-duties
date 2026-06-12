@@ -225,6 +225,35 @@ def test_omit_attestation_duties() -> int:
     )
 
 
+def test_omit_sync_committee_duties() -> int:
+    """Test omit sync committee duties
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    expected_logs = [
+        "Started in mode: log",
+        "Logging sync_committee duties is omitted by the user",
+        "No upcoming duties detected!",
+    ]
+    command = get_general_eth_duties_start_command(
+        [CONFIG.validators.active.in_sync_committee[0]],
+        CONFIG.general.working_beacon_node_url,
+    ) + ["--omit-sync-committee-duties", "--omit-attestation-duties"]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "omit sync committee duties",
+        "Logging next duties interval",
+        overhead_log_number=10,
+        additional_failure_message=(
+            "It could be that the provided validator is inactive "
+            "or about to propose a block!"
+        ),
+        drop_expected_logs=True,
+    )
+
+
 def test_increase_of_max_attestation_duty_logs() -> int:
     """Test increase of max attestation duty logs
 
@@ -284,12 +313,12 @@ def test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes() -
         "next PROPOSING duty",
         "is in current sync committee",
     ]
-    validators_to_test = CONFIG.validators.active.general[0:12]
+    validators_to_test = CONFIG.validator_nodes.single_node_indices
     command = get_eth_duties_entry_point() + [
         "--beacon-nodes",
         CONFIG.general.working_beacon_node_url,
         "--validator-nodes",
-        str(Path.cwd() / "test/data/online-prysm-validator-node"),
+        str(Path.cwd() / "test/data/online-single-validator-node"),
     ]
     try:
         test_standard_logging_mode(

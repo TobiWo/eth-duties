@@ -7,7 +7,7 @@ from typing import List
 
 from constants import program
 from fastapi import Response, status
-from fetcher.data_types import ValidatorDuty
+from fetcher.data_types import AttestationDuty, ProposingDuty, SyncCommitteeDuty
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
@@ -18,14 +18,14 @@ from rest.core.types import NoBeaconNodeConnection
 
 async def fetch_raw_attestation_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[AttestationDuty] | NoBeaconNodeConnection:
     """Fetch upcoming attestation duties for provided validators
 
     Args:
         response (Response): Attestation duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming attestation duties
+        List[AttestationDuty] | NoBeaconNodeConnection: The upcoming attestation duties
     """
     try:
         upcoming_attestation_duties = await wait_for(
@@ -40,14 +40,14 @@ async def fetch_raw_attestation_duties(
 
 async def fetch_raw_sync_committeen_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[SyncCommitteeDuty] | NoBeaconNodeConnection:
     """Fetch upcoming sync-committee duties for provided validators
 
     Args:
         response (Response): Sync committee duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming sync-committee duties
+        List[SyncCommitteeDuty] | NoBeaconNodeConnection: The upcoming sync-committee duties
     """
     try:
         upcoming_sync_committee_duties = await wait_for(
@@ -62,14 +62,14 @@ async def fetch_raw_sync_committeen_duties(
 
 async def fetch_raw_proposing_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[ProposingDuty] | NoBeaconNodeConnection:
     """Fetch upcoming block proposing duties for provided validators
 
     Args:
         response (Response): Proposing duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
+        List[ProposingDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
     """
     try:
         upcoming_proposing_duties = await wait_for(

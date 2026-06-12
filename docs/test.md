@@ -30,80 +30,40 @@ You can run the integration test suite against any real world Ethereum network (
 
 ## Configure tests
 
-There is a `config.toml` availabe in the test folder. The already present values will work for the aforementioned local devnet created with `kurtosis cli`. If you want to run the tests against a public network adapt the values accordingly. **Note: Values for validators which are in the sync committee or are about to propose a block are not provided as their status keeps changing constantly, even on the local devnet.**
+There is a `config.toml` available in the test folder. The already present values will work for the aforementioned local devnet created with `kurtosis cli`. If you want to run the tests against a public network, adapt the values accordingly.
 
-### Get specific validators for config
+The following fields change between devnet runs (or, in the case of sync-committee / proposer assignments, constantly) and therefore ship empty in `config.toml`:
 
-In order to run the test suite you need to populate the `config.toml` properties. It is a bit complex to get correct values for the following properties:
+- `[general]` `working-beacon-node-url`, `rest-port-in-usage`
+- `[validators.active]` `in-sync-committee`, `next-sync-committee`, `not-in-sync-committee-not-proposing`, `proposing-blocks`
+- `[validator-nodes]` `bearer-token`, `online-urls`, `expected-identifier-count`, `single-node-indices`
 
-- in-sync-committee
-- next-sync-committee
-- not-in-sync-committee-not-proposing
-- proposing-blocks
+### Populate dynamic config fields
 
-In the following chapters I describe how to get these values for a local devnet. You need to send some REST calls to your beacon node like `eth-duties` does it as well. Additionally, some calls refer to `CONTENT_OF_CURL_TEST_DATA_FILE` which is located here: `test/data/curl-test-data`. Just copy the content and paste it into the quotes of the respective data flag. If you run the test suite against a real world network you need to adapt the test data.
-
-You need to retrieve the current epoch for all of the below calls. The easiest way to get the current epoch of your local devnet is to use dora, a simple beachon chain explorer. To get the port were dora is exposed to just run:
+Run the helper script against a running kurtosis devnet:
 
 ```bash
-kurtosis enclave inspect eth-duties-devnet
+./test/prepare-test-config.sh
 ```
 
-#### Validators in current sync committee
+The script:
 
-1. Get the current epoch for your local devnet via dora
-1. Send `POST` call:
+1. Reads `kurtosis enclave inspect eth-duties-devnet` to extract the `cl-1-*` beacon node URL and the `dora` port.
+1. Queries the beacon node for the current epoch, current + next sync committees, and current + next epoch proposer duties.
+1. Picks 4 validator indices for each sync-related field and the last 3 indices of the next-epoch proposer list for `proposing-blocks` (trailing entries give the running test suite enough head room before those slots arrive). `next-sync-committee` is chosen disjoint from `in-sync-committee` so the REST sync-committee test sees distinct per-validator entries for both committees.
+1. Downloads the `keymanager_file` kurtosis artifact to read the shared bearer token and probes every `http-validator` endpoint with it. Endpoints that accept the token are recorded under `[validator-nodes] online-urls`; their total keystore count is stored as `expected-identifier-count`.
+1. Resolves the keystores of the smallest online VC to their validator indices (POST `/eth/v1/beacon/states/head/validators`) and writes them to `single-node-indices`. The same VC is pointed to by `online-single-validator-node`, so the standard-logging-mode test for `--validator-nodes` can match loaded vs. tested validators exactly.
+1. Regenerates the validator-nodes data files under `./test/data/` (`online-validator-nodes`, `online-validator-nodes-duplicates`, `some-online-validator-nodes`, `online-and-wrong-auth-validator-nodes`, `online-single-validator-node`) using the discovered URLs and token. These files are gitignored because they embed devnet-specific secrets.
+1. Writes all fields back into `./test/config.toml` in place.
 
-    ```bash
-    curl --location 'http://127.0.0.1:<BEACON_NODE_API_PORT>/eth/v1/validator/duties/sync/<CURRENT_EPOCH>' \
-    --header 'Content-Type: application/json' \
-    --data 'CONTENT_OF_CURL_TEST_DATA_FILE'
-    ```
+Environment overrides:
 
-1. Extract as many validator indices as you like and add to `config.toml`
+- `ENCLAVE` (default `eth-duties-devnet`)
+- `CONFIG_FILE` (default `./test/config.toml`)
+- `VALIDATOR_POOL_SIZE` (default `768`)
+- `PICK_COUNT` (default `4`)
 
-#### Validators in next sync committee
-
-If you just started a fresh local devnet the values can be the same as [above](#validators-in-current-sync-committee). The background is that validators will be the same at least for the first two sync committee periods. It is unclear at which point different indices are chosen as these are protocol genesis specifics which are out of my knowledge.
-
-If you keep your devnet running for a longer time the procedure would be the following:
-
-1. Get the current epoch via e.g. beaconcha.in for public networks or dora for your local devnet
-1. Send `POST` call:
-
-    ```bash
-    curl --location 'http://127.0.0.1:<BEACON_NODE_API_PORT>/eth/v1/validator/duties/sync/<CURRENT_EPOCH+256>' \
-    --header 'Content-Type: application/json' \
-    --data 'CONTENT_OF_CURL_TEST_DATA_FILE'
-    ```
-
-1. Extract as many validator indices as you like and add to `config.toml`
-
-#### Validators not in any sync committee and not proposing blocks
-
-1. Just use the output of the aforementioned calls and find validator indices which are neither in the current nor in the next sync committee
-1. Get the current epoch via e.g. beaconcha.in for public networks or dora for your local devnet
-1. Send `GET` calls:
-
-    ```bash
-    curl --location 'http://127.0.0.1:<BEACON_NODE_API_PORT>/eth/v1/validator/duties/proposer/<CURRENT_EPOCH>'
-    curl --location 'http://127.0.0.1:<BEACON_NODE_API_PORT>/eth/v1/validator/duties/proposer/<CURRENT_EPOCH+1>'
-    ```
-
-1. Find indices which are not in any sync committee and will not propose a block in the current and upcoming epoch
-1. Extract as many validator indices as you like and add to `config.toml`
-
-#### Validators which will propose a block
-
-1. Get the current epoch via e.g. beaconcha.in for public networks or dora for your local devnet
-1. Send `GET` call:
-
-    ```bash
-    curl --location 'http://127.0.0.1:<BEACON_NODE_API_PORT>/eth/v1/validator/duties/proposer/<CURRENT_EPOCH+1>'
-    ```
-
-1. Extract as many validator indices as you like and add to `config.toml`
-    - I recommend to extract validator indices from the end of the returned list as these are the ones which will propose a block in the most distant future (running the suite may take some time so it is a good idea to have a time buffer)
+For public networks the script will not work as-is. Populate the fields manually by hitting the equivalent `/eth/v1/validator/duties/{sync,proposer}/<epoch>` endpoints against your node, and supply keymanager bearer tokens from your own validator clients.
 
 ## Run tests
 
@@ -113,11 +73,28 @@ You need to install all dependencies and setup the project by following the [con
 poetry run python test/run_tests.py
 ```
 
+### Run a single test in isolation
+
+Helpful when you just added a new test case or want to debug a specific failure without running the full suite (~3 minutes). Each test function in `test/cases/*.py` returns `1` on success and `0` on failure, so it can be invoked directly:
+
+```bash
+poetry run python -c "
+import sys
+sys.path.insert(0, 'test')
+sys.path.insert(0, 'duties')
+from cases import test_logging_mode
+result = test_logging_mode.test_omit_sync_committee_duties()
+print('RESULT:', result)
+"
+```
+
+Replace `test_logging_mode` and `test_omit_sync_committee_duties` with the module and function you want to run. Enable `[test] debug = true` in `test/config.toml` to also print the raw subprocess logs, which helps when verifying that the expected log strings actually appear.
+
 ## Known issues
 
 ### False negatives
 
-If you connect to a real world network like Holesky you can't predict the outcome to 100%. This is especially true when your beacon node is under heavy load already. You need to consider that when you see failing tests. This does not necessarily mean that a specific functionality is broken.
+If you connect to a real world network like Hoodi you can't predict the outcome to 100%. This is especially true when your beacon node is under heavy load already. You need to consider that when you see failing tests. This does not necessarily mean that a specific functionality is broken.
 
 There are three ways to check if a test really failed:
 

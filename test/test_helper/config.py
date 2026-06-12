@@ -59,12 +59,23 @@ class Validators:
 
 
 @dataclass
+class ValidatorNodes:
+    """Validator node keymanager info populated by test/prepare-test-config.sh"""
+
+    bearer_token: str
+    online_urls: List[str]
+    expected_identifier_count: int
+    single_node_indices: List[str]
+
+
+@dataclass
 class Config:
     """Config class"""
 
     general: General
     validators: Validators
     test: Test
+    validator_nodes: ValidatorNodes
 
 
 CONFIG = Binder(Config).parse_toml(Path.cwd() / "test/config.toml")
@@ -95,6 +106,11 @@ def validate_config() -> None:
         value = getattr(CONFIG.validators.full_identifier, field)
         if not value:
             print("Missing index or pubkey for validator with both identifiers")
+            error_counter += 1
+    for field in CONFIG.validator_nodes.__dataclass_fields__:
+        value = getattr(CONFIG.validator_nodes, field)
+        if not value:
+            print(f"Missing validator-nodes.{field.replace('_', '-')}")
             error_counter += 1
     if error_counter > 0:
         raise ValueError("Missing values in test_config.toml")

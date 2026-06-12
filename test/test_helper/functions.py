@@ -4,6 +4,7 @@
 from re import findall, search
 from typing import Callable, List
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from sty import fg  # type: ignore[import]
 from test_helper.chain import (
     get_number_of_active_validators,
@@ -95,6 +96,7 @@ def test_time_to_next_sync_committee_format(
             if match:
                 match_counter += 1
     assert match_counter == len(CONFIG.validators.active.in_sync_committee)
+    print(fg.green + "\rTest succeeded\n" + fg.rs)
 
 
 def generic_test(
@@ -193,7 +195,7 @@ def run_generic_test(
         )
         print(fg.green + "Test succeeded\n" + fg.rs)
         return 1
-    except AssertionError:
+    except (AssertionError, RequestsConnectionError):
         if not additional_failure_message:
             print(fg.red + "Test Failed\n" + fg.rs)
         if additional_failure_message:
