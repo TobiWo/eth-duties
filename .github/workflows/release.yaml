@@ -50,12 +50,12 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
         with:
           fetch-depth: 0
 
       - name: "Set up Python ${{ env.PYTHON_VERSION }}"
-        uses: "actions/setup-python@v5"
+        uses: "actions/setup-python@v6"
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
 
@@ -67,7 +67,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: "Cache Poetry dependencies"
-        uses: "actions/cache@v4"
+        uses: "actions/cache@v5"
         with:
           path: ".venv"
           key: "poetry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/poetry.lock') }}"
@@ -125,7 +125,7 @@ jobs:
           echo "artifact_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
       - name: "Upload artifacts"
-        uses: "actions/upload-artifact@v4"
+        uses: "actions/upload-artifact@v7"
         with:
           name: "${{ matrix.platform-name }}-artifacts"
           path: "/tmp/artifacts/*"
@@ -142,12 +142,12 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
         with:
           fetch-depth: 0
 
       - name: "Download all artifacts"
-        uses: "actions/download-artifact@v4"
+        uses: "actions/download-artifact@v8"
         with:
           path: "artifacts"
 
@@ -177,7 +177,7 @@ jobs:
           ls -la release-assets/
 
       - name: "Create Release"
-        uses: "softprops/action-gh-release@v2"
+        uses: "softprops/action-gh-release@v3"
         with:
           tag_name: "${{ steps.version.outputs.version }}"
           name: "Release ${{ steps.version.outputs.version }}"
