@@ -13,6 +13,10 @@ NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE = (
 NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE = (
     "Response object does not include a 'data' field"
 )
+BEACON_API_JSON_DECODE_ERROR_MESSAGE = (
+    "Beacon node returned non-JSON response from %s%s: "
+    'status=%s content-type=%s body="%s"'
+)
 SYSTEM_EXIT_MESSAGE = "Detected user intervention (SIGINT). Shutting down."
 NEXT_INTERVAL_MESSAGE = "Logging next duties interval..."
 NO_UPCOMING_DUTIES_MESSAGE = "No upcoming duties detected!"
