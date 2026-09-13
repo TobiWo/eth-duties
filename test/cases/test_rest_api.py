@@ -147,7 +147,7 @@ def test_get_block_proposing_duties_from_rest_endpoint() -> int:
         additional_failure_message=(
             "Please check if provided validators still have proposing duties in the queue. "
             "The recommendation is to get farthest proposing duty via beacon node call to "
-            "'http://localhost:5051/eth/v1/validator/duties/proposer/<CURRENT_EPOCH>+1'"
+            "'http://localhost:5051/eth/v2/validator/duties/proposer/<CURRENT_EPOCH>+1'"
         ),
     )
 

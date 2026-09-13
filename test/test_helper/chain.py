@@ -142,7 +142,7 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
     request_strings = [
         (
             f"{CONFIG.general.working_beacon_node_url}"
-            f"/eth/v1/validator/duties/proposer/{get_current_epoch() + i}"
+            f"/eth/v2/validator/duties/proposer/{get_current_epoch() + i}"
         )
         for i in range(0, 2, 1)
     ]
