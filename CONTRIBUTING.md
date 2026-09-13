@@ -127,7 +127,7 @@ feat(dashboard): Implement user analytics dashboard
 
 * Real-time user activity metrics
 * Customizable dashboard widgets
-* Export functionality for reports  
+* Export functionality for reports
 * Mobile-responsive design
 ```
 
