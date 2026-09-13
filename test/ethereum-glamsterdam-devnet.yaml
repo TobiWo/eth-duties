@@ -1,0 +1,41 @@
+---
+participants_matrix:
+  el:
+    - el_type: "geth"
+      el_image: "ethpandaops/geth:master"
+    - el_type: "nethermind"
+      el_image: "ethpandaops/nethermind:master"
+  cl:
+    - cl_type: "lighthouse"
+      cl_image: "ethpandaops/lighthouse:unstable"
+    - cl_type: "lodestar"
+      cl_image: "ethpandaops/lodestar:unstable"
+
+network_params:
+  gloas_fork_epoch: 1
+  num_validator_keys_per_node: 256
+  min_validator_withdrawability_delay: 1
+  withdrawal_type: "0x01"
+  validator_balance: 40000
+
+additional_services:
+  - "spamoor"
+  - "dora"
+  - "blockscout"
+  - "forkmon"
+
+dora_params:
+  image: "ethpandaops/dora:master-latest"
+
+keymanager_enabled: true
+
+port_publisher:
+  el:
+    enabled: true
+  cl:
+    enabled: true
+  vc:
+    enabled: true
+  additional_services:
+    enabled: true
+...
