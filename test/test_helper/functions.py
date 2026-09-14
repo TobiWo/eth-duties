@@ -9,6 +9,7 @@ from sty import fg  # type: ignore[import]
 from test_helper.chain import (
     get_number_of_active_validators,
     get_number_of_validators_in_current_sync_comittee,
+    get_number_of_validators_in_ptc,
     get_number_of_validators_which_will_propose_block,
 )
 from test_helper.config import CONFIG
@@ -37,9 +38,13 @@ def test_standard_logging_mode(
     number_of_validators_which_will_propose_block = (
         get_number_of_validators_which_will_propose_block(validators_to_test)
     )
+    number_of_validators_in_ptc = get_number_of_validators_in_ptc(validators_to_test)
     expected_log_counter = (
-        number_of_active_validators + number_of_validators_in_current_sync_comittee
-    ) + number_of_validators_which_will_propose_block
+        number_of_active_validators
+        + number_of_validators_in_current_sync_comittee
+        + number_of_validators_which_will_propose_block
+        + number_of_validators_in_ptc
+    )
     logs = run_eth_duties(command, process_termination_log, None, None)
     number_of_matched_logs = compare_logs(logs[0], expected_logs, False)
     assert number_of_matched_logs == expected_log_counter
@@ -145,6 +150,24 @@ def generic_test(
         if test_rest_response_length:
             assert len(list(process_output[1].json())) == number_of_expected_logs
     assert number_of_matched_logs == number_of_expected_logs
+
+
+def skip_test(test_message: str, reason: str) -> int:
+    """Skip a test which can not be executed against the connected devnet
+
+    A skipped test counts as success so that the suite does not report a failure
+    for a scenario which the running chain simply can not provide.
+
+    Args:
+        test_message (str): Message printed to the console
+        reason (str): Reason why the test is skipped
+
+    Returns:
+        int: Always 1 as a skipped test is not a failure
+    """
+    print_test_message(test_message=test_message)
+    print(fg.yellow + f"Test skipped: {reason}\n" + fg.rs)
+    return 1
 
 
 def run_generic_test(

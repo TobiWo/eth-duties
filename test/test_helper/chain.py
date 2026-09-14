@@ -1,5 +1,4 @@
-"""Module with chain related logic
-"""
+"""Module with chain related logic"""
 
 from math import trunc
 from time import sleep, time
@@ -77,31 +76,28 @@ def get_number_of_active_validators(validators: List[str]) -> int:
     return number_of_active_validators
 
 
-def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> int:
-    """Fetch number of provided validators in current sync committee
+def __post_duties_request(endpoint: str, validators: List[str]) -> Response:
+    """Post a duties request with a validator identifier body to the beacon api
 
     Args:
+        endpoint: Duty endpoint including the target epoch
         validators (List[str]): Validator identifiers
 
     Raises:
         ValueError: Could not fetch data from beacon client
 
     Returns:
-        int: Number of provided validators in current sync committee
+        Response: Response object provided by the beacon api
     """
     validator_request_data = ",".join(f'"{validator}"' for validator in validators)
     validator_request_data = f"[{validator_request_data}]"
-    request_string = (
-        f"{CONFIG.general.working_beacon_node_url}"
-        f"/eth/v1/validator/duties/sync/{get_current_epoch()}"
-    )
     try_counter = 0
     response = Response()
     while try_counter < 10:
         try:
             try_counter += 1
             response = post(
-                url=request_string,
+                url=f"{CONFIG.general.working_beacon_node_url}{endpoint}",
                 data=validator_request_data,
                 headers={
                     "Content-type": "application/json",
@@ -115,6 +111,24 @@ def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> 
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
+    return response
+
+
+def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> int:
+    """Fetch number of provided validators in current sync committee
+
+    Args:
+        validators (List[str]): Validator identifiers
+
+    Raises:
+        ValueError: Could not fetch data from beacon client
+
+    Returns:
+        int: Number of provided validators in current sync committee
+    """
+    response = __post_duties_request(
+        f"/eth/v1/validator/duties/sync/{get_current_epoch()}", validators
+    )
     filtered_response: List[Any] = []
     for item in response.json()["data"]:
         if len(filtered_response) == 0:
@@ -125,6 +139,68 @@ def get_number_of_validators_in_current_sync_comittee(validators: List[str]) -> 
             if index + 1 == len(filtered_response):
                 filtered_response.append(item)
     return len(filtered_response)
+
+
+def get_number_of_validators_in_ptc(validators: List[str]) -> int:
+    """Fetch number of provided validators which are assigned to the payload
+    timeliness committee for the current or next epoch
+
+    Ptc committees are drawn per epoch. The app fetches ahead into the next
+    epoch for any validator whose current-epoch slot based duty is already
+    outdated, so both epochs need to be checked here to get a matching count.
+
+    Args:
+        validators (List[str]): Validator identifiers
+
+    Raises:
+        ValueError: Could not fetch data from beacon client
+
+    Returns:
+        int: Number of provided validators assigned to the ptc
+    """
+    current_epoch = get_current_epoch()
+    ptc_indices = set(__fetch_ptc_validator_indices(current_epoch, validators))
+    ptc_indices.update(__fetch_ptc_validator_indices(current_epoch + 1, validators))
+    return len(ptc_indices)
+
+
+def get_validators_with_ptc_duty(validators: List[str]) -> List[str]:
+    """Fetch provided validators which are assigned to the payload timeliness committee
+
+    Ptc membership is redrawn every epoch which is why this has to be resolved
+    while a test is running instead of during test config preparation. On a small
+    devnet a ptc member will almost always also have an attestation duty in the
+    same slot, so exclusivity is not required here; tests isolate the ptc log
+    line via '--omit-attestation-duties' / '--omit-sync-committee-duties' instead.
+
+    Args:
+        validators (List[str]): Validator identifiers
+
+    Raises:
+        ValueError: Could not fetch data from beacon client
+
+    Returns:
+        List[str]: Validator identifiers with an upcoming ptc duty
+    """
+    return __fetch_ptc_validator_indices(get_current_epoch(), validators)
+
+
+def __fetch_ptc_validator_indices(epoch: int, validators: List[str]) -> List[str]:
+    """Fetch validator indices with a ptc duty for the provided epoch
+
+    Args:
+        epoch (int): Epoch to fetch ptc duties for
+        validators (List[str]): Validator identifiers
+
+    Returns:
+        List[str]: Validator indices with an upcoming ptc duty
+    """
+    response = __post_duties_request(
+        f"/eth/v1/validator/duties/ptc/{epoch}", validators
+    )
+    return list(
+        dict.fromkeys(duty["validator_index"] for duty in response.json()["data"])
+    )
 
 
 def get_number_of_validators_which_will_propose_block(validators: List[str]) -> int:
