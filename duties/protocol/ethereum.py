@@ -8,12 +8,7 @@ from time import time
 from typing import Tuple
 
 from constants import endpoints, json, logging
-from fetcher.data_types import (
-    AttestationDuty,
-    ProposingDuty,
-    SyncCommitteeDuty,
-    ValidatorDuty,
-)
+from fetcher.data_types import SlotBasedDuty, SyncCommitteeDuty, ValidatorDuty
 from helper.error import NoDataFromEndpointError
 from protocol.request import CalldataType, send_beacon_api_request
 
@@ -36,8 +31,34 @@ async def __fetch_genesis_time() -> int:
         sys_exit(1)
 
 
+async def __fetch_gloas_fork_epoch() -> int | None:
+    """Fetches the Gloas fork epoch from the beacon client
+
+    A beacon node which does not know the Gloas fork is a perfectly valid node.
+    In that case ptc duties are not available and will not be fetched.
+
+    Returns:
+        int | None: Gloas fork epoch or None if the beacon node does not provide it
+    """
+    try:
+        response = await send_beacon_api_request(
+            endpoints.BEACON_SPEC_ENDPOINT, CalldataType.NONE, flatten=False
+        )
+        gloas_fork_epoch = response[0].get(
+            json.RESPONSE_JSON_DATA_GLOAS_FORK_EPOCH_FIELD_NAME
+        )
+        if gloas_fork_epoch is None:
+            __LOGGER.info(logging.NO_GLOAS_FORK_EPOCH_MESSAGE)
+            return None
+        return int(gloas_fork_epoch)
+    except NoDataFromEndpointError:
+        __LOGGER.info(logging.NO_GLOAS_FORK_EPOCH_MESSAGE)
+        return None
+
+
 try:
     GENESIS_TIME = run(__fetch_genesis_time())
+    GLOAS_FORK_EPOCH = run(__fetch_gloas_fork_epoch())
 except KeyboardInterrupt:
     __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)
     sys_exit(1)
@@ -67,6 +88,21 @@ def get_current_epoch() -> int:
     return trunc((now - GENESIS_TIME) / (SLOTS_PER_EPOCH * SLOT_TIME))
 
 
+def is_gloas_active() -> bool:
+    """Checks whether the Gloas fork is active on the connected chain
+
+    The fork schedule is fetched once during startup while the activation itself
+    is checked on every call. This way ptc duties are picked up automatically as
+    soon as the fork epoch is reached.
+
+    Returns:
+        bool: Whether or not the Gloas fork is active
+    """
+    if GLOAS_FORK_EPOCH is None:
+        return False
+    return get_current_epoch() >= GLOAS_FORK_EPOCH
+
+
 def set_time_to_duty(duty: ValidatorDuty) -> None:
     """Sets the time (in seconds) until the provided duty is due, via call by reference
 
@@ -93,7 +129,7 @@ def set_time_to_duty(duty: ValidatorDuty) -> None:
             )
         else:
             duty.seconds_to_duty = time_to_next_sync_committee
-    elif isinstance(duty, (AttestationDuty, ProposingDuty)):
+    elif isinstance(duty, SlotBasedDuty):
         duty.seconds_to_duty = int(duty.slot * SLOT_TIME + GENESIS_TIME - time())
 
 

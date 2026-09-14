@@ -202,6 +202,7 @@ def __log_too_many_retries(
 
     Args:
         retry_counter (int): Count the number of request retries
+        retry_limit (int): Maximum number of request retries allowed
         node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
     """
     if retry_counter == retry_limit:
@@ -268,6 +269,9 @@ def __convert_to_raw_data_responses(
     Args:
         raw_responses (List[Response]): List of fetched responses
         flatten (bool): Should a possible list of lists be flattend. This assumes some knowledge about the handled data strucutes. # pylint: disable=line-too-long
+
+    Raises:
+        NoDataFromEndpointError: If no data could be fetched from the endpoint
 
     Returns:
         List[Any]: List of raw data objects from raw response objects
