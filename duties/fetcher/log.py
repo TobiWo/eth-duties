@@ -9,9 +9,8 @@ from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging, program
 from fetcher.data_types import (
-    AttestationDuty,
     DutyType,
-    ProposingDuty,
+    SlotBasedDuty,
     ValidatorDuty,
     ValidatorIdentifier,
 )
@@ -27,21 +26,38 @@ __validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 __LOGGER = getLogger()
 
 
-def __should_log_attestation_duties() -> bool:
-    """Checks if attestation duties should be logged to console.
+def __get_omitted_duty_types(validator_duties: List[ValidatorDuty]) -> List[DutyType]:
+    """Collects the duty types which should not be logged to the console.
+
+    Args:
+        validator_duties (List[ValidatorDuty]): List of validator duties
 
     Returns:
-        bool: True if attestation duties should be logged
+        List[DutyType]: Duty types which will be filtered from the logging output
     """
-    if ARGUMENTS.omit_attestation_duties:
-        return False
-    if get_validator_count() > ARGUMENTS.max_attestation_duty_logs:
-        __LOGGER.warning(
-            logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE,
-            ARGUMENTS.max_attestation_duty_logs,
-        )
-        return False
-    return True
+    omitted_duty_types: List[DutyType] = []
+    if get_validator_count() > ARGUMENTS.max_slot_based_duty_logs:
+        __warn_too_many_duties_for_logging(DutyType.ATTESTATION)
+        omitted_duty_types.append(DutyType.ATTESTATION)
+    ptc_duties_to_log = [duty for duty in validator_duties if duty.type == DutyType.PTC]
+    if len(ptc_duties_to_log) > ARGUMENTS.max_slot_based_duty_logs:
+        __warn_too_many_duties_for_logging(DutyType.PTC)
+        omitted_duty_types.append(DutyType.PTC)
+    return omitted_duty_types
+
+
+def __warn_too_many_duties_for_logging(duty_type: DutyType) -> None:
+    """Logs a warning that a duty type will not be logged due to too many validators.
+
+    Args:
+        duty_type (DutyType): Duty type which will be omitted from logging
+    """
+    __LOGGER.warning(
+        logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_SLOT_BASED_DUTIES_MESSAGE,
+        duty_type.value,
+        ARGUMENTS.max_slot_based_duty_logs,
+        *([duty_type.value] * 2),
+    )
 
 
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
@@ -52,11 +68,10 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     """
     __set_global_validator_identifiers_with_alias()
 
-    duties_to_log = validator_duties
-    if not __should_log_attestation_duties():
-        duties_to_log = [
-            duty for duty in validator_duties if duty.type != DutyType.ATTESTATION
-        ]
+    omitted_duty_types = __get_omitted_duty_types(validator_duties)
+    duties_to_log = [
+        duty for duty in validator_duties if duty.type not in omitted_duty_types
+    ]
 
     print("")
     __LOGGER.info(logging.NEXT_INTERVAL_MESSAGE)
@@ -115,7 +130,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
             f"Fetching duties in next interval."
         )
-    elif isinstance(duty, (AttestationDuty, ProposingDuty)):
+    elif isinstance(duty, SlotBasedDuty):
         time_to_next_duty = strftime(
             program.DUTY_LOGGING_TIME_FORMAT,
             gmtime(duty.seconds_to_duty),

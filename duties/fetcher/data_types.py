@@ -15,6 +15,7 @@ class DutyType(Enum):
     ATTESTATION = "attestation"
     SYNC_COMMITTEE = "sync_committee"
     PROPOSING = "proposing"
+    PTC = "ptc"
 
 
 class ValidatorDuty(BaseModel):
@@ -26,10 +27,14 @@ class ValidatorDuty(BaseModel):
     seconds_to_duty: int = Field(default=0)
 
 
-class AttestationDuty(ValidatorDuty):
-    """Attestation duty data."""
+class SlotBasedDuty(ValidatorDuty):
+    """Base class for validator duties which are due at a specific slot."""
 
     slot: int = Field(default=0)
+
+
+class AttestationDuty(SlotBasedDuty):
+    """Attestation duty data."""
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -44,10 +49,8 @@ class AttestationDuty(ValidatorDuty):
     )
 
 
-class ProposingDuty(ValidatorDuty):
+class ProposingDuty(SlotBasedDuty):
     """Block proposing duty data."""
-
-    slot: int = Field(default=0)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -57,6 +60,22 @@ class ProposingDuty(ValidatorDuty):
                 "type": "proposing",
                 "seconds_to_duty": 180,
                 "slot": 9876600,
+            }
+        }
+    )
+
+
+class PtcDuty(SlotBasedDuty):
+    """Payload timeliness committee duty data."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "pubkey": "0x8f1a3b5c7d9e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e",  # pylint: disable=line-too-long
+                "validator_index": "456789",
+                "type": "ptc",
+                "seconds_to_duty": 96,
+                "slot": 9876650,
             }
         }
     )
