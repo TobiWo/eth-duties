@@ -1,11 +1,55 @@
-"""Module with functions to test rest cicd mode
-"""
+"""Module with functions to test rest cicd mode"""
 
 # pylint: disable=line-too-long
 
+from test_helper.chain import get_validators_with_ptc_duty
 from test_helper.config import CONFIG
-from test_helper.functions import run_generic_test
+from test_helper.functions import run_generic_test, skip_test
 from test_helper.general import get_general_eth_duties_start_command
+
+
+def test_cicd_exit_mode_with_ptc_duties_only() -> int:
+    """Test that ptc duties do not influence the exit code in cicd exit mode
+
+    Ptc duties are neither reward nor slashing relevant which is why a validator
+    which only has an upcoming ptc duty must not block a cicd pipeline.
+
+    Skips if no validator of the configured pool currently holds a ptc duty,
+    which is the case on any pre-Gloas devnet.
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    validators_with_ptc_duty = get_validators_with_ptc_duty(
+        CONFIG.validators.active.general
+    )
+    if not validators_with_ptc_duty:
+        return skip_test(
+            "cicd exit mode with ptc duties only",
+            "No validator of the configured pool has an upcoming ptc duty. "
+            "This is expected on a pre-Gloas devnet.",
+        )
+    expected_logs = ["Started in mode: cicd-exit", "Exiting with code: 0"]
+    command = get_general_eth_duties_start_command(
+        [validators_with_ptc_duty[0]],
+        CONFIG.general.working_beacon_node_url,
+    ) + [
+        "--mode",
+        "cicd-exit",
+        "--omit-attestation-duties",
+        "--omit-sync-committee-duties",
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "cicd exit mode with ptc duties only",
+        "Exiting with code",
+        drop_expected_logs=True,
+        additional_failure_message=(
+            "Ptc duties must never be treated as relevant duties in any cicd mode. "
+            "An exit code of 1 means the ptc filter in helper/terminate.py is not working."
+        ),
+    )
 
 
 def test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold() -> (

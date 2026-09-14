@@ -22,10 +22,13 @@ std_logging.disable(std_logging.CRITICAL)
 
 # pylint: disable-next=wrong-import-position
 from cli.types import NodeConnectionProperties, NodeType
+
 # pylint: disable-next=wrong-import-position
 from constants import endpoints
+
 # pylint: disable-next=wrong-import-position
 from helper.error import NoDataFromEndpointError
+
 # pylint: disable-next=wrong-import-position
 from protocol import request
 
