@@ -3,18 +3,14 @@
 
 from asyncio import TaskGroup
 from multiprocessing.shared_memory import SharedMemory
-from typing import List, Sequence, Union
+from typing import List, Sequence
 
 from constants.program import UPDATED_SHARED_MEMORY_NAME
-from fetcher.data_types import (
-    AttestationDuty,
-    ProposingDuty,
-    SyncCommitteeDuty,
-    ValidatorDuty,
-)
+from fetcher.data_types import SlotBasedDuty, SyncCommitteeDuty, ValidatorDuty
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
+    fetch_upcoming_ptc_duties,
     fetch_upcoming_sync_committee_duties,
     update_validator_identifier_cache,
 )
@@ -52,8 +48,8 @@ def __is_first_non_sync_committee_duty_up_to_date(duties: List[ValidatorDuty]) -
         bool: Data of first non sync-committee is up to date
     """
     current_slot = get_current_slot()
-    first_non_sync_committee_duty: Union[AttestationDuty, ProposingDuty, None] = next(
-        (duty for duty in duties if isinstance(duty, (AttestationDuty, ProposingDuty))),
+    first_non_sync_committee_duty: SlotBasedDuty | None = next(
+        (duty for duty in duties if isinstance(duty, SlotBasedDuty)),
         None,
     )
     if (
@@ -123,11 +119,13 @@ async def fetch_upcoming_validator_duties() -> List[ValidatorDuty]:
             fetch_upcoming_sync_committee_duties()
         )
         proposing_task = taskgroup.create_task(fetch_upcoming_proposing_duties())
+        ptc_task = taskgroup.create_task(fetch_upcoming_ptc_duties())
 
     duties: List[ValidatorDuty] = []
     duties.extend(attestation_task.result().values())
     duties.extend(sync_committee_task.result().values())
     duties.extend(proposing_task.result().values())
+    duties.extend(ptc_task.result().values())
     duties.sort(key=__sort_duties)
     return duties
 
@@ -160,6 +158,6 @@ def __sort_duties(duty: ValidatorDuty) -> int:
     Returns:
         int: Sort key value
     """
-    if isinstance(duty, (AttestationDuty, ProposingDuty)):
+    if isinstance(duty, SlotBasedDuty):
         return duty.slot
     return 0
