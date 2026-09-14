@@ -4,11 +4,17 @@
 from typing import List
 
 from fastapi import APIRouter, Response, status
-from fetcher.data_types import AttestationDuty, ProposingDuty, SyncCommitteeDuty
+from fetcher.data_types import (
+    AttestationDuty,
+    ProposingDuty,
+    PtcDuty,
+    SyncCommitteeDuty,
+)
 from rest.core.types import NoBeaconNodeConnection
 from rest.service.duties.raw import (
     fetch_raw_attestation_duties,
     fetch_raw_proposing_duties,
+    fetch_raw_ptc_duties,
     fetch_raw_sync_committeen_duties,
 )
 
@@ -70,3 +76,22 @@ async def get_proposing_duties(
         List[ProposingDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
     """
     return await fetch_raw_proposing_duties(response)
+
+
+@raw_duties_router.get(
+    "/ptc",
+    status_code=status.HTTP_200_OK,
+    responses={503: {"model": NoBeaconNodeConnection}},
+)
+async def get_ptc_duties(
+    response: Response,
+) -> List[PtcDuty] | NoBeaconNodeConnection:
+    """Get upcoming payload timeliness committee duties for provided validators
+
+    Args:
+        response (Response): Ptc duty response
+
+    Returns:
+        List[PtcDuty] | NoBeaconNodeConnection: The upcoming ptc duties
+    """
+    return await fetch_raw_ptc_duties(response)
