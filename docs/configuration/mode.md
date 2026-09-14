@@ -4,6 +4,8 @@ The default running mode of `eth-duties` is logging duties to the console (speci
 
 **Note** If you do not omit attestation or sync-committee duties with `--omit-attestation-duties` or `--omit-sync-committee-duties` these are also considered as valid duties for the cicd modes. For a more fine granular setting on attestation duties please check the [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
 
+**Note on ptc duties** Payload timeliness committee (ptc) duties, introduced with the Glamsterdam upgrade ([EIP-7732](https://eips.ethereum.org/EIPS/eip-7732)), are **never** considered relevant duties for any cicd mode. Missing a ptc duty is neither reward nor slashing relevant, and with 512 validators assigned per slot it would otherwise block nearly every pipeline run. This is independent of `--omit-ptc-duties`, which only controls whether these duties are logged to the console.
+
 ## What are relevant duties
 
 In the following sub chapters I will often refer to relevant duties. This is a short explanation. Relevant are:
@@ -13,6 +15,10 @@ In the following sub chapters I will often refer to relevant duties. This is a s
 * validator will propose a block
 * x of y attestation duties (while y == number of validators monitored) need to be executed in less than a defined time threshold
   * see [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
+
+Explicitly **not** relevant:
+
+* validator is in the payload timeliness committee (ptc)
 
 ## Modes
 

@@ -19,13 +19,14 @@ For all available cli flags please call `eth-duties --help` or check the table b
 | `--log-color-proposing` | The logging color as hex or rgb code for proposing duty logs (default: '0, 128, 0' - green) | [link](./log-colors.md) |
 | `--log-time-warning` | The threshold at which a time to duty warning log (in seconds) will be colored in YELLOW (default: 120) | [link](./log-time.md) |
 | `--log-time-critical` | The threshold at which a time to duty critical log (in seconds) will be colored in RED (default: 60) | :no_entry: |
-| `--max-attestation-duty-logs` | The max. number of validators for which attestation duties will be logged (default: 50) | :no_entry: |
+| `--max-slot-based-duty-logs` | The max. number of validators for which slot based duties (attestation and ptc) will be logged (default: 50) | :no_entry: |
 | `--mode` | The mode which eth-duties will run with. Values are 'log', 'no-log', 'cicd-exit', 'cicd-wait' or 'cicd-force-graceful-exit' (default: 'log') | [link](./mode.md) |
 | `--mode-cicd-waiting-time` | The max. waiting time until eth-duties exits in cicd-wait mode (default 780 sec. (approx. 2 epochs)) | [link](./mode.md/#cicd-wait) |
 | `--mode-cicd-attestation-time` | If a defined proportion of attestion duties is above the defined time threshold the application exits gracefully in any cicd-mode (default 240 sec.) | [link](./mode.md/#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion) |
 | `--mode-cicd-attestation-proportion` | The proportion of attestation duties which needs to be above a defined time threshold to force the application to exit gracefully (default 1) | [link](./mode.md/#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion) |
 | `--omit-attestation-duties` | If supplied upcoming attestation duties will not be logged to the console | :no_entry: |
 | `--omit-sync-committee-duties` | If supplied upcoming sync committee duties will not be logged to the console | :no_entry: |
+| `--omit-ptc-duties` | If supplied upcoming payload timeliness committee (ptc) duties will not be logged to the console. They never influence the exit code in any cicd mode as they are not reward relevant. | [link](./mode.md) |
 | `--rest` | Starts a rest server on port 5000 | [link](./restful-api.md) |
 | `--rest-host` | Host from which requests will be accepted (default 0.0.0.0) | [link](./restful-api.md) |
 | `--rest-port` | Port where the rest server is exposed (default 5000) | [link](./restful-api.md) |

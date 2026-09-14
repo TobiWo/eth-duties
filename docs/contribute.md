@@ -23,7 +23,7 @@ My personal workflow to manage virtual environments is to use [miniconda/Anacond
 1. Activate your newly created conda environment
 
     ```bash
-    conda activate poetry-py310
+    conda activate poetry-py312
     ```
 
 1. List your Python environments with poetry
