@@ -6,8 +6,9 @@ from typing import Any
 # pylint: disable-next=import-error
 from constants.program import REQUEST_TIMEOUT
 from requests import delete, get, post
+from test_helper.chain import get_validators_with_ptc_duty
 from test_helper.config import CONFIG
-from test_helper.functions import run_generic_test
+from test_helper.functions import run_generic_test, skip_test
 from test_helper.general import get_general_eth_duties_start_command
 
 
@@ -66,6 +67,59 @@ def test_get_attestation_duties_from_rest_endpoint() -> int:
         "get attestation duties from rest endpoint",
         "GET /duties/raw/attestation",
         rest_call=get_attestation_duties_rest_call,
+        rest_call_trigger_log="all duties will be executed in",
+    )
+
+
+def test_get_ptc_duties_from_rest_endpoint() -> int:
+    """Test rest api get ptc duties endpoint
+
+    Skips if no validator of the configured pool currently holds a ptc duty,
+    which is the case on any pre-Gloas devnet.
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+
+    def get_ptc_duties_rest_call() -> Any:
+        """Get ptc duties rest call
+
+        Returns:
+            Any: Rest call response
+        """
+        return get(
+            f"http://localhost:{CONFIG.general.rest_port}/duties/raw/ptc",
+            timeout=REQUEST_TIMEOUT,
+        )
+
+    validators_with_ptc_duty = get_validators_with_ptc_duty(
+        CONFIG.validators.active.general
+    )
+    if not validators_with_ptc_duty:
+        return skip_test(
+            "get ptc duties from rest endpoint",
+            "No validator of the configured pool has an upcoming ptc duty. "
+            "This is expected on a pre-Gloas devnet.",
+        )
+    tested_validators = validators_with_ptc_duty[0:1]
+    expected_logs = [
+        f"Validator {validator} has next PTC duty" for validator in tested_validators
+    ]
+    command = get_general_eth_duties_start_command(
+        tested_validators, CONFIG.general.working_beacon_node_url
+    ) + [
+        "--rest",
+        "--rest-port",
+        CONFIG.general.rest_port,
+        "--omit-attestation-duties",
+        "--omit-sync-committee-duties",
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "get ptc duties from rest endpoint",
+        "GET /duties/raw/ptc",
+        rest_call=get_ptc_duties_rest_call,
         rest_call_trigger_log="all duties will be executed in",
     )
 
@@ -147,7 +201,7 @@ def test_get_block_proposing_duties_from_rest_endpoint() -> int:
         additional_failure_message=(
             "Please check if provided validators still have proposing duties in the queue. "
             "The recommendation is to get farthest proposing duty via beacon node call to "
-            "'http://localhost:5051/eth/v1/validator/duties/proposer/<CURRENT_EPOCH>+1'"
+            "'http://localhost:5051/eth/v2/validator/duties/proposer/<CURRENT_EPOCH>+1'"
         ),
     )
 

@@ -31,7 +31,7 @@ jobs:
         uses: "actions/cache@v5"
         with:
           path: "~/.cache/pre-commit"
-          key: "pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}"
+          key: "pre-commit-${{ hashFiles('.pre-commit/.pre-commit-config.yaml') }}"
           restore-keys: |
             pre-commit-
 
@@ -88,24 +88,25 @@ jobs:
           echo "❌ Pre-commit validation failed!"
           echo ""
           if [ "${{ github.event_name }}" = "push" ]; then
-            echo "🚨 Push to develop failed validation!"
-            echo "This prevents properly formatted commits from being cherry-picked to releases."
+            echo "🚨 Push to ${{ github.ref_name }} failed validation!"
+            echo "Commit messages must be valid before develop can be merged to main."
             echo ""
-            echo "🔧 To fix the squashed commit to develop:"
+            echo "🔧 To fix the commit message:"
             echo "  1. Check the validation errors above"
-            echo "  2. Use 'git commit --amend' to fix the commit message"
+            echo "  2. Use 'git commit --amend' to fix the most recent commit message"
+            echo "     (or 'git rebase -i' to fix older commits)"
             echo "  3. Force push: 'git push --force-with-lease'"
             echo ""
-            echo "⚠️  Note: Since this is develop, semantic-release won't run"
-            echo "    But these commits will be cherry-picked to release branches!"
+            echo "⚠️  Note: semantic-release only runs on main, but these commits"
+            echo "    are analysed for versioning once develop is merged there!"
           else
             echo "🚨 Release PR validation failed!"
             echo "This blocks semantic-release from running and creating releases."
             echo ""
             echo "🔧 To fix the release PR:"
             echo "  1. Check the validation errors above"
-            echo "  2. Fix commit messages in the release branch"
-            echo "  3. Push updates to the release branch"
+            echo "  2. Fix the offending commit messages on develop"
+            echo "  3. Push the updates to develop"
             echo ""
             echo "⚠️  Semantic-release will NOT run until validation passes!"
           fi
@@ -119,6 +120,8 @@ jobs:
           echo "  ci(release): add automated release workflow"
           echo ""
           echo "💡 Set up local pre-commit hooks for immediate feedback:"
-          echo "  pip install pre-commit && pre-commit install"
+          echo "  pip install pre-commit"
+          echo "  pre-commit install --config .pre-commit/.pre-commit-config.yaml"
+          echo "  pre-commit install --hook-type commit-msg --config .pre-commit/.pre-commit-config.yaml"
           exit 1
 ...

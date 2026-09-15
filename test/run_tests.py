@@ -1,5 +1,4 @@
-"""Module to run test suite
-"""
+"""Module to run test suite"""
 
 # pylint: disable=line-too-long
 
@@ -30,6 +29,7 @@ test_cases = [
     test_rest_api.test_get_block_proposing_duties_from_rest_endpoint,
     test_rest_api.test_get_sync_committee_duties_from_rest_endpoint,  # test will currently fail on kurtosis devnet (see here: https://github.com/TobiWo/eth-duties/issues/78)
     test_rest_api.test_get_attestation_duties_from_rest_endpoint,
+    test_rest_api.test_get_ptc_duties_from_rest_endpoint,
     test_rest_api.test_rest_while_running_in_cicd_mode,
     test_rest_api.test_post_new_validator_identifier_rest_endpoint,
     test_rest_api.test_delete_validator_identifier_rest_endpoint,
@@ -45,7 +45,9 @@ test_cases = [
     test_logging_mode.test_logging_duties_for_high_number_of_validators,
     test_logging_mode.test_omit_attestation_duties,
     test_logging_mode.test_omit_sync_committee_duties,
-    test_logging_mode.test_increase_of_max_attestation_duty_logs,
+    test_logging_mode.test_omit_ptc_duties,
+    test_logging_mode.test_ptc_duty_logging,
+    test_logging_mode.test_increase_of_max_slot_based_duty_logs,
     test_logging_mode.test_logged_format_of_time_to_next_sync_committee,
     test_logging_mode.test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes,
     # Test cli validation
@@ -63,6 +65,7 @@ test_cases = [
     test_cicd_mode.test_cicd_exit_mode_with_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold,
     test_cicd_mode.test_cicd_exit_mode_without_sync_committee_duties_while_proportion_of_duties_is_not_above_threshold,
     test_cicd_mode.test_cicd_force_graceful_exit_mode,
+    test_cicd_mode.test_cicd_exit_mode_with_ptc_duties_only,
     test_cicd_mode.test_cicd_wait_mode_without_sync_committee_duties_while_proportion_of_duties_is_above_threshold_within_waiting_time,
     test_cicd_mode.test_cicd_wait_mode_while_waiting_time_exceeds,
     # Test node connections

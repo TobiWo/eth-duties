@@ -104,7 +104,7 @@ fetch_sync_indices() {
 
 fetch_proposer_indices() {
 	local epoch="$1"
-	curl -sf --location "$beacon_node/eth/v1/validator/duties/proposer/$epoch" |
+	curl -sf --location "$beacon_node/eth/v2/validator/duties/proposer/$epoch" |
 		jq -c '[.data[].validator_index | tonumber]'
 }
 

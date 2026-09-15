@@ -109,14 +109,82 @@ git commit --no-verify -m "emergency fix"
 
 **Note:** GitHub Actions will still validate these commits in PRs.
 
-## Release Process
+## Branching and Release Process
 
-This project uses semantic-release for automated versioning and release notes. The release workflow is as follows:
+This project follows a simplified Gitflow and uses semantic-release for automated versioning and release notes.
 
-1. **Feature development**: Work on feature branches, squash merge to `develop`
-2. **Release preparation**: Cherry-pick commits from `develop` to `release-vX.Y.Z` branch
-3. **Release**: Create PR from `release-vX.Y.Z` to `main`
-4. **Automated release**: Semantic-release generates version, tags, and release notes
+```text
+feature/* ──→ develop ──→ main
+                           ↑
+              hotfix/* ────┘
+```
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Production releases, always deployable |
+| `develop` | Integration branch and staging area |
+| `feature/*` | New features and enhancements; delete after merge to `develop` |
+| `hotfix/*` | Production bug fixes; delete after merge to `main` |
+
+| Transition | Method | PR required |
+| --- | --- | --- |
+| `feature/*` → `develop` | Direct merge with `--no-ff` | No |
+| `develop` → `main` | Pull request, merge commit | **Yes** — the quality gate |
+| `hotfix/*` → `main` | Pull request | **Yes** |
+| `main` → `develop` | Merge (post-release sync) | No |
+
+### Feature Development
+
+```bash
+git checkout develop && git pull origin develop
+git checkout -b feature/my-feature
+
+# ... work, committing with conventional commits ...
+
+# Optional: tidy up commits before merging
+git rebase -i develop
+
+git checkout develop && git pull origin develop
+git merge --no-ff feature/my-feature
+git push origin develop
+git branch -d feature/my-feature
+```
+
+**Do not squash-merge.** Squashing collapses separate `feat:`, `fix:`, and `test:` commits into
+one, and semantic-release may then miss the version bump. `--no-ff` preserves each conventional
+commit and creates a merge commit that marks the feature boundary, so the whole feature can be
+reverted with a single `git revert`.
+
+Feature branches need no PR — the quality gate is at `develop` → `main`, where it matters.
+
+### Release
+
+Create a PR from `develop` to `main`. This is the quality gate and is always required:
+
+```bash
+gh pr create --base main --head develop --title "Release: [describe release]"
+```
+
+Use a standard merge commit, not squash or rebase, so individual conventional commits survive
+for semantic-release to analyse. Once merged, semantic-release determines the version, creates
+the git tag, publishes the GitHub release, and generates the changelog. The tag then triggers
+the binary and Docker builds.
+
+### Hotfix
+
+For critical production bugs that cannot wait for the normal cycle, branch from `main`, open a
+PR back into `main`, then sync the fix into `develop`.
+
+### Post-Release Sync
+
+After anything lands on `main`, merge it back so `develop` does not fall behind:
+
+```bash
+git checkout main && git pull origin main
+git checkout develop && git merge main && git push origin develop
+```
+
+Always merge, never rebase.
 
 ### Enhancing Release Notes
 
@@ -127,7 +195,7 @@ feat(dashboard): Implement user analytics dashboard
 
 * Real-time user activity metrics
 * Customizable dashboard widgets
-* Export functionality for reports  
+* Export functionality for reports
 * Mobile-responsive design
 ```
 

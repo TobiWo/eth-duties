@@ -7,10 +7,16 @@ from typing import List
 
 from constants import program
 from fastapi import Response, status
-from fetcher.data_types import AttestationDuty, ProposingDuty, SyncCommitteeDuty
+from fetcher.data_types import (
+    AttestationDuty,
+    ProposingDuty,
+    PtcDuty,
+    SyncCommitteeDuty,
+)
 from fetcher.fetch import (
     fetch_upcoming_attestation_duties,
     fetch_upcoming_proposing_duties,
+    fetch_upcoming_ptc_duties,
     fetch_upcoming_sync_committee_duties,
 )
 from rest.core.types import NoBeaconNodeConnection
@@ -77,6 +83,28 @@ async def fetch_raw_proposing_duties(
             program.REST_RAW_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT,
         )
         return list(upcoming_proposing_duties.values())
+    except AsyncioTimeoutError:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return NoBeaconNodeConnection()
+
+
+async def fetch_raw_ptc_duties(
+    response: Response,
+) -> List[PtcDuty] | NoBeaconNodeConnection:
+    """Fetch upcoming payload timeliness committee duties for provided validators
+
+    Args:
+        response (Response): Ptc duty response
+
+    Returns:
+        List[PtcDuty] | NoBeaconNodeConnection: The upcoming ptc duties
+    """
+    try:
+        upcoming_ptc_duties = await wait_for(
+            fetch_upcoming_ptc_duties(),
+            program.REST_RAW_DUTY_NO_BEACON_NODE_CONNECTION_TIMEOUT,
+        )
+        return list(upcoming_ptc_duties.values())
     except AsyncioTimeoutError:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return NoBeaconNodeConnection()
