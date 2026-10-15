@@ -4,8 +4,10 @@
 # Beacon API endpoints
 ATTESTATION_DUTY_ENDPOINT = "/eth/v1/validator/duties/attester/"
 SYNC_COMMITTEE_DUTY_ENDPOINT = "/eth/v1/validator/duties/sync/"
-BLOCK_PROPOSING_DUTY_ENDPOINT = "/eth/v1/validator/duties/proposer/"
+BLOCK_PROPOSING_DUTY_ENDPOINT = "/eth/v2/validator/duties/proposer/"
+PTC_DUTY_ENDPOINT = "/eth/v1/validator/duties/ptc/"
 BEACON_GENESIS_ENDPOINT = "/eth/v1/beacon/genesis"
+BEACON_SPEC_ENDPOINT = "/eth/v1/config/spec"
 VALIDATOR_STATUS_ENDPOINT = "/eth/v1/beacon/states/head/validators"
 NODE_HEALTH_ENDPOINT = "/eth/v1/node/health"
 
