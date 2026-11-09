@@ -2,9 +2,12 @@
 # Pre-commit hooks for code quality and commit message validation
 # Install: pip install pre-commit && pre-commit install
 
+default_language_version:
+  node: "26.13.0"
+
 repos:
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: "check-merge-conflict"
         description: "Check for files that contain merge conflict markers"
@@ -38,7 +41,7 @@ repos:
       - id: "requirements-txt-fixer"
         description: "Sorts entries in requirements.txt"
   - repo: "https://github.com/adrienverge/yamllint.git"
-    rev: "v1.37.1"
+    rev: "v1.38.0"
     hooks:
       - id: "yamllint"
         args:
@@ -46,12 +49,12 @@ repos:
           - "--config-file"
           - ".pre-commit/.yamllint.yaml"
   - repo: "https://github.com/igorshubovych/markdownlint-cli"
-    rev: "v0.45.0"
+    rev: "v0.50.0"
     hooks:
       - id: "markdownlint"
         args: ["--config", ".pre-commit/.markdownlint.yaml"]
   - repo: "https://github.com/shellcheck-py/shellcheck-py"
-    rev: "v0.10.0.1"
+    rev: "v0.11.0.1-1"
     hooks:
       - id: "shellcheck"
   # - repo: "https://github.com/koalaman/shellcheck-precommit"
@@ -63,15 +66,15 @@ repos:
   #       types: ["shell"]
   #       require_serial: true
   - repo: "https://github.com/maxwinterstein/shfmt-py"
-    rev: "v3.12.0.1"
+    rev: "v4.2.0"
     hooks:
       - id: "shfmt"
   - repo: "https://github.com/rhysd/actionlint"
-    rev: "v1.7.8"
+    rev: "v1.7.12"
     hooks:
       - id: "actionlint"
   - repo: "https://github.com/alessandrojcm/commitlint-pre-commit-hook"
-    rev: "v9.22.0"
+    rev: "v9.27.0"
     hooks:
       - id: "commitlint"
         description: "Validate commit message format"

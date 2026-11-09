@@ -23,18 +23,18 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
       - name: "Set up python and pip cache"
-        uses: "actions/setup-python@v6"
+        uses: "actions/setup-python@v7"
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache: "pip"
       - name: "Install dependencies"
         run: "pip install -r requirements.txt"
       - name: "Generate mkdocs cache id"
         run: "echo \"cache_id=$(date --utc '+%V')\" >> \"$GITHUB_ENV\""
       - name: "Set up mkdocs cache"
-        uses: "actions/cache@v5"
+        uses: "actions/cache@v6"
         with:
           path: "~/.cache"
           key: "mkdocs-material-${{ env.cache_id }}"

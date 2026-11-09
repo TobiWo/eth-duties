@@ -16,7 +16,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
       - name: "Extract metadata for image tags and labels"
         id: "meta"
         uses: "docker/metadata-action@v6"

@@ -8,7 +8,7 @@ on:
       - "v*.*.*"
 
 env:
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.14"
 
 jobs:
   # Build cross-platform executables using PyInstaller
@@ -50,24 +50,24 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           fetch-depth: 0
 
       - name: "Set up Python ${{ env.PYTHON_VERSION }}"
-        uses: "actions/setup-python@v6"
+        uses: "actions/setup-python@v7"
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
 
       - name: "Install Poetry"
         uses: "snok/install-poetry@v1"
         with:
-          version: "latest"
+          version: "2.5.1"
           virtualenvs-create: true
           virtualenvs-in-project: true
 
       - name: "Cache Poetry dependencies"
-        uses: "actions/cache@v5"
+        uses: "actions/cache@v6"
         with:
           path: ".venv"
           key: "poetry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/poetry.lock') }}"
@@ -142,7 +142,7 @@ jobs:
 
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v6"
+        uses: "actions/checkout@v7"
         with:
           fetch-depth: 0
 
