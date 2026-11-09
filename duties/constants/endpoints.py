@@ -1,5 +1,4 @@
-"""Defines api endpoints
-"""
+"""Defines api endpoints"""
 
 # Beacon API endpoints
 ATTESTATION_DUTY_ENDPOINT = "/eth/v1/validator/duties/attester/"

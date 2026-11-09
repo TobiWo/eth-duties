@@ -1,5 +1,4 @@
-"""Module for parsing provided validator identifiers
-"""
+"""Module for parsing provided validator identifiers"""
 
 from asyncio import run, sleep
 from logging import getLogger
@@ -112,7 +111,7 @@ def __set_update_flag_in_shared_memory() -> None:
 
 
 async def __fetch_active_validator_identifiers(
-    provided_raw_validator_identifiers: dict[str, ValidatorIdentifier]
+    provided_raw_validator_identifiers: dict[str, ValidatorIdentifier],
 ) -> dict[str, ValidatorIdentifier]:
     """Fetch active validators based on on-chain status
 

@@ -1,5 +1,4 @@
-"""Initializes necessary program components
-"""
+"""Initializes necessary program components"""
 
 import sys
 from logging import config as logging_config

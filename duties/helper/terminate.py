@@ -1,5 +1,4 @@
-"""Helper module for graceful shutdown
-"""
+"""Helper module for graceful shutdown"""
 
 import signal
 from asyncio import all_tasks, create_task, current_task, gather, get_running_loop

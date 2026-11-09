@@ -1,5 +1,4 @@
-"""Router module whether there are any upcoming duties
-"""
+"""Router module whether there are any upcoming duties"""
 
 from fastapi import APIRouter, Response, status
 from rest.core.types import NoBeaconNodeConnection, ValidatorDuties

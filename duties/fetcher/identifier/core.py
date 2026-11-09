@@ -1,5 +1,4 @@
-"""Module for core functions to parse and create complete validator identifiers
-"""
+"""Module for core functions to parse and create complete validator identifiers"""
 
 from logging import getLogger
 from multiprocessing.shared_memory import SharedMemory
@@ -30,7 +29,7 @@ def read_validator_identifiers_from_shared_memory(
     try:
         read_bytes = bytes(shared_validator_identifiers.buf[:10000000])
         shared_validator_identifiers.close()
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         __LOGGER.error(logging.CANNOT_READ_SHARED_MEMORY_MESSAGE)
         shared_validator_identifiers.close()
         shared_validator_identifiers.unlink()
@@ -55,7 +54,7 @@ def write_validator_identifiers_to_shared_memory(
             : memoryview(validator_identifiers_bytes).nbytes
         ] = validator_identifiers_bytes
         shared_validator_identifiers.close()
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         __LOGGER.error(logging.CANNOT_WRITE_SHARED_MEMORY_MESSAGE)
         shared_validator_identifiers.close()
         shared_validator_identifiers.unlink()

@@ -213,7 +213,7 @@ async def __fetch_duty_responses(
             ),
         )
         return [duty_class.model_validate(data) for data in responses]
-    except (NoDataFromEndpointError, RuntimeError):
+    except NoDataFromEndpointError, RuntimeError:
         return []
 
 

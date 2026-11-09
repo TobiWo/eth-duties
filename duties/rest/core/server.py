@@ -1,5 +1,4 @@
-"""Rest API server module
-"""
+"""Rest API server module"""
 
 import socket as sock
 from logging import getLogger

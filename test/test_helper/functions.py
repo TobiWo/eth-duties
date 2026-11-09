@@ -1,5 +1,4 @@
-"""Module containig test function implementations
-"""
+"""Module containig test function implementations"""
 
 from re import findall, search
 from typing import Callable, List
@@ -218,7 +217,7 @@ def run_generic_test(
         )
         print(fg.green + "Test succeeded\n" + fg.rs)
         return 1
-    except (AssertionError, RequestsConnectionError):
+    except AssertionError, RequestsConnectionError:
         if not additional_failure_message:
             print(fg.red + "Test Failed\n" + fg.rs)
         if additional_failure_message:

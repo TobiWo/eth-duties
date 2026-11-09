@@ -1,5 +1,4 @@
-"""Router module for updating validator identifiers
-"""
+"""Router module for updating validator identifiers"""
 
 from typing import List
 

@@ -1,5 +1,4 @@
-"""Router module for raw upcoming duties
-"""
+"""Router module for raw upcoming duties"""
 
 from typing import List
 

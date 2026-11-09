@@ -1,5 +1,4 @@
-"""Module for general helper functions
-"""
+"""Module for general helper functions"""
 
 from signal import SIGINT
 from socket import create_connection

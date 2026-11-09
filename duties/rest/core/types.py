@@ -1,5 +1,4 @@
-"""Module for rest specific types
-"""
+"""Module for rest specific types"""
 
 from enum import Enum
 from typing import List

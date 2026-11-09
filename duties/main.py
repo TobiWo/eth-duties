@@ -130,7 +130,7 @@ if __name__ == "__main__":
     rest_api_server = create_rest_server()
     try:
         __start_processes(rest_api_server, main_logger)
-    except (CancelledError, KeyboardInterrupt):
+    except CancelledError, KeyboardInterrupt:
         if rest_api_server.server.started:
             rest_api_server.stop()
         clean_shared_memory()

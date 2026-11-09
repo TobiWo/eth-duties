@@ -1,5 +1,4 @@
-"""Module with helper functions to parse specific cli arguments
-"""
+"""Module with helper functions to parse specific cli arguments"""
 
 from pathlib import Path
 from typing import List

@@ -1,5 +1,4 @@
-"""Module with functions to test rest api
-"""
+"""Module with functions to test rest api"""
 
 from typing import Any
 

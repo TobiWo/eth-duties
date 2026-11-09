@@ -1,5 +1,4 @@
-"""Duty related helper module
-"""
+"""Duty related helper module"""
 
 from asyncio import TaskGroup
 from multiprocessing.shared_memory import SharedMemory

@@ -69,7 +69,7 @@ def get_number_of_active_validators(validators: List[str]) -> int:
                     number_of_active_validators += 1
             if response.status_code == 200:
                 break
-        except (RequestsConnectionError, ReadTimeout):
+        except RequestsConnectionError, ReadTimeout:
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
@@ -107,7 +107,7 @@ def __post_duties_request(endpoint: str, validators: List[str]) -> Response:
             )
             if response.status_code == 200:
                 break
-        except (RequestsConnectionError, ReadTimeout):
+        except RequestsConnectionError, ReadTimeout:
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
@@ -238,7 +238,7 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
                         number_of_validators_which_will_propose_a_block += 1
                 if response.status_code == 200:
                     break
-            except (RequestsConnectionError, ReadTimeout):
+            except RequestsConnectionError, ReadTimeout:
                 sleep(0.1)
         if try_counter == 10:
             raise ValueError("Couldn't fetch data from provided beacon client")

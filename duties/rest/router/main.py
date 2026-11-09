@@ -1,5 +1,4 @@
-"""FastAPI router module
-"""
+"""FastAPI router module"""
 
 from fastapi import APIRouter
 from rest.router.duties.any import any_duties_router

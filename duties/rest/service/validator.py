@@ -1,5 +1,4 @@
-"""Service module for updating validator identifiers
-"""
+"""Service module for updating validator identifiers"""
 
 from logging import getLogger
 from typing import Dict, List

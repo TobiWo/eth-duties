@@ -1,5 +1,4 @@
-"""Service module for checking whether there are any upcoming duties
-"""
+"""Service module for checking whether there are any upcoming duties"""
 
 from asyncio import TimeoutError as AsyncioTimeoutError
 from asyncio import wait_for

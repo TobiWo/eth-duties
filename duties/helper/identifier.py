@@ -1,5 +1,4 @@
-"""Identifier related helper module
-"""
+"""Identifier related helper module"""
 
 from multiprocessing.shared_memory import SharedMemory
 

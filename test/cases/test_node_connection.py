@@ -1,5 +1,4 @@
-"""Module for testing node connections
-"""
+"""Module for testing node connections"""
 
 from pathlib import Path
 
