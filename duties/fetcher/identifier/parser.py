@@ -2,7 +2,6 @@
 
 from asyncio import run, sleep
 from logging import getLogger
-from multiprocessing.shared_memory import SharedMemory
 from sys import exit as sys_exit
 from typing import Any, Dict, List
 
@@ -16,6 +15,7 @@ from fetcher.identifier.filter import (
     log_inactive_and_duplicated_validators,
 )
 from helper.error import NoDataFromEndpointError
+from helper.identifier import open_shared_memory
 from protocol.ethereum import ACTIVE_VALIDATOR_STATUS
 from protocol.request import (
     CalldataType,
@@ -35,8 +35,8 @@ async def create_shared_active_validator_identifiers(
     Args:
         active_validator_identifiers (Dict[str, ValidatorIdentifier] | None, optional): Active validator identifiers stored in shared memory. Defaults to None. # pylint: disable=line-too-long
     """
-    shared_active_validator_identifiers = SharedMemory(
-        program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME, False
+    shared_active_validator_identifiers = open_shared_memory(
+        program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
     )
     if not active_validator_identifiers:
         active_validator_identifiers = await __fetch_active_validator_identifiers(
@@ -75,8 +75,8 @@ async def update_shared_active_validator_identifiers_from_rest_input(
             current_identifier = current_active_validator_identifiers.get(identifier)
             if current_identifier:
                 current_active_validator_identifiers.pop(identifier)
-    shared_active_validator_identifiers = SharedMemory(
-        program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME, False
+    shared_active_validator_identifiers = open_shared_memory(
+        program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
     )
     core.write_validator_identifiers_to_shared_memory(
         shared_active_validator_identifiers, current_active_validator_identifiers
@@ -105,7 +105,7 @@ def __set_update_flag_in_shared_memory() -> None:
     identifiers got updated
     """
     try:
-        SharedMemory(program.UPDATED_SHARED_MEMORY_NAME, True, 1).close()
+        open_shared_memory(program.UPDATED_SHARED_MEMORY_NAME, True, 1).close()
     except FileExistsError:
         pass
 
@@ -336,18 +336,26 @@ def __get_raw_validator_identifier_from_keystore(
     }
 
 
-try:
-    SharedMemory(
+def __create_shared_memory_instances() -> None:
+    """Creates the shared memory instances and fills them with the active validator
+    identifiers
+    """
+    open_shared_memory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME,
         True,
         program.SIZE_OF_SHARED_MEMORY,
     )
-    SharedMemory(
+    open_shared_memory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME,
         True,
         program.SIZE_OF_SHARED_MEMORY,
     )
     run(create_shared_active_validator_identifiers())
+
+
+try:
+    if program.IS_SHARED_MEMORY_OWNER:
+        __create_shared_memory_instances()
     update_validator_identifier_cache()
 except KeyboardInterrupt:
     __LOGGER.error(logging.SYSTEM_EXIT_MESSAGE)

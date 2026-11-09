@@ -19,7 +19,10 @@ from helper.duty import (
     is_current_data_up_to_date,
     update_time_to_duty,
 )
-from helper.identifier import clean_shared_memory
+from helper.identifier import (
+    clean_shared_memory,
+    share_shared_memory_ids_with_child_processes,
+)
 from helper.terminate import GracefulTerminator
 from protocol.request import beacon_node, validator_node
 from rest.app import create_rest_server
@@ -114,6 +117,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
         logger (Logger): Logger instance
     """
     if ARGUMENTS.rest and "cicd" not in ARGUMENTS.mode.value:
+        share_shared_memory_ids_with_child_processes()
         rest_server.start()
         rest_server.server.started = True
         run(__main())

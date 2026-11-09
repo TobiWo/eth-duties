@@ -1,7 +1,6 @@
 """Duty related helper module"""
 
 from asyncio import TaskGroup
-from multiprocessing.shared_memory import SharedMemory
 from typing import List, Sequence
 
 from constants.program import UPDATED_SHARED_MEMORY_NAME
@@ -13,6 +12,7 @@ from fetcher.fetch import (
     fetch_upcoming_sync_committee_duties,
     update_validator_identifier_cache,
 )
+from helper.identifier import open_shared_memory
 from protocol.ethereum import get_current_epoch, get_current_slot, set_time_to_duty
 
 
@@ -86,7 +86,7 @@ def __has_updated_validator_identifiers() -> bool:
         bool: Whether or not shared memory objects got updated
     """
     try:
-        identifiers_got_updated = SharedMemory(UPDATED_SHARED_MEMORY_NAME, False)
+        identifiers_got_updated = open_shared_memory(UPDATED_SHARED_MEMORY_NAME)
         update_validator_identifier_cache()
         identifiers_got_updated.close()
         identifiers_got_updated.unlink()
