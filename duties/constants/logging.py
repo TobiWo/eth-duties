@@ -71,6 +71,7 @@ USED_BEACON_NODE_MESSAGE = "Using beacon node %s"
 ALL_HEALTHY_BEACON_NODES_MESSAGE = "All beacon node endpoints are healthy"
 ONE_NON_HEALTHY_BEACON_NODE_MESSAGE = "Beacon node %s is not ready to accept requests!"
 NODE_URL_ERROR_MESSAGE = "{0} node url should start with http or https"
+CANNOT_OPEN_FILE_ERROR_MESSAGE = "can't open '{0}': {1}"
 VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = (
     "Validator node information should only consist of url "
     "and bearer token separated by semicolon"

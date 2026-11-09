@@ -3,7 +3,7 @@ Module for parsing CLI arguments
 """
 
 import sys
-from argparse import ArgumentError, ArgumentParser, FileType, Namespace
+from argparse import ArgumentError, ArgumentParser, Namespace
 from importlib.metadata import PackageNotFoundError, version
 from itertools import chain
 from typing import List
@@ -210,7 +210,7 @@ def __get_raw_arguments() -> Namespace:
     )
     parser.add_argument(
         "--validators-file",
-        type=FileType("r"),
+        type=parse.set_validators_file,
         help="File with validator identifiers where every identifier is on a separate line",
         action="store",
     )
@@ -257,14 +257,14 @@ def __validate_fetching_interval(passed_fetching_interval: int) -> None:
 
 def __validate_provided_validator_flag(
     validators: List[str] | None,
-    validators_file: str | None,
+    validators_file: List[str] | None,
     validator_nodes: NodeConnectionProperties | None,
 ) -> None:
     """Validates that only one of the validator flags was provided
 
     Args:
         validators (List[str] | None): Provided validators
-        validators_file (str | None): Provided validators as file
+        validators_file (List[str] | None): Validators read from the provided file
         validator_nodes (NodeConnectionProperties | None): Provided validator api connection properties # pylint: disable=line-too-long
 
     Raises:

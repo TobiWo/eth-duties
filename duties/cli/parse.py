@@ -1,10 +1,12 @@
 """Module with helper functions to parse specific cli arguments"""
 
+from argparse import ArgumentTypeError
 from pathlib import Path
 from typing import List
 
 from cli.types import NodeConnectionProperties, NodeType
 from constants.logging import (
+    CANNOT_OPEN_FILE_ERROR_MESSAGE,
     NODE_URL_ERROR_MESSAGE,
     VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE,
 )
@@ -86,6 +88,27 @@ def set_logging_color(logging_color: str) -> List[int]:
     if len(filtered_rgb_color_codes) != 3:
         raise ValueError()
     return filtered_rgb_color_codes
+
+
+def set_validators_file(file_path: str) -> List[str]:
+    """Parse provided validators file
+
+    Args:
+        file_path (str): Path to file with one validator identifier per line
+
+    Raises:
+        ArgumentTypeError: Provided file can not be opened
+
+    Returns:
+        List[str]: Validator identifiers
+    """
+    try:
+        with open(Path(file_path), "r", encoding="utf-8") as validators_file:
+            return validators_file.readlines()
+    except OSError as error:
+        raise ArgumentTypeError(
+            CANNOT_OPEN_FILE_ERROR_MESSAGE.format(file_path, error)
+        ) from error
 
 
 def set_validator_nodes(file_path: str) -> List[NodeConnectionProperties]:
