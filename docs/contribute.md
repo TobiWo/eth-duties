@@ -50,6 +50,36 @@ My personal workflow to manage virtual environments is to use [miniconda/Anacond
     poetry install --only main
     ```
 
+## Update dependencies
+
+`poetry install` only installs the versions from `poetry.lock`. To update dependencies, update the lock file first.
+
+Direct dependencies in `pyproject.toml` use caret constraints (e.g. `^6.0.0` allows `>=6.0.0,<7.0.0`; `^0.162.0` allows `>=0.162.0,<0.163.0`). The exact versions are pinned in `poetry.lock`.
+
+1. Update all dependencies within their constraints
+
+    ```bash
+    # Updates poetry.lock (incl. transitive dependencies) and installs the new versions
+    poetry update
+    ```
+
+1. List remaining outdated dependencies
+
+    ```bash
+    # Only direct dependencies; these need a new major version (or a new minor version for 0.x versions)
+    poetry show --outdated --top-level
+    ```
+
+1. Upgrade remaining outdated direct dependencies deliberately and check for breaking changes
+
+    ```bash
+    # Updates the constraint in pyproject.toml, poetry.lock and installs the new version
+    poetry add <PACKAGE>@^<VERSION>
+
+    # For dev dependencies
+    poetry add --group dev <PACKAGE>@^<VERSION>
+    ```
+
 ## Code quality
 
 Please run the following formatter and linter and fix respective issues in order to keep code quality high. You can also install IDE integrations if available.
