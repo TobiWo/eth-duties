@@ -1,5 +1,10 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators"""
 
+from multiprocessing import freeze_support
+
+freeze_support()
+
+# pylint: disable=wrong-import-position
 from asyncio import CancelledError, TaskGroup, run, sleep
 from logging import Logger, getLogger
 from math import floor

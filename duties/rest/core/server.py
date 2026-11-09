@@ -29,9 +29,14 @@ class RestServer(Process):
         self.terminate()
 
     def run(self) -> None:
-        """Start the rest server programatically"""
+        """Start the rest server programatically
+
+        The app is loaded before uvicorn starts its event loop because importing the
+        app runs blocking event loops at module level (e.g. fetching the genesis time).
+        """
         if not self.__is_port_in_use():
             self.logger.info(logging.START_REST_SERVER_MESSAGE, self.config.port)
+            self.config.load()
             self.server.run()
 
     def __is_port_in_use(self) -> bool:
