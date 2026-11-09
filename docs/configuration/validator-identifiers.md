@@ -45,7 +45,7 @@ Note, you can supply additional validators via one of the other two cli flags (`
 Not all clients support the keymanager api yet. Furthermore, I did not had the time yet to test all clients/remote signers.
 
 | client | tested | compatible |
-|  --- |  --- | --- |
+| --- | --- | --- |
 | prysm | :white_check_mark: | :exclamation: |
 | lighthouse | :white_check_mark: | :white_check_mark: |
 | teku | :white_check_mark: | :white_check_mark: |
