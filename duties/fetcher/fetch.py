@@ -132,6 +132,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ProposingDuty]:
             if (
                 str(data.validator_index) in __VALIDATOR_IDENTIFIER_CACHE
                 and data.validator_index not in validator_duties
+                and data.slot > ethereum.get_current_slot()
             ):
                 proposing_duty = ProposingDuty(
                     pubkey=data.pubkey,
@@ -142,7 +143,7 @@ async def fetch_upcoming_proposing_duties() -> dict[str, ProposingDuty]:
                 ethereum.set_time_to_duty(proposing_duty)
                 validator_duties[data.validator_index] = proposing_duty
         current_epoch += index
-    return __filter_proposing_duties(validator_duties)
+    return validator_duties
 
 
 async def __fetch_upcoming_slot_based_duties(
@@ -269,23 +270,3 @@ def __get_next_slot_based_duty(
     validator_duty.slot = data.slot
     ethereum.set_time_to_duty(validator_duty)
     return validator_duty
-
-
-def __filter_proposing_duties(
-    raw_proposing_duties: dict[str, ProposingDuty],
-) -> dict[str, ProposingDuty]:
-    """Filters supplied proposing duties dict for already outdated duties
-
-    Args:
-        raw_proposing_duties (dict[str, ProposingDuty]): All fetched proposing duties for the current and upcoming epoch # pylint: disable=line-too-long
-
-    Returns:
-        dict[str, ProposingDuty]: Filtered proposing duties
-    """
-    current_slot = ethereum.get_current_slot()
-    filtered_proposing_duties = {
-        validator_index: proposing_duty
-        for (validator_index, proposing_duty) in raw_proposing_duties.items()
-        if proposing_duty.slot > current_slot
-    }
-    return filtered_proposing_duties
