@@ -52,7 +52,8 @@ def get_number_of_active_validators(validators: List[str]) -> int:
     """
     calldata = f"{','.join(validators)}"
     parameters = urlencode({"id": calldata}, safe=",")
-    number_of_active_validators = 0
+    # Some clients echo duplicated ids, while the app logs each validator once
+    active_validators: set[str] = set()
     try_counter = 0
     response = Response()
     while try_counter < 10:
@@ -66,14 +67,14 @@ def get_number_of_active_validators(validators: List[str]) -> int:
             )
             for validator in response.json()["data"]:
                 if validator["status"] == "active_ongoing":
-                    number_of_active_validators += 1
+                    active_validators.add(validator["index"])
             if response.status_code == 200:
                 break
         except RequestsConnectionError, ReadTimeout:
             sleep(0.1)
     if try_counter == 10:
         raise ValueError("Couldn't fetch data from provided beacon client")
-    return number_of_active_validators
+    return len(active_validators)
 
 
 def __post_duties_request(endpoint: str, validators: List[str]) -> Response:
@@ -203,11 +204,14 @@ def __fetch_ptc_validator_indices(epoch: int, validators: List[str]) -> List[str
     )
 
 
-def get_number_of_validators_which_will_propose_block(validators: List[str]) -> int:
+def get_number_of_validators_which_will_propose_block(
+    validators: List[str], epoch: int | None = None
+) -> int:
     """Fetch number of provided validators which will propose a block
 
     Args:
         validators (List[str]): Validator identifiers
+        epoch (int | None): First of the two fetched epochs, defaults to the current epoch
 
     Raises:
         ValueError: Could not fetch data from beacon client
@@ -215,14 +219,17 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
     Returns:
         int: Number of provided validators which will propose a block
     """
+    first_epoch = get_current_epoch() if epoch is None else epoch
     request_strings = [
         (
             f"{CONFIG.general.working_beacon_node_url}"
-            f"/eth/v2/validator/duties/proposer/{get_current_epoch() + i}"
+            f"/eth/v2/validator/duties/proposer/{first_epoch + i}"
         )
         for i in range(0, 2, 1)
     ]
-    number_of_validators_which_will_propose_a_block = 0
+    # Mirror the app: only future slots count and each validator is logged once
+    current_slot = trunc((time() - fetch_genesis_time()) / SLOT_TIME)
+    validators_which_will_propose_a_block: set[str] = set()
     response = Response()
     for request in request_strings:
         try_counter = 0
@@ -234,12 +241,16 @@ def get_number_of_validators_which_will_propose_block(validators: List[str]) -> 
                     if (
                         validator_which_will_propose_a_block["validator_index"]
                         in validators
+                        and int(validator_which_will_propose_a_block["slot"])
+                        > current_slot
                     ):
-                        number_of_validators_which_will_propose_a_block += 1
+                        validators_which_will_propose_a_block.add(
+                            validator_which_will_propose_a_block["validator_index"]
+                        )
                 if response.status_code == 200:
                     break
             except RequestsConnectionError, ReadTimeout:
                 sleep(0.1)
         if try_counter == 10:
             raise ValueError("Couldn't fetch data from provided beacon client")
-    return number_of_validators_which_will_propose_a_block
+    return len(validators_which_will_propose_a_block)

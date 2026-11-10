@@ -6,6 +6,7 @@ from typing import Callable, List
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from sty import fg  # type: ignore[import]
 from test_helper.chain import (
+    get_current_epoch,
     get_number_of_active_validators,
     get_number_of_validators_in_current_sync_comittee,
     get_number_of_validators_in_ptc,
@@ -34,19 +35,39 @@ def test_standard_logging_mode(
     number_of_validators_in_current_sync_comittee = (
         get_number_of_validators_in_current_sync_comittee(validators_to_test)
     )
+    epoch_before_run = get_current_epoch()
     number_of_validators_which_will_propose_block = (
-        get_number_of_validators_which_will_propose_block(validators_to_test)
+        get_number_of_validators_which_will_propose_block(
+            validators_to_test, epoch_before_run
+        )
     )
     number_of_validators_in_ptc = get_number_of_validators_in_ptc(validators_to_test)
     expected_log_counter = (
         number_of_active_validators
         + number_of_validators_in_current_sync_comittee
-        + number_of_validators_which_will_propose_block
         + number_of_validators_in_ptc
     )
     logs = run_eth_duties(command, process_termination_log, None, None)
+    # Proposals can pass during app startup, so the logged count lies between both
+    proposers_after_run = get_number_of_validators_which_will_propose_block(
+        validators_to_test, epoch_before_run
+    )
     number_of_matched_logs = compare_logs(logs[0], expected_logs, False)
-    assert number_of_matched_logs == expected_log_counter
+    is_matching = (
+        expected_log_counter + proposers_after_run
+        <= number_of_matched_logs
+        <= expected_log_counter + number_of_validators_which_will_propose_block
+    )
+    if not is_matching:
+        print(
+            f"Expected: active={number_of_active_validators} "
+            f"sync={number_of_validators_in_current_sync_comittee} "
+            f"proposing={proposers_after_run}-"
+            f"{number_of_validators_which_will_propose_block} "
+            f"ptc={number_of_validators_in_ptc}\nLogged: "
+            + str({log: sum(log in line for line in logs[0]) for log in expected_logs})
+        )
+    assert is_matching
     print(fg.green + "\rTest succeeded\n" + fg.rs)
 
 
