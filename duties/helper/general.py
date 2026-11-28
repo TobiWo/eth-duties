@@ -1,5 +1,4 @@
-"""General helper module
-"""
+"""General helper module"""
 
 from datetime import timedelta
 from typing import Dict

@@ -1,5 +1,4 @@
-"""Module for logging validator duties
-"""
+"""Module for logging validator duties"""
 
 from datetime import timedelta
 from logging import getLogger
@@ -9,7 +8,13 @@ from typing import List, Tuple
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging, program
-from fetcher.data_types import DutyType, ValidatorDuty, ValidatorIdentifier
+from fetcher.data_types import (
+    DutyType,
+    SlotBasedDuty,
+    ValidatorDuty,
+    ValidatorIdentifier,
+)
+from fetcher.fetch import get_validator_count
 from fetcher.identifier.core import read_validator_identifiers_from_shared_memory
 from helper.duty import get_duties_proportion_above_time_threshold
 from helper.general import format_timedelta_to_hours
@@ -21,6 +26,40 @@ __validator_identifiers_with_alias = {"0": ValidatorIdentifier()}
 __LOGGER = getLogger()
 
 
+def __get_omitted_duty_types(validator_duties: List[ValidatorDuty]) -> List[DutyType]:
+    """Collects the duty types which should not be logged to the console.
+
+    Args:
+        validator_duties (List[ValidatorDuty]): List of validator duties
+
+    Returns:
+        List[DutyType]: Duty types which will be filtered from the logging output
+    """
+    omitted_duty_types: List[DutyType] = []
+    if get_validator_count() > ARGUMENTS.max_slot_based_duty_logs:
+        __warn_too_many_duties_for_logging(DutyType.ATTESTATION)
+        omitted_duty_types.append(DutyType.ATTESTATION)
+    ptc_duties_to_log = [duty for duty in validator_duties if duty.type == DutyType.PTC]
+    if len(ptc_duties_to_log) > ARGUMENTS.max_slot_based_duty_logs:
+        __warn_too_many_duties_for_logging(DutyType.PTC)
+        omitted_duty_types.append(DutyType.PTC)
+    return omitted_duty_types
+
+
+def __warn_too_many_duties_for_logging(duty_type: DutyType) -> None:
+    """Logs a warning that a duty type will not be logged due to too many validators.
+
+    Args:
+        duty_type (DutyType): Duty type which will be omitted from logging
+    """
+    __LOGGER.warning(
+        logging.TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_SLOT_BASED_DUTIES_MESSAGE,
+        duty_type.value,
+        ARGUMENTS.max_slot_based_duty_logs,
+        *([duty_type.value] * 2),
+    )
+
+
 def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
     """Logs the time to next duties for the provided validators to the console
 
@@ -28,13 +67,19 @@ def log_time_to_next_duties(validator_duties: List[ValidatorDuty]) -> None:
         validator_duties (List[ValidatorDuty]): List of validator duties
     """
     __set_global_validator_identifiers_with_alias()
+
+    omitted_duty_types = __get_omitted_duty_types(validator_duties)
+    duties_to_log = [
+        duty for duty in validator_duties if duty.type not in omitted_duty_types
+    ]
+
     print("")
     __LOGGER.info(logging.NEXT_INTERVAL_MESSAGE)
-    if validator_duties:
-        for duty in validator_duties:
+    if duties_to_log:
+        for duty in duties_to_log:
             logging_message = __create_logging_message(duty)
             __LOGGER.info(logging_message)
-        __log_duty_proportion_above_time_threshold(validator_duties)
+        __log_duty_proportion_above_time_threshold(duties_to_log)
     else:
         __LOGGER.info(logging.NO_UPCOMING_DUTIES_MESSAGE)
 
@@ -85,7 +130,7 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"for validator {__get_validator_identifier_for_logging(duty)} outdated. "
             f"Fetching duties in next interval."
         )
-    else:
+    elif isinstance(duty, SlotBasedDuty):
         time_to_next_duty = strftime(
             program.DUTY_LOGGING_TIME_FORMAT,
             gmtime(duty.seconds_to_duty),
@@ -96,6 +141,8 @@ def __create_logging_message(duty: ValidatorDuty) -> str:
             f"has next {duty.type.name} duty in: "
             f"{time_to_next_duty} min. (slot: {duty.slot}){rs.all}"
         )
+    else:
+        logging_message = ""
     return logging_message
 
 

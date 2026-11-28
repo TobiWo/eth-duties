@@ -1,5 +1,4 @@
-"""Module to create the rest api server
-"""
+"""Module to create the rest api server"""
 
 from cli.arguments import ARGUMENTS
 from fastapi import FastAPI

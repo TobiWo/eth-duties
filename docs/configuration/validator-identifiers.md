@@ -45,7 +45,7 @@ Note, you can supply additional validators via one of the other two cli flags (`
 Not all clients support the keymanager api yet. Furthermore, I did not had the time yet to test all clients/remote signers.
 
 | client | tested | compatible |
-|  --- |  --- | --- |
+| --- | --- | --- |
 | prysm | :white_check_mark: | :exclamation: |
 | lighthouse | :white_check_mark: | :white_check_mark: |
 | teku | :white_check_mark: | :white_check_mark: |
@@ -55,10 +55,6 @@ Not all clients support the keymanager api yet. Furthermore, I did not had the t
 | vouch | :x: | :x: |
 | web3signer | :x: | :white_check_mark: |
 | dirk | :x: | :x: |
-
-#### Notes
-
-1. There are some issues with prysm currently. More specifically, if you use prysm but validators are managed by a remote signer, eth-duties will not work since the respective endpoint is broken. If validators are managed locally everything works as expected. **This issue will be fixed in version `v5.1.3`**.
 
 ### File structure
 

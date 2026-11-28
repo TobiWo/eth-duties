@@ -1,0 +1,42 @@
+---
+participants_matrix:
+  el:
+    - el_type: "geth"
+      el_image: "ethpandaops/geth:glamsterdam-devnet-7"
+    - el_type: "reth"
+      el_image: "ethpandaops/reth:glamsterdam-devnet-7"
+    - el_type: "nethermind"
+      el_image: "ethpandaops/nethermind:glamsterdam-devnet-7"
+  cl:
+    - cl_type: "lighthouse"
+      cl_image: "ethpandaops/lighthouse:glamsterdam-devnet-7"
+    - cl_type: "lodestar"
+      cl_image: "ethpandaops/lodestar:glamsterdam-devnet-7"
+
+network_params:
+  gloas_fork_epoch: 1
+  num_validator_keys_per_node: 256
+  min_validator_withdrawability_delay: 1
+
+additional_services:
+  - "spamoor"
+  - "dora"
+  - "blockscout"
+  - "forkmon"
+  - "tx_fuzz"
+
+dora_params:
+  image: "ethpandaops/dora:master-latest"
+
+keymanager_enabled: true
+
+port_publisher:
+  el:
+    enabled: true
+  cl:
+    enabled: true
+  vc:
+    enabled: true
+  additional_services:
+    enabled: true
+...

@@ -7,7 +7,7 @@ ETH-duties logs upcoming validator duties to the console in order to find the be
 ## Consensus client compatibility
 
 | client | tested | compatible |
-|  --- |  --- | --- |
+| --- | --- | --- |
 | prysm | :white_check_mark: | :white_check_mark: |
 | lighthouse | :white_check_mark: | :white_check_mark: |
 | teku | :white_check_mark: | :white_check_mark: |

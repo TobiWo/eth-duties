@@ -47,3 +47,9 @@ with-alias = [
 [validators.full-identifier]
 index = "0"
 pubkey = "0xaaf6c1251e73fb600624937760fef218aace5b253bf068ed45398aeb29d821e4d2899343ddcbbe37cb3f6cf500dff26c"
+
+[validator-nodes]
+bearer-token = ""
+online-urls = []
+expected-identifier-count = 0
+single-node-indices = []

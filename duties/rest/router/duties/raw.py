@@ -1,14 +1,19 @@
-"""Router module for raw upcoming duties
-"""
+"""Router module for raw upcoming duties"""
 
 from typing import List
 
 from fastapi import APIRouter, Response, status
-from fetcher.data_types import ValidatorDuty
+from fetcher.data_types import (
+    AttestationDuty,
+    ProposingDuty,
+    PtcDuty,
+    SyncCommitteeDuty,
+)
 from rest.core.types import NoBeaconNodeConnection
 from rest.service.duties.raw import (
     fetch_raw_attestation_duties,
     fetch_raw_proposing_duties,
+    fetch_raw_ptc_duties,
     fetch_raw_sync_committeen_duties,
 )
 
@@ -22,14 +27,14 @@ raw_duties_router = APIRouter(prefix="/duties/raw", tags=["duties"])
 )
 async def get_attestation_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[AttestationDuty] | NoBeaconNodeConnection:
     """Get upcoming attestation duties for provided validators
 
     Args:
         response (Response): Attestation duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming attestation duties
+        List[AttestationDuty] | NoBeaconNodeConnection: The upcoming attestation duties
     """
     return await fetch_raw_attestation_duties(response)
 
@@ -41,14 +46,14 @@ async def get_attestation_duties(
 )
 async def get_sync_committee_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[SyncCommitteeDuty] | NoBeaconNodeConnection:
     """Get upcoming sync committee duties for provided validators
 
     Args:
         response (Response): Sync committee duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming sync committee duties
+        List[SyncCommitteeDuty] | NoBeaconNodeConnection: The upcoming sync committee duties
     """
     return await fetch_raw_sync_committeen_duties(response)
 
@@ -60,13 +65,32 @@ async def get_sync_committee_duties(
 )
 async def get_proposing_duties(
     response: Response,
-) -> List[ValidatorDuty] | NoBeaconNodeConnection:
+) -> List[ProposingDuty] | NoBeaconNodeConnection:
     """Get upcoming block proposing duties for provided validators
 
     Args:
         response (Response): Proposing duty response
 
     Returns:
-        List[ValidatorDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
+        List[ProposingDuty] | NoBeaconNodeConnection: The upcoming block proposing duties
     """
     return await fetch_raw_proposing_duties(response)
+
+
+@raw_duties_router.get(
+    "/ptc",
+    status_code=status.HTTP_200_OK,
+    responses={503: {"model": NoBeaconNodeConnection}},
+)
+async def get_ptc_duties(
+    response: Response,
+) -> List[PtcDuty] | NoBeaconNodeConnection:
+    """Get upcoming payload timeliness committee duties for provided validators
+
+    Args:
+        response (Response): Ptc duty response
+
+    Returns:
+        List[PtcDuty] | NoBeaconNodeConnection: The upcoming ptc duties
+    """
+    return await fetch_raw_ptc_duties(response)

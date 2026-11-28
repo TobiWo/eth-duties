@@ -1,8 +1,28 @@
 """Defines program related constants"""
 
+from os import environ
 from random import randint
 from sys import exit as sys_exit
 from typing import List
+
+
+def __get_shared_memory_ids() -> List[int]:
+    """Returns the shared memory ids of this eth-duties instance
+
+    Child processes (e.g. the rest server) inherit the ids of their parent process via
+    an environment variable. The parent process creates new random ids.
+
+    Returns:
+        List[int]: Shared memory ids
+    """
+    if IS_SHARED_MEMORY_OWNER:
+        return __create_random_numbers()
+    return [
+        int(shared_memory_id)
+        for shared_memory_id in environ[SHARED_MEMORY_IDS_ENVIRONMENT_VARIABLE].split(
+            SHARED_MEMORY_IDS_SEPARATOR
+        )
+    ]
 
 
 def __create_random_numbers() -> List[int]:
@@ -27,7 +47,10 @@ def __create_random_numbers() -> List[int]:
 # Shared memory id creation
 RANDOM_RANGE_START = 1_000_000
 RANDOM_RANGE_STOP = 100_000_000
-RANDOM_NUMBERS = __create_random_numbers()
+SHARED_MEMORY_IDS_ENVIRONMENT_VARIABLE = "ETH_DUTIES_SHARED_MEMORY_IDS"
+SHARED_MEMORY_IDS_SEPARATOR = ","
+IS_SHARED_MEMORY_OWNER = SHARED_MEMORY_IDS_ENVIRONMENT_VARIABLE not in environ
+RANDOM_NUMBERS = __get_shared_memory_ids()
 
 # General program settings
 REQUEST_TIMEOUT = (3, 5)
@@ -37,6 +60,7 @@ REQUEST_HEADER = {"Content-type": "application/json", "Accept": "application/jso
 DUTY_LOGGING_TIME_FORMAT = "%M:%S"
 THRESHOLD_TO_INFORM_USER_FOR_WAITING_PERIOD = 5000
 NUMBER_OF_VALIDATORS_PER_REST_CALL = 1000
+MAX_GET_URL_IDS_BYTES = 6400
 MAX_NUMBER_OF_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES = 100
 ALIAS_SEPARATOR = ";"
 PUBKEY_PREFIX = "0x"

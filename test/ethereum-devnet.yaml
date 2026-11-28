@@ -53,14 +53,15 @@ participants:
     use_separate_vc: true
     validator_count: 10
 network_params:
-  num_validator_keys_per_node: 128
+  num_validator_keys_per_node: 256
   min_validator_withdrawability_delay: 1
 additional_services:
   - "tx_fuzz"
   - "spamoor"
   - "forkmon"
   - "dora"
-  - "prometheus_grafana"
+  - "prometheus"
+  - "grafana"
   - "blockscout"
 keymanager_enabled: true
 port_publisher:

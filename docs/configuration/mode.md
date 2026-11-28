@@ -2,7 +2,9 @@
 
 The default running mode of `eth-duties` is logging duties to the console (specified with value `log`). However, professional node operators or advanced home stakers might leverage the tool in their cicd pipelines to e.g. prevent an unintentional client update when your validator is right before proposing a block or part of the sync committee. This is where the different `cicd` modes come into play. You can make your deployment job dependent from the `eth-duties` job so that the deployment job will only run when `eth-duties` exits gracefully with `exit code 0`. This documentation will not go into detail about advanced pipelines in gitlab or github. However, I provide a separate `cicd-compose.yaml` (in docker folder) which may be adopted by home stakers.
 
-**Note** If you do not omit attestation duties with `--omit-attestation-duties` these are also considered as valid duties for the cicd modes. For a more fine granular setting on attestation duties please check the [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
+**Note** If you do not omit attestation or sync-committee duties with `--omit-attestation-duties` or `--omit-sync-committee-duties` these are also considered as valid duties for the cicd modes. For a more fine granular setting on attestation duties please check the [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
+
+**Note on ptc duties** Payload timeliness committee (ptc) duties, introduced with the Glamsterdam upgrade ([EIP-7732](https://eips.ethereum.org/EIPS/eip-7732)), are **never** considered relevant duties for any cicd mode. Missing a ptc duty is neither reward nor slashing relevant, and with 512 validators assigned per slot it would otherwise block nearly every pipeline run. This is independent of `--omit-ptc-duties`, which only controls whether these duties are logged to the console.
 
 ## What are relevant duties
 
@@ -14,6 +16,10 @@ In the following sub chapters I will often refer to relevant duties. This is a s
 * x of y attestation duties (while y == number of validators monitored) need to be executed in less than a defined time threshold
   * see [chapter about --mode-cicd-attestation-time and --mode-cicd-attestation-proportion](#mode-cicd-attestation-time-and-mode-cicd-attestation-proportion)
 
+Explicitly **not** relevant:
+
+* validator is in the payload timeliness committee (ptc)
+
 ## Modes
 
 ### cicd-exit
@@ -22,7 +28,7 @@ This mode results in a one time check whether one of your supplied validators ha
 
 ### cicd-wait
 
-This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for relevant upcoming duties until there is none. If there will be no relevant upcoming duty the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends, `eth-duties` exits with `exit code 1`.
+This mode results in an ongoing process (similar to the standard behavior) where `eth-duties` checks for relevant upcoming duties until there is none. If there will be no relevant upcoming duties the application exits with `exit code 0`. Compared to the standard logging behavior this process only runs for a certain amount of time (specified with flag `--mode-cicd-waiting-time` (default: 780 seconds, approx. 2 epochs)). If this timeframe ends, `eth-duties` exits with `exit code 1`.
 
 ### cicd-force-graceful-exit
 

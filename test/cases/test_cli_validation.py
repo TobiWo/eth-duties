@@ -1,5 +1,4 @@
-"""Module with functions to test cli validation
-"""
+"""Module with functions to test cli validation"""
 
 from pathlib import Path
 

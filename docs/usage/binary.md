@@ -53,8 +53,8 @@ Just download the artifact for your OS and start optimizing your validator maint
 1. Print upcoming validator duties but omit attestation duties:
 
     ```bash
-    # Note: If you provide more than 50 validators, attestation related logs are omitted by default
-    # This can be changed with '--max-attestation-duty-logs'
+    # Note: If you provide more than 50 validators, attestation and ptc related logs are omitted by default
+    # This can be changed with '--max-slot-based-duty-logs'
     ./eth-duties \
     --validators-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052 \
@@ -65,10 +65,11 @@ Just download the artifact for your OS and start optimizing your validator maint
 
 | OS | Tested | Works |
 | --- | --- | --- |
-| MacOS 11 | :white_check_mark: | :white_check_mark: |
-| MacOS 12 | :white_check_mark: | :white_check_mark: |
-| Ubuntu 20.04 | :white_check_mark: | :white_check_mark: |
+| MacOS 13 | :white_check_mark: | :white_check_mark: |
+| MacOS 14 | :white_check_mark: | :white_check_mark: |
+| MacOS 15 | :white_check_mark: | :white_check_mark: |
 | Ubuntu 22.04 | :white_check_mark: | :white_check_mark: |
+| Ubuntu 24.04 | :white_check_mark: | :white_check_mark: |
 | Windows 7 | :x: | :question: |
 | Windows 10 | :white_check_mark: | :white_check_mark: |
 | Windows 11 | :x: | :question: |

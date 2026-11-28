@@ -1,5 +1,10 @@
 """Entrypoint for eth-duties to check for upcoming duties for one or many validators"""
 
+from multiprocessing import freeze_support
+
+freeze_support()
+
+# pylint: disable=wrong-import-position
 from asyncio import CancelledError, TaskGroup, run, sleep
 from logging import Logger, getLogger
 from math import floor
@@ -9,7 +14,7 @@ from typing import List
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
-from fetcher.data_types import ValidatorDuty
+from fetcher.data_types import DutyType, ValidatorDuty
 from fetcher.identifier.parser import (
     update_shared_active_validator_identifiers_on_interval,
 )
@@ -19,7 +24,10 @@ from helper.duty import (
     is_current_data_up_to_date,
     update_time_to_duty,
 )
-from helper.identifier import clean_shared_memory
+from helper.identifier import (
+    clean_shared_memory,
+    share_shared_memory_ids_with_child_processes,
+)
 from helper.terminate import GracefulTerminator
 from protocol.request import beacon_node, validator_node
 from rest.app import create_rest_server
@@ -43,10 +51,33 @@ async def __fetch_validator_duties(
         __check_beacon_node_connection()
         return duties
     fetched_upcoming_validator_duties = await fetch_upcoming_validator_duties()
+    omitted_duty_types = __get_omitted_duty_types()
     if not fetched_upcoming_validator_duties:
+        if omitted_duty_types:
+            for omitted_duty_type in omitted_duty_types:
+                __LOGGER.info(
+                    logging.OMITTED_DUTY_LOGS_MESSAGE, omitted_duty_type.value
+                )
+            return fetched_upcoming_validator_duties
         __LOGGER.error(logging.NO_DUTY_DATA_ERROR_MESSAGE)
         return duties
     return fetched_upcoming_validator_duties
+
+
+def __get_omitted_duty_types() -> List[DutyType]:
+    """Collects the duty types which the user omitted via cli flags
+
+    Returns:
+        List[DutyType]: Omitted duty types
+    """
+    omitted_duty_types: List[DutyType] = []
+    if ARGUMENTS.omit_attestation_duties:
+        omitted_duty_types.append(DutyType.ATTESTATION)
+    if ARGUMENTS.omit_sync_committee_duties:
+        omitted_duty_types.append(DutyType.SYNC_COMMITTEE)
+    if ARGUMENTS.omit_ptc_duties:
+        omitted_duty_types.append(DutyType.PTC)
+    return omitted_duty_types
 
 
 def __check_beacon_node_connection() -> None:
@@ -91,6 +122,7 @@ def __start_processes(rest_server: RestServer, logger: Logger) -> None:
         logger (Logger): Logger instance
     """
     if ARGUMENTS.rest and "cicd" not in ARGUMENTS.mode.value:
+        share_shared_memory_ids_with_child_processes()
         rest_server.start()
         rest_server.server.started = True
         run(__main())
@@ -107,7 +139,7 @@ if __name__ == "__main__":
     rest_api_server = create_rest_server()
     try:
         __start_processes(rest_api_server, main_logger)
-    except (CancelledError, KeyboardInterrupt):
+    except CancelledError, KeyboardInterrupt:
         if rest_api_server.server.started:
             rest_api_server.stop()
         clean_shared_memory()

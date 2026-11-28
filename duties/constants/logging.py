@@ -13,14 +13,18 @@ NO_FETCHED_VALIDATOR_IDENTIFIERS_MESSAGE = (
 NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE = (
     "Response object does not include a 'data' field"
 )
+BEACON_API_JSON_DECODE_ERROR_MESSAGE = (
+    "Beacon node returned non-JSON response from %s%s: "
+    'status=%s content-type=%s body="%s"'
+)
 SYSTEM_EXIT_MESSAGE = "Detected user intervention (SIGINT). Shutting down."
 NEXT_INTERVAL_MESSAGE = "Logging next duties interval..."
 NO_UPCOMING_DUTIES_MESSAGE = "No upcoming duties detected!"
-TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_ATTESTATION_DUTIES_MESSAGE = (
-    "Provided number of validators for fetching attestion duties is high (> %s). "
+TOO_MANY_PROVIDED_VALIDATORS_FOR_FETCHING_SLOT_BASED_DUTIES_MESSAGE = (
+    "Provided number of validators for fetching %s duties is high (> %s). "
     "This pollutes the console output and prevents checking important duties. "
-    "Checking attestion duties will be skipped! "
-    "To increase the max. number of logged attestation duties use '--max-attestation-duty-logs'"
+    "Checking %s duties will be skipped! "
+    "To increase the max. number of logged %s duties use '--max-slot-based-duty-logs'"
 )
 HIGHER_PROCESSING_TIME_INFO_MESSAGE = (
     "You provided %s validators. Fetching all necessary data may take some time."
@@ -37,6 +41,10 @@ PUBKEY_IS_NOT_HEXADECIMAL_MESSAGE = "Pubkey 0x%s is not hexadecimal: %s"
 DUPLICATE_VALIDATORS_MESSAGE = (
     "Filtered duplicated validators with different identifiers: %s"
 )
+NO_GLOAS_FORK_EPOCH_MESSAGE = (
+    "Beacon node does not provide a Gloas fork epoch. Fetching ptc duties is disabled "
+    "for this run. Restart eth-duties once your beacon node knows the Gloas fork schedule."
+)
 ACTIVATED_MODE_MESSAGE = "Started in mode: %s"
 PROPORTION_OF_DUTIES_ABOVE_TIME_THRESHOLD_MESSAGE = (
     "%s%% of %s duties will be executed in %s sec. or later"
@@ -48,6 +56,7 @@ START_REST_SERVER_MESSAGE = "Started rest api server on localhost:%s"
 NOT_SUPPORTED_HTTP_METHOD_MESSAGE = "HTTP method %s is not supported yet"
 CANNOT_READ_SHARED_MEMORY_MESSAGE = "Could not read from shared memory. Exiting!"
 CANNOT_WRITE_SHARED_MEMORY_MESSAGE = "Could not write to shared memory. Exiting!"
+SHARED_MEMORY_ALREADY_CLOSED_MESSAGE = "Shared memory instance is already closed"
 PORT_ALREADY_IN_USAGE_MESSAGE = (
     "Port %s is already in use. Starting eth-duties without rest server."
 )
@@ -62,6 +71,7 @@ USED_BEACON_NODE_MESSAGE = "Using beacon node %s"
 ALL_HEALTHY_BEACON_NODES_MESSAGE = "All beacon node endpoints are healthy"
 ONE_NON_HEALTHY_BEACON_NODE_MESSAGE = "Beacon node %s is not ready to accept requests!"
 NODE_URL_ERROR_MESSAGE = "{0} node url should start with http or https"
+CANNOT_OPEN_FILE_ERROR_MESSAGE = "can't open '{0}': {1}"
 VALIDATOR_NODE_PROPERTY_ERROR_MESSAGE = (
     "Validator node information should only consist of url "
     "and bearer token separated by semicolon"
@@ -86,7 +96,8 @@ VALIDATOR_NODE_AUTHORIZATION_FAILED_MESSAGE = (
     "Authentication failed for validator node: %s"
 )
 NO_GENESIS_TIME_ERROR_MESSAGE = "Could not fetch genesis time. Exiting eth-duties!"
-NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"
+NO_DUTY_DATA_ERROR_MESSAGE = "Could not fetch any duty data from provided beacon nodes. Logging outdated duty data. Retry in next interval!"  # pylint: disable=line-too-long
 CACHED_DATA_WARNING_MESSAGE = (
     "Cached data will only be used until next upcoming duty is due"
 )
+OMITTED_DUTY_LOGS_MESSAGE = "Logging %s duties is omitted by the user"

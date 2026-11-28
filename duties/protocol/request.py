@@ -14,6 +14,7 @@ from helper.general import get_correct_request_header
 from protocol.connection import BeaconNode, ValidatorNode
 from requests import ConnectionError as RequestsConnectionError
 from requests import ReadTimeout, Response, get, post
+from requests.exceptions import JSONDecodeError as RequestsJSONDecodeError
 
 __LOGGER = getLogger()
 beacon_node = BeaconNode()
@@ -53,15 +54,10 @@ async def send_beacon_api_request(
     responses: List[Response] = []
     if beacon_node_endpoint:
         if provided_validators:
+            chunk_size = __get_chunk_size(calldata_type, provided_validators)
             chunked_validators = [
-                provided_validators[
-                    index : index + program.NUMBER_OF_VALIDATORS_PER_REST_CALL
-                ]
-                for index in range(
-                    0,
-                    len(provided_validators),
-                    program.NUMBER_OF_VALIDATORS_PER_REST_CALL,
-                )
+                provided_validators[index : index + chunk_size]
+                for index in range(0, len(provided_validators), chunk_size)
             ]
             async with TaskGroup() as taskgroup:
                 tasks = [
@@ -117,6 +113,32 @@ async def send_key_manager_api_keystore_requests() -> List[Any]:
     return []
 
 
+def __get_chunk_size(
+    calldata_type: CalldataType, provided_validators: List[str]
+) -> int:
+    """Pick a chunk size for fan-out requests based on the calldata type.
+
+    POST bodies have generous server-side size limits, so we use the flat
+    ``NUMBER_OF_VALIDATORS_PER_REST_CALL``. GET requests encode validators as
+    a comma-separated URL parameter and hit a URL length ceiling (8 KB on most
+    HTTP stacks), so the chunk size is derived from the longest identifier in
+    the current batch — keeping chunks as large as possible for short indices
+    and conservatively small for 98-char pubkeys.
+
+    Args:
+        calldata_type (CalldataType): How the validators are encoded upstream
+        provided_validators (List[str]): Validator indices or pubkeys to chunk
+
+    Returns:
+        int: Number of validators to include per upstream request
+    """
+    if calldata_type != CalldataType.PARAMETERS:
+        return program.NUMBER_OF_VALIDATORS_PER_REST_CALL
+    max_identifier_length = max(len(identifier) for identifier in provided_validators)
+    chunk_size = program.MAX_GET_URL_IDS_BYTES // (max_identifier_length + 1)
+    return max(1, min(chunk_size, program.NUMBER_OF_VALIDATORS_PER_REST_CALL))
+
+
 async def __handle_api_request(
     node_connection_properties: NodeConnectionProperties,
     endpoint: str,
@@ -147,7 +169,7 @@ async def __handle_api_request(
             )
             response.close()
             is_request_successful = __is_request_successful(
-                response, node_connection_properties.url
+                response, node_connection_properties.url, endpoint
             )
         except RequestsConnectionError:
             __LOGGER.error(
@@ -156,7 +178,7 @@ async def __handle_api_request(
                 node_connection_properties.url,
             )
             await sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
-        except (ReadTimeout, KeyError):
+        except ReadTimeout, KeyError:
             __LOGGER.error(
                 logging.READ_TIMEOUT_ERROR_MESSAGE,
                 node_connection_properties.node_type.value,
@@ -166,7 +188,9 @@ async def __handle_api_request(
         except PrysmError:
             return Response()
         __log_too_many_retries(retry_counter, retry_limit, node_connection_properties)
-    return response
+    if is_request_successful:
+        return response
+    return Response()
 
 
 def __log_too_many_retries(
@@ -178,6 +202,7 @@ def __log_too_many_retries(
 
     Args:
         retry_counter (int): Count the number of request retries
+        retry_limit (int): Maximum number of request retries allowed
         node_connection_properties (NodeConnectionProperties): Object with respective connection information # pylint: disable=line-too-long
     """
     if retry_counter == retry_limit:
@@ -245,6 +270,9 @@ def __convert_to_raw_data_responses(
         raw_responses (List[Response]): List of fetched responses
         flatten (bool): Should a possible list of lists be flattend. This assumes some knowledge about the handled data strucutes. # pylint: disable=line-too-long
 
+    Raises:
+        NoDataFromEndpointError: If no data could be fetched from the endpoint
+
     Returns:
         List[Any]: List of raw data objects from raw response objects
     """
@@ -292,12 +320,13 @@ def __get_processed_calldata(
     return calldata
 
 
-def __is_request_successful(response: Response, node_url: str) -> bool:
+def __is_request_successful(response: Response, node_url: str, endpoint: str) -> bool:
     """Helper to check if a request was successful
 
     Args:
         response (Response): Response object from the api call
         node_url (str): Url to which the request was sent
+        endpoint (str): Endpoint path which was requested
 
     Raises:
         RuntimeError: Raised when reponse is totally empty
@@ -310,9 +339,33 @@ def __is_request_successful(response: Response, node_url: str) -> bool:
     if not response.text:
         __LOGGER.error(response)
         raise RuntimeError(logging.NO_RESPONSE_ERROR_MESSAGE, node_url)
-    if json.RESPONSE_JSON_DATA_FIELD_NAME in response.json():
+    try:
+        response_json = response.json()
+    except RequestsJSONDecodeError:
+        __LOGGER.error(
+            logging.BEACON_API_JSON_DECODE_ERROR_MESSAGE,
+            node_url,
+            endpoint,
+            response.status_code,
+            response.headers.get("Content-Type", ""),
+            __get_response_body_preview(response),
+        )
+        return False
+    if json.RESPONSE_JSON_DATA_FIELD_NAME in response_json:
         return True
-    if json.RESPONSE_JSON_MESSAGE_NAME in response.json():
+    if json.RESPONSE_JSON_MESSAGE_NAME in response_json:
         raise PrysmError()
     __LOGGER.error(response.text)
     raise KeyError(logging.NO_DATA_FIELD_IN_RESPONS_JSON_ERROR_MESSAGE)
+
+
+def __get_response_body_preview(response: Response) -> str:
+    """Return a short single-line response body preview for error logs.
+
+    Args:
+        response (Response): Response object to preview
+
+    Returns:
+        str: Response body preview
+    """
+    return response.text.replace("\n", "\\n")[:200]

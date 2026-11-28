@@ -1,5 +1,4 @@
-"""Module for custom errors
-"""
+"""Module for custom errors"""
 
 
 class PrysmError(Exception):
@@ -18,6 +17,11 @@ class PrysmError(Exception):
 
 
 class NoDataFromEndpointError(Exception):
+    """Exception raised when an api endpoint returns no data.
+
+    Args:
+        message (str): Error message
+    """
 
     def __init__(
         self, message: str = "No data could be fetched from api endpoint"

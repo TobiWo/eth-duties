@@ -9,7 +9,7 @@ while IFS='=' read -r key value; do
 done <./ethereum-devnet-tags.env
 
 envsubst <./ethereum-devnet-small.yaml >./ethereum-devnet-small-replace.yaml
-kurtosis run --image-download always --enclave eth-duties-devnet github.com/ethpandaops/ethereum-package --args-file ./ethereum-devnet-small-replace.yaml &&
+kurtosis run --image-download always --enclave eth-duties-devnet github.com/ethpandaops/ethereum-package@6.0.0 --args-file ./ethereum-devnet-small-replace.yaml &&
 	rm ./ethereum-devnet-small-replace.yaml &&
 	for var in "${exported_vars[@]}"; do
 		unset "$var"
