@@ -95,9 +95,10 @@ class BeaconApiRequestTest(unittest.TestCase):
                 [],
             )
 
-        with patch.object(
-            request, "__send_api_request", return_value=non_json_response
-        ), self.assertLogs(level="ERROR") as log_context:
+        with (
+            patch.object(request, "__send_api_request", return_value=non_json_response),
+            self.assertLogs(level="ERROR") as log_context,
+        ):
             response = asyncio.run(run_request())
 
         joined_logs = "\n".join(log_context.output)

@@ -1,5 +1,4 @@
-"""Service module for fetching raw validator duties
-"""
+"""Service module for fetching raw validator duties"""
 
 from asyncio import TimeoutError as AsyncioTimeoutError
 from asyncio import wait_for

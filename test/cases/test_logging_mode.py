@@ -399,6 +399,7 @@ def test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes() -
     expected_logs = [
         "next ATTESTATION duty",
         "next PROPOSING duty",
+        "next PTC duty",
         "is in current sync committee",
     ]
     validators_to_test = CONFIG.validator_nodes.single_node_indices
@@ -407,6 +408,9 @@ def test_standard_logging_mode_when_identifiers_fetched_from_validator_nodes() -
         CONFIG.general.working_beacon_node_url,
         "--validator-nodes",
         str(Path.cwd() / "test/data/online-single-validator-node"),
+        # Node key count may exceed the default limit which would omit slot based logs
+        "--max-slot-based-duty-logs",
+        str(len(validators_to_test)),
     ]
     try:
         test_standard_logging_mode(

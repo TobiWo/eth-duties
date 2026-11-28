@@ -1,5 +1,4 @@
-"""Module for core functions to parse and create complete validator identifiers
-"""
+"""Module for core functions to parse and create complete validator identifiers"""
 
 from logging import getLogger
 from multiprocessing.shared_memory import SharedMemory
@@ -10,6 +9,7 @@ from typing import List
 from constants import logging, program
 from eth_typing import BLSPubkey
 from fetcher.data_types import ValidatorData, ValidatorIdentifier
+from helper.identifier import open_shared_memory
 
 __LOGGER = getLogger()
 
@@ -25,12 +25,12 @@ def read_validator_identifiers_from_shared_memory(
     Returns:
         dict[str, ValidatorIdentifier]: Validator identifier dict
     """
-    shared_validator_identifiers = SharedMemory(shared_memory_name, False)
+    shared_validator_identifiers = open_shared_memory(shared_memory_name)
     read_bytes = bytes()
     try:
-        read_bytes = bytes(shared_validator_identifiers.buf[:10000000])
+        read_bytes = bytes(__get_buffer(shared_validator_identifiers)[:10000000])
         shared_validator_identifiers.close()
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         __LOGGER.error(logging.CANNOT_READ_SHARED_MEMORY_MESSAGE)
         shared_validator_identifiers.close()
         shared_validator_identifiers.unlink()
@@ -51,15 +51,32 @@ def write_validator_identifiers_to_shared_memory(
     """
     try:
         validator_identifiers_bytes = dumps(validator_identifiers)
-        shared_validator_identifiers.buf[
+        __get_buffer(shared_validator_identifiers)[
             : memoryview(validator_identifiers_bytes).nbytes
         ] = validator_identifiers_bytes
         shared_validator_identifiers.close()
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         __LOGGER.error(logging.CANNOT_WRITE_SHARED_MEMORY_MESSAGE)
         shared_validator_identifiers.close()
         shared_validator_identifiers.unlink()
         sys_exit(1)
+
+
+def __get_buffer(shared_memory: SharedMemory) -> memoryview:
+    """Returns the buffer of an open shared memory instance
+
+    Args:
+        shared_memory (SharedMemory): Shared memory instance
+
+    Raises:
+        ValueError: Shared memory instance is already closed
+
+    Returns:
+        memoryview: Buffer of the shared memory instance
+    """
+    if shared_memory.buf is None:
+        raise ValueError(logging.SHARED_MEMORY_ALREADY_CLOSED_MESSAGE)
+    return shared_memory.buf
 
 
 def create_shared_active_validator_identifiers_with_alias() -> None:
@@ -69,8 +86,8 @@ def create_shared_active_validator_identifiers_with_alias() -> None:
     active_validator_identifiers = read_validator_identifiers_from_shared_memory(
         program.ACTIVE_VALIDATOR_IDENTIFIERS_SHARED_MEMORY_NAME
     )
-    shared_active_validator_identifiers_with_alias = SharedMemory(
-        program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME, False
+    shared_active_validator_identifiers_with_alias = open_shared_memory(
+        program.ACTIVE_VALIDATOR_IDENTIFIERS_WITH_ALIAS_SHARED_MEMORY_NAME
     )
     identifiers_with_alias = {
         index: validator_identifier

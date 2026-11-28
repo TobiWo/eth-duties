@@ -1,5 +1,4 @@
-"""Config related module
-"""
+"""Config related module"""
 
 from dataclasses import dataclass
 from pathlib import Path

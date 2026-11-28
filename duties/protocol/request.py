@@ -178,7 +178,7 @@ async def __handle_api_request(
                 node_connection_properties.url,
             )
             await sleep(program.REQUEST_CONNECTION_ERROR_WAITING_TIME)
-        except (ReadTimeout, KeyError):
+        except ReadTimeout, KeyError:
             __LOGGER.error(
                 logging.READ_TIMEOUT_ERROR_MESSAGE,
                 node_connection_properties.node_type.value,

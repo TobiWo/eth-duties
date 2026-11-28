@@ -1,5 +1,4 @@
-"""Module for argument parser related types
-"""
+"""Module for argument parser related types"""
 
 from dataclasses import dataclass
 from enum import Enum

@@ -17,7 +17,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) t
 ### Commit Types
 
 | Type | Description | Release Impact |
-|------|-------------|----------------|
+| --- | --- | --- |
 | `feat` | New features | Minor version bump |
 | `fix` | Bug fixes | Patch version bump |
 | `perf` | Performance improvements | Patch version bump |

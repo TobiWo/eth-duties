@@ -1,4 +1,4 @@
-FROM python:3.12.0-alpine3.18 AS python
+FROM python:3.14.10-alpine3.24 AS python
 ENV PYTHONUNBUFFERED=true
 WORKDIR /home/app
 
@@ -6,7 +6,7 @@ FROM python AS poetry
 ENV POETRY_HOME=/opt/poetry
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 ENV PATH="$POETRY_HOME/bin:$PATH"
-RUN python3 -m pip install --no-cache-dir poetry==1.7.1
+RUN python3 -m pip install --no-cache-dir poetry==2.5.1
 COPY pyproject.toml .
 COPY poetry.lock .
 RUN poetry install --only main --no-interaction --no-root

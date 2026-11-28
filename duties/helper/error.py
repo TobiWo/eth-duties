@@ -1,5 +1,4 @@
-"""Module for custom errors
-"""
+"""Module for custom errors"""
 
 
 class PrysmError(Exception):

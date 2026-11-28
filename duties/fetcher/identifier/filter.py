@@ -1,5 +1,4 @@
-"""Module for main filter function which filters for inactive and duplicate validator identifiers
-"""
+"""Module for main filter function which filters for inactive and duplicate validator identifiers"""
 
 from logging import getLogger
 from typing import Dict, List
@@ -12,7 +11,7 @@ __LOGGER = getLogger()
 
 
 def filter_empty_validator_identifier(
-    validator_identifiers: Dict[str, ValidatorIdentifier]
+    validator_identifiers: Dict[str, ValidatorIdentifier],
 ) -> Dict[str, ValidatorIdentifier]:
     """Filter for empty validator identifiers
 

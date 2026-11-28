@@ -108,7 +108,7 @@ class BeaconNode(NodeManager):
                 timeout=program.REQUEST_TIMEOUT,
             )
             return response.status_code == 200
-        except (RequestsConnectionError, ReadTimeout):
+        except RequestsConnectionError, ReadTimeout:
             return False
 
     def _log_health_of_nodes(self) -> None:
