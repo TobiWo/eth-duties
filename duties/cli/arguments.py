@@ -104,11 +104,11 @@ def __get_raw_arguments() -> Namespace:
         default=60.0,
     )
     parser.add_argument(
-        "--max-attestation-duty-logs",
+        "--max-slot-based-duty-logs",
         type=int,
         help=(
-            "The max. number of validators for which attestation duties will be logged "
-            "(default: 50)"
+            "The max. number of validators for which slot based duties (attestation and ptc) "
+            "will be logged (default: 50)"
         ),
         action="store",
         default=50,
@@ -165,6 +165,16 @@ def __get_raw_arguments() -> Namespace:
     parser.add_argument(
         "--omit-sync-committee-duties",
         help="If supplied upcoming sync committee duties will not be logged to the console",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--omit-ptc-duties",
+        help=(
+            "If supplied upcoming payload timeliness committee (ptc) duties will not be "
+            "logged to the console. They never influence the exit code in any cicd mode "
+            "as they are not reward relevant."
+        ),
         action="store_true",
         default=False,
     )

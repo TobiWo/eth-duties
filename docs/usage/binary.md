@@ -53,8 +53,8 @@ Just download the artifact for your OS and start optimizing your validator maint
 1. Print upcoming validator duties but omit attestation duties:
 
     ```bash
-    # Note: If you provide more than 50 validators, attestation related logs are omitted by default
-    # This can be changed with '--max-attestation-duty-logs'
+    # Note: If you provide more than 50 validators, attestation and ptc related logs are omitted by default
+    # This can be changed with '--max-slot-based-duty-logs'
     ./eth-duties \
     --validators-file <PATH_TO_VALIDATOR_FILE> \
     --beacon-node http://localhost:5052 \

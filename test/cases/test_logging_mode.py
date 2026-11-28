@@ -1,12 +1,13 @@
-"""Module with functions to test logging mode
-"""
+"""Module with functions to test logging mode"""
 
 from pathlib import Path
 
 from sty import fg  # type: ignore[import]
+from test_helper.chain import get_validators_with_ptc_duty
 from test_helper.config import CONFIG, ETH_DUTIES_ENTRY_POINT
 from test_helper.functions import (
     run_generic_test,
+    skip_test,
     test_set_colorful_logging_thresholds,
     test_standard_logging_mode,
     test_time_to_next_sync_committee_format,
@@ -27,6 +28,7 @@ def test_standard_logging_mode_execution() -> int:
     expected_logs = [
         "next ATTESTATION duty",
         "next PROPOSING duty",
+        "next PTC duty",
         "is in current sync committee",
     ]
     validators_to_test = (
@@ -177,7 +179,7 @@ def test_logging_duties_for_high_number_of_validators() -> int:
         int: Whether or not test succeeds while 1 is success and 0 is failure
     """
     expected_logs = [
-        "Provided number of validators for fetching attestion duties is high"
+        "Provided number of validators for fetching attestation duties is high"
     ]
     command = [
         "poetry",
@@ -210,7 +212,11 @@ def test_omit_attestation_duties() -> int:
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.active.not_in_sync_committee_not_proposing[0]],
         CONFIG.general.working_beacon_node_url,
-    ) + ["--omit-attestation-duties"]
+    ) + [
+        "--omit-attestation-duties",
+        "--omit-sync-committee-duties",
+        "--omit-ptc-duties",
+    ]
     return run_generic_test(
         expected_logs,
         command,
@@ -239,7 +245,11 @@ def test_omit_sync_committee_duties() -> int:
     command = get_general_eth_duties_start_command(
         [CONFIG.validators.active.in_sync_committee[0]],
         CONFIG.general.working_beacon_node_url,
-    ) + ["--omit-sync-committee-duties", "--omit-attestation-duties"]
+    ) + [
+        "--omit-sync-committee-duties",
+        "--omit-attestation-duties",
+        "--omit-ptc-duties",
+    ]
     return run_generic_test(
         expected_logs,
         command,
@@ -254,8 +264,86 @@ def test_omit_sync_committee_duties() -> int:
     )
 
 
-def test_increase_of_max_attestation_duty_logs() -> int:
-    """Test increase of max attestation duty logs
+def test_omit_ptc_duties() -> int:
+    """Test omit ptc duties
+
+    Skips if no validator of the configured pool currently holds a ptc duty,
+    which is the case on any pre-Gloas devnet.
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    validators_with_ptc_duty = get_validators_with_ptc_duty(
+        CONFIG.validators.active.general
+    )
+    if not validators_with_ptc_duty:
+        return skip_test(
+            "omit ptc duties",
+            "No validator of the configured pool has an upcoming ptc duty. "
+            "This is expected on a pre-Gloas devnet.",
+        )
+    expected_logs = [
+        "Started in mode: log",
+        "Logging ptc duties is omitted by the user",
+        "No upcoming duties detected!",
+    ]
+    command = get_general_eth_duties_start_command(
+        [validators_with_ptc_duty[0]],
+        CONFIG.general.working_beacon_node_url,
+    ) + [
+        "--omit-ptc-duties",
+        "--omit-attestation-duties",
+        "--omit-sync-committee-duties",
+    ]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "omit ptc duties",
+        "Logging next duties interval",
+        overhead_log_number=10,
+        additional_failure_message=(
+            "It could be that the provided validator is inactive "
+            "or about to propose a block!"
+        ),
+        drop_expected_logs=True,
+    )
+
+
+def test_ptc_duty_logging() -> int:
+    """Test that an upcoming ptc duty is logged in the standard slot based format
+
+    Skips if no validator of the configured pool currently holds a ptc duty,
+    which is the case on any pre-Gloas devnet.
+
+    Returns:
+        int: Whether or not test succeeds while 1 is success and 0 is failure
+    """
+    validators_with_ptc_duty = get_validators_with_ptc_duty(
+        CONFIG.validators.active.general
+    )
+    if not validators_with_ptc_duty:
+        return skip_test(
+            "ptc duty logging",
+            "No validator of the configured pool has an upcoming ptc duty. "
+            "This is expected on a pre-Gloas devnet.",
+        )
+    expected_logs = ["next PTC duty"]
+    command = get_general_eth_duties_start_command(
+        [validators_with_ptc_duty[0]],
+        CONFIG.general.working_beacon_node_url,
+    ) + ["--omit-attestation-duties", "--omit-sync-committee-duties"]
+    return run_generic_test(
+        expected_logs,
+        command,
+        "ptc duty logging",
+        "Logging next duties interval",
+        overhead_log_number=10,
+        drop_expected_logs=True,
+    )
+
+
+def test_increase_of_max_slot_based_duty_logs() -> int:
+    """Test increase of max slot based duty logs
 
     Returns:
         int: Whether or not test succeeds while 1 is success and 0 is failure
@@ -273,13 +361,13 @@ def test_increase_of_max_attestation_duty_logs() -> int:
         str(Path.cwd() / "test/data/devnet-validators-small"),
         "--beacon-nodes",
         CONFIG.general.working_beacon_node_url,
-        "--max-attestation-duty-logs",
+        "--max-slot-based-duty-logs",
         "61",
     ]
     return run_generic_test(
         expected_logs,
         command,
-        "increase of max attestation duty logs",
+        "increase of max slot based duty logs",
         "all duties will be executed",
     )
 

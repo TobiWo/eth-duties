@@ -70,7 +70,7 @@ For public networks the script will not work as-is. Populate the fields manually
 You need to install all dependencies and setup the project by following the [contribution guideline](contribute.md/#installation). Once that is finished and the `config.toml` is populated you can start the test suite with:
 
 ```bash
-poetry run python test/run_tests.py
+PYTHONPATH=./duties poetry run python test/run_tests.py
 ```
 
 ### Run a single test in isolation

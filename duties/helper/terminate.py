@@ -10,7 +10,7 @@ from typing import List
 from cli.arguments import ARGUMENTS
 from cli.types import Mode
 from constants import logging
-from fetcher.data_types import AttestationDuty, ValidatorDuty
+from fetcher.data_types import AttestationDuty, DutyType, ValidatorDuty
 from helper.duty import get_duties_proportion_above_time_threshold
 from helper.identifier import clean_shared_memory
 
@@ -76,18 +76,22 @@ class GracefulTerminator:
     def __no_relevant_upcoming_duties(self, duties: List[ValidatorDuty]) -> bool:
         """Checks whether there are non relevant upcoming duties for the provided validators
 
+        Ptc duties are never relevant as they are neither reward nor slashing relevant.
+        They are filtered before any further processing.
+
         Args:
             duties (List[ValidatorDuty]): List of fetched validator duties
 
         Returns:
             bool: Whether or not there are any relevant upcoming duties
         """
-        if len(duties) == 0:
+        relevant_duties = [duty for duty in duties if duty.type is not DutyType.PTC]
+        if len(relevant_duties) == 0:
             return True
         attestation_duties = [
-            duty for duty in duties if isinstance(duty, AttestationDuty)
+            duty for duty in relevant_duties if isinstance(duty, AttestationDuty)
         ]
-        if len(attestation_duties) != len(duties):
+        if len(attestation_duties) != len(relevant_duties):
             return False
         return self.__is_proportion_of_attestation_duties_above_time_threshold(
             attestation_duties

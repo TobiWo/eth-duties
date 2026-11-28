@@ -43,20 +43,33 @@ async def __fetch_validator_duties(
         __check_beacon_node_connection()
         return duties
     fetched_upcoming_validator_duties = await fetch_upcoming_validator_duties()
-    if not fetched_upcoming_validator_duties and (
-        ARGUMENTS.omit_attestation_duties or ARGUMENTS.omit_sync_committee_duties
-    ):
-        if ARGUMENTS.omit_attestation_duties:
-            __LOGGER.info(logging.OMITTED_DUTY_LOGS_MESSAGE, DutyType.ATTESTATION.value)
-        if ARGUMENTS.omit_sync_committee_duties:
-            __LOGGER.info(
-                logging.OMITTED_DUTY_LOGS_MESSAGE, DutyType.SYNC_COMMITTEE.value
-            )
-        return fetched_upcoming_validator_duties
+    omitted_duty_types = __get_omitted_duty_types()
     if not fetched_upcoming_validator_duties:
+        if omitted_duty_types:
+            for omitted_duty_type in omitted_duty_types:
+                __LOGGER.info(
+                    logging.OMITTED_DUTY_LOGS_MESSAGE, omitted_duty_type.value
+                )
+            return fetched_upcoming_validator_duties
         __LOGGER.error(logging.NO_DUTY_DATA_ERROR_MESSAGE)
         return duties
     return fetched_upcoming_validator_duties
+
+
+def __get_omitted_duty_types() -> List[DutyType]:
+    """Collects the duty types which the user omitted via cli flags
+
+    Returns:
+        List[DutyType]: Omitted duty types
+    """
+    omitted_duty_types: List[DutyType] = []
+    if ARGUMENTS.omit_attestation_duties:
+        omitted_duty_types.append(DutyType.ATTESTATION)
+    if ARGUMENTS.omit_sync_committee_duties:
+        omitted_duty_types.append(DutyType.SYNC_COMMITTEE)
+    if ARGUMENTS.omit_ptc_duties:
+        omitted_duty_types.append(DutyType.PTC)
+    return omitted_duty_types
 
 
 def __check_beacon_node_connection() -> None:
